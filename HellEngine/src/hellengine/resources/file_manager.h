@@ -18,7 +18,7 @@ namespace hellengine
 			std::string stem = "";
 			std::string extension = "";
 			std::string content = "";
-			u32 size = 0;
+			u64 size = 0;
 
 			File() = default;
 			~File() = default;
@@ -30,7 +30,7 @@ namespace hellengine
 			HE_API const std::string& GetName() const { return name; }
 			HE_API const std::string& GetExtension() const { return extension; }
 			HE_API const std::string& GetContent() const { return content; }
-			HE_API u32 GetSize() const { return size; }
+			HE_API u64 GetSize() const { return size; }
 		};
 
 		class FileManager

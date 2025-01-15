@@ -284,6 +284,6 @@ void SandboxApplication::CreateCubeMesh()
 		12, 13, 14, 12, 14, 15
 	};
 
-	m_vertex_buffer = m_backend->CreateVertexBuffer(vertices.data(), vertices.size());
-	m_index_buffer = m_backend->CreateIndexBuffer(indices.data(), indices.size());
+	m_vertex_buffer = m_backend->CreateVertexBuffer(vertices.data(), (u32)vertices.size());
+	m_index_buffer = m_backend->CreateIndexBuffer(indices.data(), (u32)indices.size());
 }
