@@ -303,7 +303,7 @@ void TestOffscreen::CreateRenderPasses()
 	// Swapchain renderpass
 	{
 		RenderPassAttachmentInfo color_attachment = {};
-		color_attachment.format = VK_FORMAT_B8G8R8A8_SRGB;
+		color_attachment.format = VK_FORMAT_B8G8R8A8_UNORM;
 		color_attachment.load_op = AttachmentLoadOp_Clear;
 		color_attachment.store_op = AttachmentStoreOp_Store;
 		color_attachment.stencil_load_op = AttachmentLoadOp_DontCare;
