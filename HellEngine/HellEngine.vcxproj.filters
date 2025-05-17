@@ -1,0 +1,2144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="dependencies">
+      <UniqueIdentifier>{8CAD9F58-7810-2FFD-2196-67B30DD8FA7F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dependencies\ASSIMP">
+      <UniqueIdentifier>{68A63800-D407-160E-5D75-5CC0C9D54CCD}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dependencies\ASSIMP\include">
+      <UniqueIdentifier>{DBB599B6-47C3-C79C-D0A9-C3873CB69353}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dependencies\ASSIMP\include\assimp">
+      <UniqueIdentifier>{979CE4E4-83D8-E74E-ECEA-FF45D8459069}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dependencies\ASSIMP\include\assimp\Compiler">
+      <UniqueIdentifier>{E1F50B17-4D5B-9F9D-D633-41764298940C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dependencies\ASSIMP\include\assimp\port">
+      <UniqueIdentifier>{6BE4F2DB-D773-B4C6-E06F-95DE4C7EEFD2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dependencies\ASSIMP\include\assimp\port\AndroidJNI">
+      <UniqueIdentifier>{DC1578A1-C8A9-6D49-316E-C7FD1D21A83B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dependencies\EXTENSIONS">
+      <UniqueIdentifier>{0BCA1B31-7701-64C8-800B-C8EBECC18AC1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dependencies\EXTENSIONS\GL">
+      <UniqueIdentifier>{8D6306CE-7973-B29E-E22C-17BDCE5BA137}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dependencies\EXTENSIONS\KHR">
+      <UniqueIdentifier>{FFE5D28E-6BF3-0075-F4D9-FC5F60E6CC2B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dependencies\GLFW">
+      <UniqueIdentifier>{4BC0806A-B7D6-7E00-004E-0A226CA34F88}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dependencies\GLFW\include">
+      <UniqueIdentifier>{BE02435A-2AC5-76E4-7375-0571DF764FC2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dependencies\GLFW\include\GLFW">
+      <UniqueIdentifier>{BD2423A5-A94A-ED0B-9290-72D77E5512D8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dependencies\GLM">
+      <UniqueIdentifier>{7B91AED4-678A-CD26-90BC-B2AB7C14AD32}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dependencies\GLM\include">
+      <UniqueIdentifier>{EE030711-DA28-5691-0374-3B21EFF754AF}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dependencies\GLM\include\glm">
+      <UniqueIdentifier>{3DD5BE83-2990-AE2F-D247-277ABEE1F8BF}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dependencies\GLM\include\glm\detail">
+      <UniqueIdentifier>{5FE66646-CB9F-D1F0-54FF-EBCAC0B78760}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dependencies\GLM\include\glm\ext">
+      <UniqueIdentifier>{1DAF8C45-0900-7887-3264-66491E140BF1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dependencies\GLM\include\glm\gtc">
+      <UniqueIdentifier>{0AB78C45-F607-7887-1F6C-66490B1C0BF1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dependencies\GLM\include\glm\gtx">
+      <UniqueIdentifier>{1FB78C45-0B08-7887-346C-6649201C0BF1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dependencies\GLM\include\glm\simd">
+      <UniqueIdentifier>{B9FF29F7-256E-7F76-6E57-3A76DA047512}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dependencies\IMGUI">
+      <UniqueIdentifier>{568BBDBA-426F-7E10-ABCF-786397D26892}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dependencies\KTX">
+      <UniqueIdentifier>{92A3AED4-7E9C-CD26-A7CE-B2AB9326AD32}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dependencies\KTX\include">
+      <UniqueIdentifier>{053D2748-F161-76C8-1AAD-5B58063175E6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dependencies\KTX\include\KHR">
+      <UniqueIdentifier>{F945F353-E500-E3FF-8EB8-5B4A7A522D90}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dependencies\SPDLOG">
+      <UniqueIdentifier>{840BF729-F06C-D437-79DA-1AEAE53A0BF7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dependencies\SPDLOG\include">
+      <UniqueIdentifier>{F7768994-6384-B77A-EC6A-B36558778331}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dependencies\SPDLOG\include\spdlog">
+      <UniqueIdentifier>{4FEB6282-3B27-66EC-A439-7EE390940E07}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dependencies\SPDLOG\include\spdlog\cfg">
+      <UniqueIdentifier>{4E739185-3AC5-6875-23E4-A5850FD5815E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dependencies\SPDLOG\include\spdlog\details">
+      <UniqueIdentifier>{C4BA5D58-B022-2426-198E-383C05153B12}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dependencies\SPDLOG\include\spdlog\fmt">
+      <UniqueIdentifier>{05819185-F1D2-6875-DAF1-A585C6E2815E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dependencies\SPDLOG\include\spdlog\fmt\bundled">
+      <UniqueIdentifier>{F2D4BC72-DE52-0D0C-C74A-CBA3B3674F34}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dependencies\SPDLOG\include\spdlog\sinks">
+      <UniqueIdentifier>{06D8DE30-F254-D273-1BD2-D28707AE6E07}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dependencies\STB">
+      <UniqueIdentifier>{84C5AED4-70BE-CD26-99F0-B2AB8548AD32}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dependencies\STB\include">
+      <UniqueIdentifier>{F7305B70-E355-AAF0-0CA1-8F80F824A90E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dependencies\STB\include\stb">
+      <UniqueIdentifier>{CF92049C-BB4D-F447-6405-6D92509F3ED8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src">
+      <UniqueIdentifier>{2DAB880B-99B4-887C-2230-9F7C8E38947C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\hellengine">
+      <UniqueIdentifier>{574E091F-431C-FD24-2CB0-6D4B181DD989}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\hellengine\containers">
+      <UniqueIdentifier>{9C303DAE-08F3-7038-51A3-FFC4BDA44916}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\hellengine\core">
+      <UniqueIdentifier>{2F8D85AD-9BEE-62BB-245C-A96D90BC997A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\hellengine\core\application">
+      <UniqueIdentifier>{92AF0774-FE92-16B4-0796-44F073F8DC04}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\hellengine\core\engine">
+      <UniqueIdentifier>{F400C65D-E010-722E-49CA-D64C35F960C7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\hellengine\core\events">
+      <UniqueIdentifier>{53C2555E-3FD2-012F-A88B-664D94BAF0C7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\hellengine\core\input">
+      <UniqueIdentifier>{8E34F967-FAF6-2CF2-43A7-BB7EAFA805D0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\hellengine\core\logging">
+      <UniqueIdentifier>{E5C4B133-51D2-DF19-DAB8-DB0446C5ABD0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\hellengine\core\time">
+      <UniqueIdentifier>{4D0B3C41-3930-8BC1-627B-70514EFF89DF}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\hellengine\core\uuid">
+      <UniqueIdentifier>{35CA3C41-21EF-8BC1-4A3A-715136BE8ADF}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\hellengine\core\window">
+      <UniqueIdentifier>{56236C87-4233-1858-ABEC-7C76971B07F1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\hellengine\graphics">
+      <UniqueIdentifier>{97C42654-03FC-6EEB-0C06-D30E78BC95E4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\hellengine\graphics\backend">
+      <UniqueIdentifier>{6E0A73D7-DAED-8117-E3F0-AF534F534868}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\hellengine\graphics\camera">
+      <UniqueIdentifier>{4F7D2F3F-3BA3-F9A5-24E9-7E7110AE1E72}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\hellengine\graphics\frontend">
+      <UniqueIdentifier>{A6FAB5AF-924B-A1F1-BBAF-8FB3A75F345B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\hellengine\graphics\managers">
+      <UniqueIdentifier>{743C9D05-608D-8847-89F1-760975A11BB1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\hellengine\graphics\mesh">
+      <UniqueIdentifier>{D33CCC72-BFF7-BB1E-68AF-3469544906AF}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\hellengine\graphics\objects">
+      <UniqueIdentifier>{70A2F8C2-DC85-0703-E588-353F51EBCD53}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\hellengine\math">
+      <UniqueIdentifier>{B0CD8AAD-1C2F-68BB-A59C-AE6D11FD9E7A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\hellengine\math\noise">
+      <UniqueIdentifier>{9DFA61F1-09BD-957B-526D-2408BE6E6E59}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\hellengine\math\random">
+      <UniqueIdentifier>{8019FB25-6C29-A7F6-D5E2-0B15C111968F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\hellengine\math\vertex">
+      <UniqueIdentifier>{5D929A2F-49A2-4600-B25B-AB1E9E8A3599}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\hellengine\platform">
+      <UniqueIdentifier>{AB38E1D4-1770-296C-207A-8D8F8C305065}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\hellengine\platform\glfw">
+      <UniqueIdentifier>{4A2FD33C-36EA-C2E8-DFA1-3B33CB3B0D79}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\hellengine\platform\windows">
+      <UniqueIdentifier>{05F60D53-71D9-1C93-7ADC-4ACFE63EE3E3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\hellengine\resources">
+      <UniqueIdentifier>{A1AC3343-8DD1-82C3-B61C-6853A2A081E1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\hellengine\tools">
+      <UniqueIdentifier>{37C86A5F-2357-F428-CC75-0824B8E304CF}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\hellengine\tools\profiling">
+      <UniqueIdentifier>{90353A80-7C5B-04E7-65A1-89B2516629B3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\hellengine\ui">
+      <UniqueIdentifier>{641A5FD9-D030-5D6F-19A8-E89085FD2DF7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\hellengine\ui\backend">
+      <UniqueIdentifier>{3BDDD6AD-A79F-0A38-F04F-99C45C51E315}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\AssertHandler.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\Base64.hpp">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\BaseImporter.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\Bitmap.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\BlobIOSystem.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\ByteSwapper.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\ColladaMetaData.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\Compiler\poppack1.h">
+      <Filter>dependencies\ASSIMP\include\assimp\Compiler</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\Compiler\pstdint.h">
+      <Filter>dependencies\ASSIMP\include\assimp\Compiler</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\Compiler\pushpack1.h">
+      <Filter>dependencies\ASSIMP\include\assimp\Compiler</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\CreateAnimMesh.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\DefaultIOStream.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\DefaultIOSystem.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\DefaultLogger.hpp">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\Exceptional.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\Exporter.hpp">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\GenericProperty.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\GltfMaterial.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\Hash.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\IOStream.hpp">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\IOStreamBuffer.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\IOSystem.hpp">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\Importer.hpp">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\LineSplitter.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\LogAux.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\LogStream.hpp">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\Logger.hpp">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\MathFunctions.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\MemoryIOWrapper.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\NullLogger.hpp">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\ObjMaterial.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\ParsingUtils.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\Profiler.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\ProgressHandler.hpp">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\RemoveComments.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\SGSpatialSort.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\SceneCombiner.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\SkeletonMeshBuilder.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\SmallVector.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\SmoothingGroups.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\SpatialSort.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\StandardShapes.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\StreamReader.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\StreamWriter.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\StringComparison.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\StringUtils.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\Subdivision.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\TinyFormatter.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\Vertex.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\XMLTools.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\XmlParser.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\ZipArchiveIOSystem.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\aabb.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\ai_assert.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\anim.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\camera.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\cexport.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\cfileio.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\cimport.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\color4.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\commonMetaData.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\config.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\defs.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\fast_atof.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\importerdesc.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\light.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\material.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\matrix3x3.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\matrix4x4.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\mesh.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\metadata.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\pbrmaterial.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\port\AndroidJNI\AndroidJNIIOSystem.h">
+      <Filter>dependencies\ASSIMP\include\assimp\port\AndroidJNI</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\port\AndroidJNI\BundledAssetIOSystem.h">
+      <Filter>dependencies\ASSIMP\include\assimp\port\AndroidJNI</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\postprocess.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\qnan.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\quaternion.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\revision.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\scene.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\texture.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\types.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\vector2.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\vector3.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\ASSIMP\include\assimp\version.h">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\EXTENSIONS\GL\glcorearb.h">
+      <Filter>dependencies\EXTENSIONS\GL</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\EXTENSIONS\GL\glext.h">
+      <Filter>dependencies\EXTENSIONS\GL</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\EXTENSIONS\GL\glxext.h">
+      <Filter>dependencies\EXTENSIONS\GL</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\EXTENSIONS\GL\wgl.h">
+      <Filter>dependencies\EXTENSIONS\GL</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\EXTENSIONS\GL\wglext.h">
+      <Filter>dependencies\EXTENSIONS\GL</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\EXTENSIONS\KHR\khrplatform.h">
+      <Filter>dependencies\EXTENSIONS\KHR</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLFW\include\GLFW\glfw3.h">
+      <Filter>dependencies\GLFW\include\GLFW</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLFW\include\GLFW\glfw3native.h">
+      <Filter>dependencies\GLFW\include\GLFW</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\common.hpp">
+      <Filter>dependencies\GLM\include\glm</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\detail\_features.hpp">
+      <Filter>dependencies\GLM\include\glm\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\detail\_fixes.hpp">
+      <Filter>dependencies\GLM\include\glm\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\detail\_noise.hpp">
+      <Filter>dependencies\GLM\include\glm\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\detail\_swizzle.hpp">
+      <Filter>dependencies\GLM\include\glm\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\detail\_swizzle_func.hpp">
+      <Filter>dependencies\GLM\include\glm\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\detail\_vectorize.hpp">
+      <Filter>dependencies\GLM\include\glm\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\detail\compute_common.hpp">
+      <Filter>dependencies\GLM\include\glm\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\detail\compute_vector_decl.hpp">
+      <Filter>dependencies\GLM\include\glm\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\detail\compute_vector_relational.hpp">
+      <Filter>dependencies\GLM\include\glm\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\detail\qualifier.hpp">
+      <Filter>dependencies\GLM\include\glm\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\detail\setup.hpp">
+      <Filter>dependencies\GLM\include\glm\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\detail\type_float.hpp">
+      <Filter>dependencies\GLM\include\glm\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\detail\type_half.hpp">
+      <Filter>dependencies\GLM\include\glm\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\detail\type_mat2x2.hpp">
+      <Filter>dependencies\GLM\include\glm\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\detail\type_mat2x3.hpp">
+      <Filter>dependencies\GLM\include\glm\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\detail\type_mat2x4.hpp">
+      <Filter>dependencies\GLM\include\glm\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\detail\type_mat3x2.hpp">
+      <Filter>dependencies\GLM\include\glm\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\detail\type_mat3x3.hpp">
+      <Filter>dependencies\GLM\include\glm\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\detail\type_mat3x4.hpp">
+      <Filter>dependencies\GLM\include\glm\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\detail\type_mat4x2.hpp">
+      <Filter>dependencies\GLM\include\glm\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\detail\type_mat4x3.hpp">
+      <Filter>dependencies\GLM\include\glm\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\detail\type_mat4x4.hpp">
+      <Filter>dependencies\GLM\include\glm\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\detail\type_quat.hpp">
+      <Filter>dependencies\GLM\include\glm\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\detail\type_vec1.hpp">
+      <Filter>dependencies\GLM\include\glm\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\detail\type_vec2.hpp">
+      <Filter>dependencies\GLM\include\glm\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\detail\type_vec3.hpp">
+      <Filter>dependencies\GLM\include\glm\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\detail\type_vec4.hpp">
+      <Filter>dependencies\GLM\include\glm\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\exponential.hpp">
+      <Filter>dependencies\GLM\include\glm</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext.hpp">
+      <Filter>dependencies\GLM\include\glm</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\_matrix_vectorize.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_clip_space.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_common.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_double2x2.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_double2x2_precision.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_double2x3.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_double2x3_precision.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_double2x4.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_double2x4_precision.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_double3x2.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_double3x2_precision.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_double3x3.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_double3x3_precision.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_double3x4.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_double3x4_precision.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_double4x2.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_double4x2_precision.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_double4x3.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_double4x3_precision.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_double4x4.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_double4x4_precision.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_float2x2.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_float2x2_precision.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_float2x3.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_float2x3_precision.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_float2x4.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_float2x4_precision.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_float3x2.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_float3x2_precision.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_float3x3.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_float3x3_precision.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_float3x4.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_float3x4_precision.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_float4x2.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_float4x2_precision.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_float4x3.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_float4x3_precision.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_float4x4.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_float4x4_precision.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_int2x2.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_int2x2_sized.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_int2x3.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_int2x3_sized.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_int2x4.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_int2x4_sized.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_int3x2.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_int3x2_sized.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_int3x3.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_int3x3_sized.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_int3x4.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_int3x4_sized.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_int4x2.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_int4x2_sized.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_int4x3.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_int4x3_sized.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_int4x4.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_int4x4_sized.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_integer.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_projection.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_relational.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_transform.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_uint2x2.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_uint2x2_sized.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_uint2x3.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_uint2x3_sized.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_uint2x4.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_uint2x4_sized.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_uint3x2.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_uint3x2_sized.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_uint3x3.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_uint3x3_sized.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_uint3x4.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_uint3x4_sized.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_uint4x2.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_uint4x2_sized.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_uint4x3.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_uint4x3_sized.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_uint4x4.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\matrix_uint4x4_sized.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\quaternion_common.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\quaternion_double.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\quaternion_double_precision.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\quaternion_exponential.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\quaternion_float.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\quaternion_float_precision.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\quaternion_geometric.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\quaternion_relational.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\quaternion_transform.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\quaternion_trigonometric.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\scalar_common.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\scalar_constants.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\scalar_int_sized.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\scalar_integer.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\scalar_packing.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\scalar_reciprocal.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\scalar_relational.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\scalar_uint_sized.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\scalar_ulp.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\vector_bool1.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\vector_bool1_precision.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\vector_bool2.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\vector_bool2_precision.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\vector_bool3.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\vector_bool3_precision.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\vector_bool4.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\vector_bool4_precision.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\vector_common.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\vector_double1.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\vector_double1_precision.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\vector_double2.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\vector_double2_precision.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\vector_double3.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\vector_double3_precision.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\vector_double4.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\vector_double4_precision.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\vector_float1.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\vector_float1_precision.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\vector_float2.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\vector_float2_precision.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\vector_float3.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\vector_float3_precision.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\vector_float4.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\vector_float4_precision.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\vector_int1.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\vector_int1_sized.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\vector_int2.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\vector_int2_sized.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\vector_int3.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\vector_int3_sized.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\vector_int4.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\vector_int4_sized.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\vector_integer.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\vector_packing.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\vector_reciprocal.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\vector_relational.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\vector_uint1.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\vector_uint1_sized.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\vector_uint2.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\vector_uint2_sized.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\vector_uint3.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\vector_uint3_sized.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\vector_uint4.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\vector_uint4_sized.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\ext\vector_ulp.hpp">
+      <Filter>dependencies\GLM\include\glm\ext</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\fwd.hpp">
+      <Filter>dependencies\GLM\include\glm</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\geometric.hpp">
+      <Filter>dependencies\GLM\include\glm</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\glm.hpp">
+      <Filter>dependencies\GLM\include\glm</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtc\bitfield.hpp">
+      <Filter>dependencies\GLM\include\glm\gtc</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtc\color_space.hpp">
+      <Filter>dependencies\GLM\include\glm\gtc</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtc\constants.hpp">
+      <Filter>dependencies\GLM\include\glm\gtc</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtc\epsilon.hpp">
+      <Filter>dependencies\GLM\include\glm\gtc</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtc\integer.hpp">
+      <Filter>dependencies\GLM\include\glm\gtc</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtc\matrix_access.hpp">
+      <Filter>dependencies\GLM\include\glm\gtc</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtc\matrix_integer.hpp">
+      <Filter>dependencies\GLM\include\glm\gtc</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtc\matrix_inverse.hpp">
+      <Filter>dependencies\GLM\include\glm\gtc</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtc\matrix_transform.hpp">
+      <Filter>dependencies\GLM\include\glm\gtc</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtc\noise.hpp">
+      <Filter>dependencies\GLM\include\glm\gtc</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtc\packing.hpp">
+      <Filter>dependencies\GLM\include\glm\gtc</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtc\quaternion.hpp">
+      <Filter>dependencies\GLM\include\glm\gtc</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtc\random.hpp">
+      <Filter>dependencies\GLM\include\glm\gtc</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtc\reciprocal.hpp">
+      <Filter>dependencies\GLM\include\glm\gtc</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtc\round.hpp">
+      <Filter>dependencies\GLM\include\glm\gtc</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtc\type_aligned.hpp">
+      <Filter>dependencies\GLM\include\glm\gtc</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtc\type_precision.hpp">
+      <Filter>dependencies\GLM\include\glm\gtc</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtc\type_ptr.hpp">
+      <Filter>dependencies\GLM\include\glm\gtc</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtc\ulp.hpp">
+      <Filter>dependencies\GLM\include\glm\gtc</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtc\vec1.hpp">
+      <Filter>dependencies\GLM\include\glm\gtc</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\associated_min_max.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\bit.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\closest_point.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\color_encoding.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\color_space.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\color_space_YCoCg.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\common.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\compatibility.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\component_wise.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\dual_quaternion.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\easing.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\euler_angles.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\extend.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\extended_min_max.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\exterior_product.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\fast_exponential.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\fast_square_root.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\fast_trigonometry.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\functions.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\gradient_paint.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\handed_coordinate_space.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\hash.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\integer.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\intersect.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\io.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\log_base.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\matrix_cross_product.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\matrix_decompose.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\matrix_factorisation.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\matrix_interpolation.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\matrix_major_storage.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\matrix_operation.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\matrix_query.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\matrix_transform_2d.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\mixed_product.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\norm.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\normal.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\normalize_dot.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\number_precision.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\optimum_pow.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\orthonormalize.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\pca.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\perpendicular.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\polar_coordinates.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\projection.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\quaternion.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\range.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\raw_data.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\rotate_normalized_axis.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\rotate_vector.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\scalar_multiplication.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\scalar_relational.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\spline.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\std_based_type.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\string_cast.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\texture.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\transform.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\transform2.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\type_aligned.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\type_trait.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\vec_swizzle.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\vector_angle.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\vector_query.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\gtx\wrap.hpp">
+      <Filter>dependencies\GLM\include\glm\gtx</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\integer.hpp">
+      <Filter>dependencies\GLM\include\glm</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\mat2x2.hpp">
+      <Filter>dependencies\GLM\include\glm</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\mat2x3.hpp">
+      <Filter>dependencies\GLM\include\glm</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\mat2x4.hpp">
+      <Filter>dependencies\GLM\include\glm</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\mat3x2.hpp">
+      <Filter>dependencies\GLM\include\glm</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\mat3x3.hpp">
+      <Filter>dependencies\GLM\include\glm</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\mat3x4.hpp">
+      <Filter>dependencies\GLM\include\glm</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\mat4x2.hpp">
+      <Filter>dependencies\GLM\include\glm</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\mat4x3.hpp">
+      <Filter>dependencies\GLM\include\glm</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\mat4x4.hpp">
+      <Filter>dependencies\GLM\include\glm</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\matrix.hpp">
+      <Filter>dependencies\GLM\include\glm</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\packing.hpp">
+      <Filter>dependencies\GLM\include\glm</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\simd\common.h">
+      <Filter>dependencies\GLM\include\glm\simd</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\simd\exponential.h">
+      <Filter>dependencies\GLM\include\glm\simd</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\simd\geometric.h">
+      <Filter>dependencies\GLM\include\glm\simd</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\simd\integer.h">
+      <Filter>dependencies\GLM\include\glm\simd</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\simd\matrix.h">
+      <Filter>dependencies\GLM\include\glm\simd</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\simd\neon.h">
+      <Filter>dependencies\GLM\include\glm\simd</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\simd\packing.h">
+      <Filter>dependencies\GLM\include\glm\simd</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\simd\platform.h">
+      <Filter>dependencies\GLM\include\glm\simd</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\simd\trigonometric.h">
+      <Filter>dependencies\GLM\include\glm\simd</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\simd\vector_relational.h">
+      <Filter>dependencies\GLM\include\glm\simd</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\trigonometric.hpp">
+      <Filter>dependencies\GLM\include\glm</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\vec2.hpp">
+      <Filter>dependencies\GLM\include\glm</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\vec3.hpp">
+      <Filter>dependencies\GLM\include\glm</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\vec4.hpp">
+      <Filter>dependencies\GLM\include\glm</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\GLM\include\glm\vector_relational.hpp">
+      <Filter>dependencies\GLM\include\glm</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\IMGUI\imconfig.h">
+      <Filter>dependencies\IMGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\IMGUI\imgui.h">
+      <Filter>dependencies\IMGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\IMGUI\imgui_impl_glfw.h">
+      <Filter>dependencies\IMGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\IMGUI\imgui_impl_vulkan.h">
+      <Filter>dependencies\IMGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\IMGUI\imgui_internal.h">
+      <Filter>dependencies\IMGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\IMGUI\imstb_rectpack.h">
+      <Filter>dependencies\IMGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\IMGUI\imstb_textedit.h">
+      <Filter>dependencies\IMGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\IMGUI\imstb_truetype.h">
+      <Filter>dependencies\IMGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\KTX\include\KHR\khr_df.h">
+      <Filter>dependencies\KTX\include\KHR</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\KTX\include\ktx.h">
+      <Filter>dependencies\KTX\include</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\KTX\include\ktxvulkan.h">
+      <Filter>dependencies\KTX\include</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\async.h">
+      <Filter>dependencies\SPDLOG\include\spdlog</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\async_logger-inl.h">
+      <Filter>dependencies\SPDLOG\include\spdlog</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\async_logger.h">
+      <Filter>dependencies\SPDLOG\include\spdlog</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\cfg\argv.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\cfg</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\cfg\env.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\cfg</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\cfg\helpers-inl.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\cfg</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\cfg\helpers.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\cfg</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\common-inl.h">
+      <Filter>dependencies\SPDLOG\include\spdlog</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\common.h">
+      <Filter>dependencies\SPDLOG\include\spdlog</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\details\backtracer-inl.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\details\backtracer.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\details\circular_q.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\details\console_globals.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\details\file_helper-inl.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\details\file_helper.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\details\fmt_helper.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\details\log_msg-inl.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\details\log_msg.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\details\log_msg_buffer-inl.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\details\log_msg_buffer.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\details\mpmc_blocking_q.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\details\null_mutex.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\details\os-inl.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\details\os.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\details\periodic_worker-inl.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\details\periodic_worker.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\details\registry-inl.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\details\registry.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\details\synchronous_factory.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\details\tcp_client-windows.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\details\tcp_client.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\details\thread_pool-inl.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\details\thread_pool.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\details\udp_client-windows.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\details\udp_client.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\details\windows_include.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\details</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\fmt\bin_to_hex.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\fmt\bundled\args.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\fmt\bundled</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\fmt\bundled\chrono.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\fmt\bundled</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\fmt\bundled\color.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\fmt\bundled</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\fmt\bundled\compile.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\fmt\bundled</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\fmt\bundled\core.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\fmt\bundled</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\fmt\bundled\format-inl.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\fmt\bundled</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\fmt\bundled\format.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\fmt\bundled</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\fmt\bundled\locale.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\fmt\bundled</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\fmt\bundled\os.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\fmt\bundled</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\fmt\bundled\ostream.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\fmt\bundled</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\fmt\bundled\printf.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\fmt\bundled</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\fmt\bundled\ranges.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\fmt\bundled</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\fmt\bundled\std.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\fmt\bundled</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\fmt\bundled\xchar.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\fmt\bundled</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\fmt\chrono.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\fmt\compile.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\fmt\fmt.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\fmt\ostr.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\fmt\ranges.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\fmt\std.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\fmt\xchar.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\fmt</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\formatter.h">
+      <Filter>dependencies\SPDLOG\include\spdlog</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\fwd.h">
+      <Filter>dependencies\SPDLOG\include\spdlog</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\logger-inl.h">
+      <Filter>dependencies\SPDLOG\include\spdlog</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\logger.h">
+      <Filter>dependencies\SPDLOG\include\spdlog</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\mdc.h">
+      <Filter>dependencies\SPDLOG\include\spdlog</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\pattern_formatter-inl.h">
+      <Filter>dependencies\SPDLOG\include\spdlog</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\pattern_formatter.h">
+      <Filter>dependencies\SPDLOG\include\spdlog</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\sinks\android_sink.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\sinks\ansicolor_sink-inl.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\sinks\ansicolor_sink.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\sinks\base_sink-inl.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\sinks\base_sink.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\sinks\basic_file_sink-inl.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\sinks\basic_file_sink.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\sinks\callback_sink.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\sinks\daily_file_sink.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\sinks\dist_sink.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\sinks\dup_filter_sink.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\sinks\hourly_file_sink.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\sinks\kafka_sink.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\sinks\mongo_sink.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\sinks\msvc_sink.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\sinks\null_sink.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\sinks\ostream_sink.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\sinks\qt_sinks.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\sinks\ringbuffer_sink.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\sinks\rotating_file_sink-inl.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\sinks\rotating_file_sink.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\sinks\sink-inl.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\sinks\sink.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\sinks\stdout_color_sinks-inl.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\sinks\stdout_color_sinks.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\sinks\stdout_sinks-inl.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\sinks\stdout_sinks.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\sinks\syslog_sink.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\sinks\systemd_sink.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\sinks\tcp_sink.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\sinks\udp_sink.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\sinks\win_eventlog_sink.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\sinks\wincolor_sink-inl.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\sinks\wincolor_sink.h">
+      <Filter>dependencies\SPDLOG\include\spdlog\sinks</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\spdlog-inl.h">
+      <Filter>dependencies\SPDLOG\include\spdlog</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\spdlog.h">
+      <Filter>dependencies\SPDLOG\include\spdlog</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\stopwatch.h">
+      <Filter>dependencies\SPDLOG\include\spdlog</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\tweakme.h">
+      <Filter>dependencies\SPDLOG\include\spdlog</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\SPDLOG\include\spdlog\version.h">
+      <Filter>dependencies\SPDLOG\include\spdlog</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\STB\include\stb\stb_c_lexer.h">
+      <Filter>dependencies\STB\include\stb</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\STB\include\stb\stb_connected_components.h">
+      <Filter>dependencies\STB\include\stb</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\STB\include\stb\stb_divide.h">
+      <Filter>dependencies\STB\include\stb</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\STB\include\stb\stb_ds.h">
+      <Filter>dependencies\STB\include\stb</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\STB\include\stb\stb_dxt.h">
+      <Filter>dependencies\STB\include\stb</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\STB\include\stb\stb_easy_font.h">
+      <Filter>dependencies\STB\include\stb</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\STB\include\stb\stb_herringbone_wang_tile.h">
+      <Filter>dependencies\STB\include\stb</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\STB\include\stb\stb_hexwave.h">
+      <Filter>dependencies\STB\include\stb</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\STB\include\stb\stb_image.h">
+      <Filter>dependencies\STB\include\stb</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\STB\include\stb\stb_image_resize2.h">
+      <Filter>dependencies\STB\include\stb</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\STB\include\stb\stb_image_write.h">
+      <Filter>dependencies\STB\include\stb</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\STB\include\stb\stb_include.h">
+      <Filter>dependencies\STB\include\stb</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\STB\include\stb\stb_leakcheck.h">
+      <Filter>dependencies\STB\include\stb</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\STB\include\stb\stb_perlin.h">
+      <Filter>dependencies\STB\include\stb</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\STB\include\stb\stb_rect_pack.h">
+      <Filter>dependencies\STB\include\stb</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\STB\include\stb\stb_sprintf.h">
+      <Filter>dependencies\STB\include\stb</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\STB\include\stb\stb_textedit.h">
+      <Filter>dependencies\STB\include\stb</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\STB\include\stb\stb_tilemap_editor.h">
+      <Filter>dependencies\STB\include\stb</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\STB\include\stb\stb_truetype.h">
+      <Filter>dependencies\STB\include\stb</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\STB\include\stb\stb_voxel_render.h">
+      <Filter>dependencies\STB\include\stb</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\containers\tuple.h">
+      <Filter>src\hellengine\containers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\core\api.h">
+      <Filter>src\hellengine\core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\core\application\application.h">
+      <Filter>src\hellengine\core\application</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\core\application\configuration.h">
+      <Filter>src\hellengine\core\application</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\core\assert.h">
+      <Filter>src\hellengine\core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\core\core.h">
+      <Filter>src\hellengine\core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\core\defines.h">
+      <Filter>src\hellengine\core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\core\engine\configuration.h">
+      <Filter>src\hellengine\core\engine</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\core\engine\engine.h">
+      <Filter>src\hellengine\core\engine</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\core\events\event.h">
+      <Filter>src\hellengine\core\events</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\core\events\event_types.h">
+      <Filter>src\hellengine\core\events</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\core\input\input.h">
+      <Filter>src\hellengine\core\input</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\core\input\input_codes.h">
+      <Filter>src\hellengine\core\input</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\core\logging\logger.h">
+      <Filter>src\hellengine\core\logging</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\core\memory.hpp">
+      <Filter>src\hellengine\core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\core\platform.h">
+      <Filter>src\hellengine\core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\core\time\timer.h">
+      <Filter>src\hellengine\core\time</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\core\typedefs.h">
+      <Filter>src\hellengine\core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\core\uuid\uuid.h">
+      <Filter>src\hellengine\core\uuid</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\core\version.h">
+      <Filter>src\hellengine\core</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\core\window\configuration.h">
+      <Filter>src\hellengine\core\window</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\core\window\window.h">
+      <Filter>src\hellengine\core\window</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\graphics\backend\vulkan_backend.h">
+      <Filter>src\hellengine\graphics\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\graphics\camera\camera.h">
+      <Filter>src\hellengine\graphics\camera</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\graphics\camera\perspective.h">
+      <Filter>src\hellengine\graphics\camera</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\graphics\camera\perspective_controller.h">
+      <Filter>src\hellengine\graphics\camera</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\graphics\context.h">
+      <Filter>src\hellengine\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\graphics\defines.h">
+      <Filter>src\hellengine\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\graphics\frontend\vulkan_frontend.h">
+      <Filter>src\hellengine\graphics\frontend</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\graphics\graphic_types.h">
+      <Filter>src\hellengine\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\graphics\graphics_core.h">
+      <Filter>src\hellengine\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\graphics\managers\material_manager.h">
+      <Filter>src\hellengine\graphics\managers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\graphics\managers\mesh_manager.h">
+      <Filter>src\hellengine\graphics\managers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\graphics\managers\model_manager.h">
+      <Filter>src\hellengine\graphics\managers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\graphics\managers\texture_manager.h">
+      <Filter>src\hellengine\graphics\managers</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\graphics\mesh\material.h">
+      <Filter>src\hellengine\graphics\mesh</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\graphics\mesh\mesh.h">
+      <Filter>src\hellengine\graphics\mesh</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\graphics\mesh\model.h">
+      <Filter>src\hellengine\graphics\mesh</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\graphics\objects\shared.h">
+      <Filter>src\hellengine\graphics\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\graphics\objects\types.h">
+      <Filter>src\hellengine\graphics\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\graphics\objects\vulkan_buffer.h">
+      <Filter>src\hellengine\graphics\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\graphics\objects\vulkan_command_buffer.h">
+      <Filter>src\hellengine\graphics\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\graphics\objects\vulkan_debugger.h">
+      <Filter>src\hellengine\graphics\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\graphics\objects\vulkan_descriptor.h">
+      <Filter>src\hellengine\graphics\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\graphics\objects\vulkan_device.h">
+      <Filter>src\hellengine\graphics\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\graphics\objects\vulkan_framebuffer.h">
+      <Filter>src\hellengine\graphics\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\graphics\objects\vulkan_image.h">
+      <Filter>src\hellengine\graphics\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\graphics\objects\vulkan_instance.h">
+      <Filter>src\hellengine\graphics\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\graphics\objects\vulkan_pipeline.h">
+      <Filter>src\hellengine\graphics\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\graphics\objects\vulkan_renderpass.h">
+      <Filter>src\hellengine\graphics\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\graphics\objects\vulkan_shader.h">
+      <Filter>src\hellengine\graphics\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\graphics\objects\vulkan_surface.h">
+      <Filter>src\hellengine\graphics\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\graphics\objects\vulkan_swapchain.h">
+      <Filter>src\hellengine\graphics\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\graphics\objects\vulkan_synchronization.h">
+      <Filter>src\hellengine\graphics\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\graphics\objects\vulkan_texture.h">
+      <Filter>src\hellengine\graphics\objects</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\graphics\vulkan_core.h">
+      <Filter>src\hellengine\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\hellengine.h">
+      <Filter>src\hellengine</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\math\algebra.h">
+      <Filter>src\hellengine\math</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\math\core.h">
+      <Filter>src\hellengine\math</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\math\noise\fractal_noise.h">
+      <Filter>src\hellengine\math\noise</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\math\noise\perlin_noise.h">
+      <Filter>src\hellengine\math\noise</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\math\random\random.h">
+      <Filter>src\hellengine\math\random</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\math\types.h">
+      <Filter>src\hellengine\math</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\math\vertex\vertex.h">
+      <Filter>src\hellengine\math\vertex</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\platform\glfw\glfw_types.h">
+      <Filter>src\hellengine\platform\glfw</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\platform\glfw\glfw_window.h">
+      <Filter>src\hellengine\platform\glfw</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\platform\windows\windows_types.h">
+      <Filter>src\hellengine\platform\windows</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\platform\windows\windows_utils.h">
+      <Filter>src\hellengine\platform\windows</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\resources\asset_manager.h">
+      <Filter>src\hellengine\resources</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\resources\file_manager.h">
+      <Filter>src\hellengine\resources</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\tools\profiling\profiler.h">
+      <Filter>src\hellengine\tools\profiling</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\ui\backend\backend.h">
+      <Filter>src\hellengine\ui\backend</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\ui\ui.h">
+      <Filter>src\hellengine\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hepch.h">
+      <Filter>src</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="dependencies\GLM\include\glm\detail\glm.cpp">
+      <Filter>dependencies\GLM\include\glm\detail</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\IMGUI\imgui.cpp">
+      <Filter>dependencies\IMGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\IMGUI\imgui_demo.cpp">
+      <Filter>dependencies\IMGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\IMGUI\imgui_draw.cpp">
+      <Filter>dependencies\IMGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\IMGUI\imgui_impl_glfw.cpp">
+      <Filter>dependencies\IMGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\IMGUI\imgui_impl_vulkan.cpp">
+      <Filter>dependencies\IMGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\IMGUI\imgui_tables.cpp">
+      <Filter>dependencies\IMGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\IMGUI\imgui_widgets.cpp">
+      <Filter>dependencies\IMGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\STB\include\stb\stb_vorbis.c">
+      <Filter>dependencies\STB\include\stb</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hellengine\core\application\application.cpp">
+      <Filter>src\hellengine\core\application</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hellengine\core\engine\engine.cpp">
+      <Filter>src\hellengine\core\engine</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hellengine\core\events\event.cpp">
+      <Filter>src\hellengine\core\events</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hellengine\core\input\input.cpp">
+      <Filter>src\hellengine\core\input</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hellengine\core\logging\logger.cpp">
+      <Filter>src\hellengine\core\logging</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hellengine\core\time\timer.cpp">
+      <Filter>src\hellengine\core\time</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hellengine\core\window\window.cpp">
+      <Filter>src\hellengine\core\window</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hellengine\graphics\backend\vulkan_backend.cpp">
+      <Filter>src\hellengine\graphics\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hellengine\graphics\camera\perspective.cpp">
+      <Filter>src\hellengine\graphics\camera</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hellengine\graphics\camera\perspective_controller.cpp">
+      <Filter>src\hellengine\graphics\camera</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hellengine\graphics\context.cpp">
+      <Filter>src\hellengine\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hellengine\graphics\frontend\vulkan_frontend.cpp">
+      <Filter>src\hellengine\graphics\frontend</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hellengine\graphics\managers\material_manager.cpp">
+      <Filter>src\hellengine\graphics\managers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hellengine\graphics\managers\mesh_manager.cpp">
+      <Filter>src\hellengine\graphics\managers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hellengine\graphics\managers\model_manager.cpp">
+      <Filter>src\hellengine\graphics\managers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hellengine\graphics\managers\texture_manager.cpp">
+      <Filter>src\hellengine\graphics\managers</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hellengine\graphics\mesh\material.cpp">
+      <Filter>src\hellengine\graphics\mesh</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hellengine\graphics\mesh\mesh.cpp">
+      <Filter>src\hellengine\graphics\mesh</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hellengine\graphics\mesh\model.cpp">
+      <Filter>src\hellengine\graphics\mesh</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hellengine\graphics\objects\vulkan_buffer.cpp">
+      <Filter>src\hellengine\graphics\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hellengine\graphics\objects\vulkan_command_buffer.cpp">
+      <Filter>src\hellengine\graphics\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hellengine\graphics\objects\vulkan_debugger.cpp">
+      <Filter>src\hellengine\graphics\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hellengine\graphics\objects\vulkan_descriptor.cpp">
+      <Filter>src\hellengine\graphics\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hellengine\graphics\objects\vulkan_device.cpp">
+      <Filter>src\hellengine\graphics\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hellengine\graphics\objects\vulkan_framebuffer.cpp">
+      <Filter>src\hellengine\graphics\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hellengine\graphics\objects\vulkan_image.cpp">
+      <Filter>src\hellengine\graphics\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hellengine\graphics\objects\vulkan_instance.cpp">
+      <Filter>src\hellengine\graphics\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hellengine\graphics\objects\vulkan_pipeline.cpp">
+      <Filter>src\hellengine\graphics\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hellengine\graphics\objects\vulkan_renderpass.cpp">
+      <Filter>src\hellengine\graphics\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hellengine\graphics\objects\vulkan_shader.cpp">
+      <Filter>src\hellengine\graphics\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hellengine\graphics\objects\vulkan_surface.cpp">
+      <Filter>src\hellengine\graphics\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hellengine\graphics\objects\vulkan_swapchain.cpp">
+      <Filter>src\hellengine\graphics\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hellengine\graphics\objects\vulkan_synchronization.cpp">
+      <Filter>src\hellengine\graphics\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hellengine\graphics\objects\vulkan_texture.cpp">
+      <Filter>src\hellengine\graphics\objects</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hellengine\math\random\random.cpp">
+      <Filter>src\hellengine\math\random</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hellengine\math\types.cpp">
+      <Filter>src\hellengine\math</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hellengine\math\vertex\vertex.cpp">
+      <Filter>src\hellengine\math\vertex</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hellengine\platform\glfw\glfw_window.cpp">
+      <Filter>src\hellengine\platform\glfw</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hellengine\resources\asset_manager.cpp">
+      <Filter>src\hellengine\resources</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hellengine\resources\file_manager.cpp">
+      <Filter>src\hellengine\resources</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hellengine\tools\profiling\profiler.cpp">
+      <Filter>src\hellengine\tools\profiling</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hellengine\ui\backend\backend.cpp">
+      <Filter>src\hellengine\ui\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hellengine\ui\ui.cpp">
+      <Filter>src\hellengine\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hepch.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="dependencies\ASSIMP\include\assimp\config.h.in">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </None>
+    <None Include="dependencies\ASSIMP\include\assimp\revision.h.in">
+      <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </None>
+  </ItemGroup>
+</Project>
