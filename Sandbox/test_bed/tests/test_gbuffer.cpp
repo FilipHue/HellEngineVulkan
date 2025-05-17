@@ -217,7 +217,7 @@ void TestGBuffer::CreateAttachments()
 {
 	// GBuffer attachments
 	{
-		m_gbuffer_color_texture = m_backend->CreateTexture2D(VK_FORMAT_B8G8R8A8_SRGB, m_window->GetWidth(), m_window->GetHeight());
+		m_gbuffer_color_texture = m_backend->CreateTexture2D(VK_FORMAT_B8G8R8A8_UNORM, m_window->GetWidth(), m_window->GetHeight());
 		m_gbuffer_normal_texture = m_backend->CreateTexture2D(VK_FORMAT_R16G16B16A16_SFLOAT, m_window->GetWidth(), m_window->GetHeight());
 		m_gbuffer_position_texture = m_backend->CreateTexture2D(VK_FORMAT_R16G16B16A16_SFLOAT, m_window->GetWidth(), m_window->GetHeight());
 		m_gbuffer_albedo_texture = m_backend->CreateTexture2D(VK_FORMAT_R8G8B8A8_SRGB, m_window->GetWidth(), m_window->GetHeight());
@@ -282,7 +282,7 @@ void TestGBuffer::CreateAttachments()
 
 	// Composition attachments
 	{
-		m_composition_color_texture = m_backend->CreateTexture2D(VK_FORMAT_B8G8R8A8_SRGB, m_window->GetWidth(), m_window->GetHeight());
+		m_composition_color_texture = m_backend->CreateTexture2D(VK_FORMAT_B8G8R8A8_UNORM, m_window->GetWidth(), m_window->GetHeight());
 
 		m_composition_color_attachment = {
 			m_composition_color_texture->GetHandle(),
@@ -303,7 +303,7 @@ void TestGBuffer::CreateAttachments()
 
 	// Glass attachments
 	{
-		m_glass_color_texture = m_backend->CreateTexture2D(VK_FORMAT_B8G8R8A8_SRGB, m_window->GetWidth(), m_window->GetHeight());
+		m_glass_color_texture = m_backend->CreateTexture2D(VK_FORMAT_B8G8R8A8_UNORM, m_window->GetWidth(), m_window->GetHeight());
 		m_glass_depth_texture = m_backend->CreateTexture2D(VK_FORMAT_D32_SFLOAT, m_window->GetWidth(), m_window->GetHeight());
 
 		m_glass_color_attachment = {
@@ -335,7 +335,7 @@ void TestGBuffer::CreateAttachments()
 
 	// Final attachments
 	{
-		m_final_color_texture = m_backend->CreateTexture2D(VK_FORMAT_B8G8R8A8_SRGB, m_window->GetWidth(), m_window->GetHeight());
+		m_final_color_texture = m_backend->CreateTexture2D(VK_FORMAT_B8G8R8A8_UNORM, m_window->GetWidth(), m_window->GetHeight());
 
 		m_final_color_attachment = {
 			m_final_color_texture->GetHandle(),

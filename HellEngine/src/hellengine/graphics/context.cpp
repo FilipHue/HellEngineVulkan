@@ -757,11 +757,11 @@ namespace hellengine
 
 			if (file.GetExtension() == ".ktx")
 			{
-				texture->Create(m_instance, m_device, m_command_pool, VK_FORMAT_R8G8B8A8_SRGB, file.GetAbsolutePath().c_str());
+				texture->Create(m_instance, m_device, m_command_pool, VK_FORMAT_R8G8B8A8_UNORM, file.GetAbsolutePath().c_str());
 				return texture;
 			}
 
-			texture->LoadSTBI(m_instance, m_device, m_command_pool, VK_FORMAT_R8G8B8A8_SRGB, file.GetAbsolutePath().c_str());
+			texture->LoadSTBI(m_instance, m_device, m_command_pool, VK_FORMAT_R8G8B8A8_UNORM, file.GetAbsolutePath().c_str());
 			return texture;
 		}
 
@@ -784,7 +784,7 @@ namespace hellengine
 		VulkanTextureCubemap* VulkanContext::CreateTextureCubemap(const File& file)
 		{
 			VulkanTextureCubemap* texture = new VulkanTextureCubemap();
-			texture->Create(m_instance, m_device, m_command_pool, VK_FORMAT_R8G8B8A8_SRGB, file.GetAbsolutePath().c_str());
+			texture->Create(m_instance, m_device, m_command_pool, VK_FORMAT_R8G8B8A8_UNORM, file.GetAbsolutePath().c_str());
 
 			return texture;
 		}
@@ -792,7 +792,7 @@ namespace hellengine
 		VulkanTextureCubemap* VulkanContext::CreateTextureCubemapArray(const File& file)
 		{
 			VulkanTextureCubemap* texture = new VulkanTextureCubemap();
-			texture->CreateArray(m_instance, m_device, m_command_pool, VK_FORMAT_R8G8B8A8_SRGB, file.GetAbsolutePath().c_str());
+			texture->CreateArray(m_instance, m_device, m_command_pool, VK_FORMAT_R8G8B8A8_UNORM, file.GetAbsolutePath().c_str());
 
 			return texture;
 		}
