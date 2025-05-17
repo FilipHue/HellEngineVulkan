@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="test_bed">
+      <UniqueIdentifier>{2FD9EBFC-1BA6-4608-44BF-34B030EB7B96}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="test_bed\tests">
+      <UniqueIdentifier>{51ABAA76-3D79-9E7C-260D-0FA3127A7AE1}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="sandbox.h" />
+    <ClInclude Include="test_bed\base.h">
+      <Filter>test_bed</Filter>
+    </ClInclude>
+    <ClInclude Include="test_bed\tests.h">
+      <Filter>test_bed</Filter>
+    </ClInclude>
+    <ClInclude Include="test_bed\tests\test_cpu_particles.h">
+      <Filter>test_bed\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="test_bed\tests\test_descriptor_sets.h">
+      <Filter>test_bed\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="test_bed\tests\test_dynamic_attachment.h">
+      <Filter>test_bed\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="test_bed\tests\test_dynamic_uniform_buffer.h">
+      <Filter>test_bed\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="test_bed\tests\test_gbuffer.h">
+      <Filter>test_bed\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="test_bed\tests\test_gltf_loading.h">
+      <Filter>test_bed\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="test_bed\tests\test_offscreen.h">
+      <Filter>test_bed\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="test_bed\tests\test_pipelines.h">
+      <Filter>test_bed\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="test_bed\tests\test_push_constants.h">
+      <Filter>test_bed\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="test_bed\tests\test_specialization_constants.h">
+      <Filter>test_bed\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="test_bed\tests\test_stencil.h">
+      <Filter>test_bed\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="test_bed\tests\test_texture.h">
+      <Filter>test_bed\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="test_bed\tests\test_texture_3d.h">
+      <Filter>test_bed\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="test_bed\tests\test_texture_array.h">
+      <Filter>test_bed\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="test_bed\tests\test_texture_cubemap.h">
+      <Filter>test_bed\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="test_bed\tests\test_texture_cubemap_array.h">
+      <Filter>test_bed\tests</Filter>
+    </ClInclude>
+    <ClInclude Include="test_bed\tests\test_triangle.h">
+      <Filter>test_bed\tests</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="sandbox.cpp" />
+    <ClCompile Include="test_bed\base.cpp">
+      <Filter>test_bed</Filter>
+    </ClCompile>
+    <ClCompile Include="test_bed\tests\test_cpu_particles.cpp">
+      <Filter>test_bed\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="test_bed\tests\test_descriptor_sets.cpp">
+      <Filter>test_bed\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="test_bed\tests\test_dynamic_attachment.cpp">
+      <Filter>test_bed\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="test_bed\tests\test_dynamic_uniform_buffer.cpp">
+      <Filter>test_bed\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="test_bed\tests\test_gbuffer.cpp">
+      <Filter>test_bed\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="test_bed\tests\test_gltf_loading.cpp">
+      <Filter>test_bed\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="test_bed\tests\test_offscreen.cpp">
+      <Filter>test_bed\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="test_bed\tests\test_pipelines.cpp">
+      <Filter>test_bed\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="test_bed\tests\test_push_constants.cpp">
+      <Filter>test_bed\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="test_bed\tests\test_specialization_constants.cpp">
+      <Filter>test_bed\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="test_bed\tests\test_stencil.cpp">
+      <Filter>test_bed\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="test_bed\tests\test_texture.cpp">
+      <Filter>test_bed\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="test_bed\tests\test_texture_3d.cpp">
+      <Filter>test_bed\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="test_bed\tests\test_texture_array.cpp">
+      <Filter>test_bed\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="test_bed\tests\test_texture_cubemap.cpp">
+      <Filter>test_bed\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="test_bed\tests\test_texture_cubemap_array.cpp">
+      <Filter>test_bed\tests</Filter>
+    </ClCompile>
+    <ClCompile Include="test_bed\tests\test_triangle.cpp">
+      <Filter>test_bed\tests</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
