@@ -24,6 +24,7 @@ namespace hellengine
 			HE_API static TextureCubemap LoadTextureCubemap(const File& file);
 
 		private:
+			static void PreProcessModelRawData(aiNode* node, const aiScene* scene, Model* model);
 			static void ProcessNode(aiNode* node, const aiScene* scene, Model* model, const glm::mat4& parent_transform, const File& file);
 			static void ProcessMesh(aiMesh* mesh, const aiScene* scene, Model* model, const glm::mat4& transform, const File& file);
 

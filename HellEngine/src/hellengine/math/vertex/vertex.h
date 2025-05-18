@@ -2,6 +2,7 @@
 
 // Internal
 #include <hellengine/graphics/graphics_core.h>
+#include <optional>
 
 // External
 #include <glm/glm.hpp>
@@ -15,12 +16,12 @@ namespace hellengine
 
 		struct RawVertexData
 		{
-			glm::vec3 position;
-			glm::vec4 color;
-			glm::vec2 tex_coord;
-			glm::vec3 normal;
-			glm::vec3 tangent;
-			glm::vec3 bitangent;
+			std::vector<glm::vec3> positions;
+			std::optional<std::vector<glm::vec4>> colors = std::nullopt;
+			std::optional<std::vector<glm::vec2>> tex_coords = std::nullopt;
+			std::optional<std::vector<glm::vec3>> normals = std::nullopt;
+			std::optional<std::vector<glm::vec3>> tangents = std::nullopt;
+			std::optional<std::vector<glm::vec3>> bitangents = std::nullopt;
 		};
 
 		struct VertexFormatBase
