@@ -55,23 +55,36 @@ namespace hellengine
 		void Model::UploadToGPU()
 		{
 			std::vector<VertexT> final_vertices;
-			final_vertices.reserve(m_vertices.size());
+			final_vertices.reserve(m_vertices_raw_data.positions.size());
+			HE_CORE_INFO("Size: {0}", sizeof(m_vertices_raw_data));
 
-			for (size_t i = 0; i < m_vertices.size(); ++i)
+			for (size_t i = 0; i < m_vertices_raw_data.positions.size(); ++i)
 			{
 				VertexT vertex{};
 				if constexpr (requires { vertex.position; })
-					vertex.position = m_vertices[i].position;
+				{
+					vertex.position = m_vertices_raw_data.positions[i];
+				}
 				if constexpr (requires { vertex.color; })
-					vertex.color = m_vertices[i].color;
+				{
+					vertex.color = m_vertices_raw_data.colors.has_value() ? m_vertices_raw_data.colors.value()[i] : glm::vec4(1.0f);
+				}
 				if constexpr (requires { vertex.tex_coord; })
-					vertex.tex_coord = m_vertices[i].tex_coord;
+				{
+					vertex.tex_coord = m_vertices_raw_data.tex_coords.has_value() ? m_vertices_raw_data.tex_coords.value()[i] : glm::vec2(0.0f);
+				}
 				if constexpr (requires { vertex.normal; })
-					vertex.normal = m_vertices[i].normal;
+				{
+					vertex.normal = m_vertices_raw_data.normals.has_value() ? m_vertices_raw_data.normals.value()[i] : glm::vec3(0.0f);
+				}
 				if constexpr (requires { vertex.tangent; })
-					vertex.tangent = m_vertices[i].tangent;
+				{
+					vertex.tangent = m_vertices_raw_data.tangents.has_value() ? m_vertices_raw_data.tangents.value()[i] : glm::vec3(0.0f);
+				}
 				if constexpr (requires { vertex.bitangent; })
-					vertex.bitangent = m_vertices[i].bitangent;
+				{
+					vertex.bitangent = m_vertices_raw_data.bitangents.has_value() ? m_vertices_raw_data.bitangents.value()[i] : glm::vec3(0.0f);
+				}
 
 				final_vertices.push_back(vertex);
 			}

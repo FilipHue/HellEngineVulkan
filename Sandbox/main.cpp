@@ -29,7 +29,7 @@ int main(int argc, char** argv)
 
 	Engine::GetInstance().Init();
 
-	Engine::GetInstance().Run(*apps[0]);
+	Engine::GetInstance().Run(*apps[7]);
 
 	Engine::GetInstance().Shutdown();
 }

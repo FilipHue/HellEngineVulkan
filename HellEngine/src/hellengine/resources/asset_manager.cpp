@@ -31,6 +31,7 @@ namespace hellengine
 			Model* model = new Model();
 			ModelManager::GetInstance()->AddModel(model);
 
+			PreProcessModelRawData(scene->mRootNode, scene, model);
 			ProcessNode(scene->mRootNode, scene, model, glm::mat4(1.0f), file);
 
 			HE_GRAPHICS_INFO("\tLoaded");
@@ -60,6 +61,42 @@ namespace hellengine
 			return TextureManager::GetInstance()->CreateTextureCubemap(file.GetName(), file);
 		}
 
+		void AssetManager::PreProcessModelRawData(aiNode* node, const aiScene* scene, Model* model)
+		{
+			for (u32 i = 0; i < node->mNumMeshes; i++)
+			{
+				aiMesh* ai_mesh = scene->mMeshes[node->mMeshes[i]];
+
+				RawVertexData& raw_data = model->GetVerticesRawData();
+
+				if (ai_mesh->HasVertexColors(0) && !raw_data.colors.has_value())
+				{
+					raw_data.colors = std::vector<glm::vec4>();
+				}
+
+				if (ai_mesh->HasTextureCoords(0) && !raw_data.tex_coords.has_value())
+				{
+					raw_data.tex_coords = std::vector<glm::vec2>();
+				}
+
+				if (ai_mesh->HasNormals() && !raw_data.normals.has_value())
+				{
+					raw_data.normals = std::vector<glm::vec3>();
+				}
+
+				if (ai_mesh->HasTangentsAndBitangents() && !raw_data.tangents.has_value())
+				{
+					raw_data.tangents = std::vector<glm::vec3>();
+					raw_data.bitangents = std::vector<glm::vec3>();
+				}
+			}
+
+			for (u32 i = 0; i < node->mNumChildren; i++)
+			{
+				PreProcessModelRawData(node->mChildren[i], scene, model);
+			}
+		}
+
 		void AssetManager::ProcessNode(aiNode* node, const aiScene* scene, Model* model, const glm::mat4& parent_transform, const File& file)
 		{
 			glm::mat4 transform = parent_transform * glm::transpose(glm::make_mat4(&node->mTransformation.a1));
@@ -77,7 +114,7 @@ namespace hellengine
 
 		void AssetManager::ProcessMesh(aiMesh* ai_mesh, const aiScene* scene, Model* model, const glm::mat4& transform, const File& file)
 		{
-			u32 first_vertex = static_cast<u32>(model->GetVertices().size());
+			u32 first_vertex = static_cast<u32>(model->GetVerticesRawData().positions.size());
 			u32 first_index = static_cast<u32>(model->GetIndices().size());
 
 			Mesh* mesh = new Mesh();
@@ -85,52 +122,51 @@ namespace hellengine
 			mesh->SetFirstIndex(first_index);
 
 			// Vertices
+			RawVertexData& vertex = model->GetVerticesRawData();
+
 			for (u32 j = 0; j < ai_mesh->mNumVertices; j++)
 			{
-				RawVertexData vertex;
 
 				glm::vec4 position(ai_mesh->mVertices[j].x, ai_mesh->mVertices[j].y, ai_mesh->mVertices[j].z, 1.0f);
-				vertex.position = glm::vec3(transform * position);
+				vertex.positions.push_back(glm::vec3(transform * position));
 
 				if (ai_mesh->HasVertexColors(0))
 				{
-					vertex.color = glm::vec4(ai_mesh->mColors[0][j].r, ai_mesh->mColors[0][j].g, ai_mesh->mColors[0][j].b, 1.0f);
+					vertex.colors.value().push_back(glm::vec4(ai_mesh->mColors[0][j].r, ai_mesh->mColors[0][j].g, ai_mesh->mColors[0][j].b, 1.0f));
 				}
-				else
+				else if (vertex.colors.has_value())
 				{
-					vertex.color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
+					vertex.colors.value().push_back(glm::vec4(1.0f));
 				}
 
 				if (ai_mesh->HasTextureCoords(0))
 				{
-					vertex.tex_coord = glm::vec2(ai_mesh->mTextureCoords[0][j].x, ai_mesh->mTextureCoords[0][j].y);
+					vertex.tex_coords.value().push_back(glm::vec2(ai_mesh->mTextureCoords[0][j].x, ai_mesh->mTextureCoords[0][j].y));
 				}
-				else
+				else if (vertex.tex_coords.has_value())
 				{
-					vertex.tex_coord = glm::vec2(0.0f, 0.0f);
+					vertex.tex_coords.value().push_back(glm::vec2(0.0f));
 				}
 
 				if (ai_mesh->HasNormals())
 				{
-					vertex.normal = glm::normalize(glm::vec3(ai_mesh->mNormals[j].x, ai_mesh->mNormals[j].y, ai_mesh->mNormals[j].z));
+					vertex.normals.value().push_back(glm::vec3(glm::normalize(glm::vec3(ai_mesh->mNormals[j].x, ai_mesh->mNormals[j].y, ai_mesh->mNormals[j].z))));
 				}
-				else
+				else if (vertex.normals.has_value())
 				{
-					vertex.normal = glm::vec3(0.0f, 0.0f, 0.0f);
+					vertex.normals.value().push_back(glm::vec3(0.0f));
 				}
 
 				if (ai_mesh->HasTangentsAndBitangents())
 				{
-					vertex.tangent = glm::vec3(ai_mesh->mTangents[j].x, ai_mesh->mTangents[j].y, ai_mesh->mTangents[j].z);
-					vertex.bitangent = glm::vec3(ai_mesh->mBitangents[j].x, ai_mesh->mBitangents[j].y, ai_mesh->mBitangents[j].z);
+					vertex.tangents.value().push_back(glm::vec3(ai_mesh->mTangents[j].x, ai_mesh->mTangents[j].y, ai_mesh->mTangents[j].z));
+					vertex.bitangents.value().push_back(glm::vec3(ai_mesh->mBitangents[j].x, ai_mesh->mBitangents[j].y, ai_mesh->mBitangents[j].z));
 				}
-				else
+				else if (vertex.tangents.has_value())
 				{
-					vertex.tangent = glm::vec3(0.0f, 0.0f, 0.0f);
-					vertex.bitangent = glm::vec3(0.0f, 0.0f, 0.0f);
+					vertex.tangents.value().push_back(glm::vec3(0.0f));
+					vertex.bitangents.value().push_back(glm::vec3(0.0f));
 				}
-
-				model->GetVertices().push_back(vertex);
 			}
 
 			// Indices

@@ -22,8 +22,8 @@ namespace hellengine
 			std::vector<Mesh*>& GetMeshes() { return m_meshes; }
 			const std::vector<Mesh*>& GetMeshes() const { return m_meshes; }
 
-			std::vector<RawVertexData>& GetVertices() { return m_vertices; }
-			const std::vector<RawVertexData>& GetVertices() const { return m_vertices; }
+			RawVertexData& GetVerticesRawData() { return m_vertices_raw_data; }
+			const RawVertexData& GetVerticesRawData() const { return m_vertices_raw_data; }
 
 			std::vector<u32>& GetIndices() { return m_indices; }
 			const std::vector<u32>& GetIndices() const { return m_indices; }
@@ -45,7 +45,7 @@ namespace hellengine
 			std::vector<Mesh*> m_meshes;
 			std::vector<VulkanDescriptorSet*> m_descriptor_sets;
 
-			std::vector<RawVertexData> m_vertices;
+			RawVertexData m_vertices_raw_data;
 			std::vector<u32> m_indices;
 
 			VulkanBuffer* m_vertex_buffer;
