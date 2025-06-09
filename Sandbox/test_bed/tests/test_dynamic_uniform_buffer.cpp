@@ -244,7 +244,7 @@ void TestDynamicUniformBuffer::CreatePipeline()
 void TestDynamicUniformBuffer::CreateDescriptorSets()
 {
 	// Init pool
-	m_backend->InitDescriptorPool({
+	m_backend->InitDescriptorPoolGrowable({
 		{ DescriptorType_UniformBuffer, 1 },
 		{ DescriptorType_UniformBufferDynamic, 1 },
 		{ DescriptorType_CombinedImageSampler, 1 }
@@ -258,9 +258,9 @@ void TestDynamicUniformBuffer::CreateDescriptorSets()
 		DescriptorSetWriteData descriptor_data{};
 		descriptor_data.type = DescriptorType_UniformBuffer;
 		descriptor_data.binding = 0;
-		descriptor_data.data.buffer.buffer = m_camera_buffer->GetHandle();
-		descriptor_data.data.buffer.offset = 0;
-		descriptor_data.data.buffer.range = sizeof(CameraData);
+		descriptor_data.data.buffer.buffers = m_camera_buffer->GetHandle();
+		descriptor_data.data.buffer.offsets = 0;
+		descriptor_data.data.buffer.ranges = sizeof(CameraData);
 
 		std::vector<DescriptorSetWriteData> descriptor_data_camera = { descriptor_data };
 		m_backend->WriteDescriptor(&m_camera_descriptor, descriptor_data_camera);
@@ -274,9 +274,9 @@ void TestDynamicUniformBuffer::CreateDescriptorSets()
 		DescriptorSetWriteData descriptor_data1;
 		descriptor_data1.type = DescriptorType_UniformBufferDynamic;
 		descriptor_data1.binding = 0;
-		descriptor_data1.data.buffer.buffer = m_objects_buffer->GetHandle();
-		descriptor_data1.data.buffer.offset = 0;
-		descriptor_data1.data.buffer.range = m_objects_buffer->GetDynamicAlignment();
+		descriptor_data1.data.buffer.buffers = m_objects_buffer->GetHandle();
+		descriptor_data1.data.buffer.offsets = 0;
+		descriptor_data1.data.buffer.ranges = m_objects_buffer->GetDynamicAlignment();
 
 		std::vector<DescriptorSetWriteData> descriptor_data_dynamic = { descriptor_data1 };
 		m_backend->WriteDescriptor(&m_objects_descriptor, descriptor_data_dynamic);
@@ -294,14 +294,14 @@ void TestDynamicUniformBuffer::CreateDescriptorSets()
 		DescriptorSetWriteData descriptor_data1;
 		descriptor_data1.type = DescriptorType_CombinedImageSampler;
 		descriptor_data1.binding = 0;
-		descriptor_data1.data.image.image_view = m_texture1->GetImageView();
-		descriptor_data1.data.image.sampler = m_texture1->GetSampler();
+		descriptor_data1.data.image.image_views = m_texture1->GetImageView();
+		descriptor_data1.data.image.samplers = m_texture1->GetSampler();
 
 		DescriptorSetWriteData descriptor_data2;
 		descriptor_data2.type = DescriptorType_CombinedImageSampler;
 		descriptor_data2.binding = 1;
-		descriptor_data2.data.image.image_view = m_texture2->GetImageView();
-		descriptor_data2.data.image.sampler = m_texture2->GetSampler();
+		descriptor_data2.data.image.image_views = m_texture2->GetImageView();
+		descriptor_data2.data.image.samplers = m_texture2->GetSampler();
 
 		std::vector<DescriptorSetWriteData> descriptor_data_texture = { descriptor_data1, descriptor_data2 };
 		m_backend->WriteDescriptor(&m_texture_descriptor, descriptor_data_texture);

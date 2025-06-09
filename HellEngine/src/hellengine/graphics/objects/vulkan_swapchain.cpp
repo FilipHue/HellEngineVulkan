@@ -206,7 +206,7 @@ namespace hellengine
 				HE_CORE_CRITICAL("Failed to detect depth format");
 			}
 
-			m_depth_image.Create(instance, device, VK_IMAGE_TYPE_2D, device.GetDepthFormat(), { m_extent.width, m_extent.height, 1 }, 1, 1, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, 0, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+			m_depth_image.Create(instance, device, VK_IMAGE_TYPE_2D, device.GetDepthFormat(), { m_extent.width, m_extent.height, 1 }, 1, 1, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, 0, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 			m_depth_image.CreateImageView(instance, device, VK_IMAGE_VIEW_TYPE_2D, device.GetDepthFormat(), { VK_IMAGE_ASPECT_DEPTH_BIT, 0, 1, 0, 1 });
 
 			if (!DetectStencilFormat(device))
@@ -215,7 +215,7 @@ namespace hellengine
 				HE_CORE_CRITICAL("Failed to detect stencil format");
 			}
 
-			m_stencil_image.Create(instance, device, VK_IMAGE_TYPE_2D, device.GetStencilFormat(), { m_extent.width, m_extent.height, 1 }, 1, 1, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, 0, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+			m_stencil_image.Create(instance, device, VK_IMAGE_TYPE_2D, device.GetStencilFormat(), { m_extent.width, m_extent.height, 1 }, 1, 1, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, 0, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 			m_stencil_image.CreateImageView(instance, device, VK_IMAGE_VIEW_TYPE_2D, device.GetStencilFormat(), { VK_IMAGE_ASPECT_STENCIL_BIT, 0, 1, 0, 1 });
 
 			if (!DetectDepthStencilFormat(device))
@@ -224,7 +224,7 @@ namespace hellengine
 				HE_CORE_CRITICAL("Failed to detect depth stencil format");
 			}
 
-			m_depth_stencil_image.Create(instance, device, VK_IMAGE_TYPE_2D, device.GetDepthStencilFormat(), { m_extent.width, m_extent.height, 1 }, 1, 1, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, 0, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+			m_depth_stencil_image.Create(instance, device, VK_IMAGE_TYPE_2D, device.GetDepthStencilFormat(), { m_extent.width, m_extent.height, 1 }, 1, 1, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, 0, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 			m_depth_stencil_image.CreateImageView(instance, device, VK_IMAGE_VIEW_TYPE_2D, device.GetDepthStencilFormat(), { VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT, 0, 1, 0, 1 });
 		}
 

@@ -17,6 +17,7 @@ namespace hellengine
 			void Shutdown();
 
 			void AddModel(Model* model);
+			Model* CreateModel();
 
 			static ModelManager* GetInstance();
 

@@ -56,11 +56,12 @@ namespace hellengine
 			~VulkanDescriptorSet();
 
 			void Create(const VulkanDevice& device, VkDescriptorSetLayout layout, VkDescriptorPool pool);
-			void Create(const VulkanInstance& instance, const VulkanDevice& device, VkDescriptorSetLayout layout, VulkanDescriptorPoolGrowable& pool, u32 set = 0);
+			void Create(const VulkanInstance& instance, const VulkanDevice& device, VkDescriptorSetLayout layout, VulkanDescriptorPoolGrowable& pool, u32 set);
+			void CreateVariable(const VulkanInstance& instance, const VulkanDevice& device, VkDescriptorSetLayout layout, VulkanDescriptorPoolGrowable& pool, u32 set, std::vector<u32> counts);
 			void Destroy(const VulkanDevice& device, VkDescriptorPool pool);
 
-			void WriteBuffer(VkBuffer buffer, VkDeviceSize offset, VkDeviceSize range, u32 binding, VkDescriptorType type);
-			void WriteImage(VkImageView image_view, VkSampler sampler, u32 binding, VkDescriptorType type);
+			void WriteBuffer(VkBuffer* buffer, VkDeviceSize* offset, VkDeviceSize* range, u32 binding, VkDescriptorType type, u32 count = 1, u32 array_element = 0);
+			void WriteImage(VkImageView* image_view, VkSampler* sampler, u32 binding, VkDescriptorType type, u32 count = 1, u32 array_element = 0);
 
 			void Update(const VulkanDevice& device);
 			void Clear();
@@ -80,6 +81,8 @@ namespace hellengine
 
 			u32 m_set;
 		};
+
+		VkDescriptorSetLayout CreateDescriptorSetLayout(const VulkanInstance& instance, const VulkanDevice& device, const DescriptorSetInfo& set);
 
 	} // namespace graphics
 

@@ -8,13 +8,14 @@ workspace "HellEngineVulkan"
         "Debug", 
         "Release" 
     }
-    startproject "Sandbox"
+    startproject "Editor"
 
     output_dir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
 project "HellEngine"
     location "HellEngine"
-    kind "SharedLib"
+    -- kind "SharedLib"
+    kind "StaticLib"
     language "C++"
 
     -- This is to make sure that the runtime library is linked dynamically
@@ -44,6 +45,7 @@ project "HellEngine"
         "%{IncludeDirs.ASSIMP}",
         "%{IncludeDirs.KTX}",
         "%{IncludeDirs.IMGUI}",
+        "%{IncludeDirs.ENTT}",
 
         "%{IncludeDirs.VULKAN}"
     }
@@ -99,8 +101,8 @@ project "HellEngine"
         defines 
         { 
             "HE_PLATFORM_WINDOWS",
-            "HE_BUILD_DLL",
-            "HE_DLL"
+            -- "HE_BUILD_DLL",
+            -- "HE_DLL"
         }
 
         buildoptions
@@ -151,6 +153,7 @@ project "Editor"
         "HellEngine/dependencies/ASSIMP/include",
         "HellEngine/dependencies/KTX/include",
         "HellEngine/dependencies/IMGUI",
+        "HellEngine/dependencies/ENTT/include",
 
         "%{IncludeDirs.VULKAN}"
     }
@@ -170,7 +173,7 @@ project "Editor"
         defines 
         {
             "HE_PLATFORM_WINDOWS",
-            "HE_DLL"
+            -- "HE_DLL"
         }
 
         buildoptions
@@ -221,6 +224,7 @@ project "Sandbox"
         "HellEngine/dependencies/ASSIMP/include",
         "HellEngine/dependencies/KTX/include",
         "HellEngine/dependencies/IMGUI",
+        "HellEngine/dependencies/ENTT/include",
 
         "%{IncludeDirs.VULKAN}"
     }
@@ -240,7 +244,7 @@ project "Sandbox"
         defines 
         {
             "HE_PLATFORM_WINDOWS",
-            "HE_DLL"
+            -- "HE_DLL"
         }
 
         buildoptions

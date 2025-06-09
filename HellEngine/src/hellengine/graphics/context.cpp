@@ -206,9 +206,9 @@ namespace hellengine
 
 		void VulkanContext::SetExtent(VkExtent2D extent)
 		{
-			if (m_swapchain.GetExtent().width < extent.width || m_swapchain.GetExtent().height < extent.height)
+			if (m_swapchain.GetExtent().width != extent.width || m_swapchain.GetExtent().height != extent.height)
 			{
-				FramebufferResize();
+				m_frame_data[m_current_frame].framebuffer_resized = true;
 			}
 			m_render_data.extent = extent;
 		}
@@ -273,6 +273,7 @@ namespace hellengine
 				attachment_info.loadOp = info.color_attachments[i].load_op;
 				attachment_info.storeOp = info.color_attachments[i].store_op;
 				attachment_info.clearValue = info.color_attachments[i].clear_value;
+
 				color_attachments.push_back(attachment_info);
 			}
 
@@ -292,7 +293,7 @@ namespace hellengine
 			rendering_info.sType = VK_STRUCTURE_TYPE_RENDERING_INFO_KHR;
 			rendering_info.pNext = VK_NULL_HANDLE;
 			rendering_info.flags = info.flags;
-			rendering_info.renderArea = { {0, 0}, m_render_data.extent };
+			rendering_info.renderArea = { {0, 0}, info.extent };
 			rendering_info.layerCount = 1;
 			rendering_info.viewMask = 0;	
 			rendering_info.colorAttachmentCount = (u32)color_attachments.size();
@@ -719,6 +720,14 @@ namespace hellengine
 			return descriptor_set;
 		}
 
+		VulkanDescriptorSet* VulkanContext::CreateDescriptorSetVariable(VulkanPipeline* pipeline, u32 set, std::vector<u32> count)
+		{
+			VulkanDescriptorSet* descriptor_set = new VulkanDescriptorSet();
+			descriptor_set->CreateVariable(m_instance, m_device, pipeline->GetDescriptorSetLayout(set), m_descriptor_pool_growable, set, count);
+
+			return descriptor_set;
+		}
+
 		void VulkanContext::WriteDescriptor(VulkanDescriptorSet** descriptor, std::vector<DescriptorSetWriteData>& data)
 		{
 			(*descriptor)->Clear();
@@ -727,11 +736,29 @@ namespace hellengine
 			{
 				if (GetVulkanDescriptorType(write_data.type) == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER || GetVulkanDescriptorType(write_data.type) == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC || GetVulkanDescriptorType(write_data.type) == VK_DESCRIPTOR_TYPE_STORAGE_BUFFER)
 				{
-					(*descriptor)->WriteBuffer(write_data.data.buffer.buffer, write_data.data.buffer.offset, write_data.data.buffer.range, write_data.binding, GetVulkanDescriptorType(write_data.type));
+					(*descriptor)->WriteBuffer(write_data.data.buffer.buffers, write_data.data.buffer.offsets, write_data.data.buffer.ranges, write_data.binding, GetVulkanDescriptorType(write_data.type));
 				}
 				else if (GetVulkanDescriptorType(write_data.type) == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER)
 				{
-					(*descriptor)->WriteImage(write_data.data.image.image_view, write_data.data.image.sampler, write_data.binding, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
+					(*descriptor)->WriteImage(write_data.data.image.image_views, write_data.data.image.samplers, write_data.binding, GetVulkanDescriptorType(write_data.type));
+				}
+			}
+			(*descriptor)->Update(m_device);
+		}
+
+		void VulkanContext::WriteDescriptor(VulkanDescriptorSet** descriptor, std::vector<DescriptorSetWriteData>& data, u32 count, u32 array_element)
+		{
+			(*descriptor)->Clear();
+			(*descriptor)->SetExpectedWrites((u32)data.size());
+			for (const auto& write_data : data)
+			{
+				if (GetVulkanDescriptorType(write_data.type) == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER || GetVulkanDescriptorType(write_data.type) == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC || GetVulkanDescriptorType(write_data.type) == VK_DESCRIPTOR_TYPE_STORAGE_BUFFER)
+				{
+					(*descriptor)->WriteBuffer(write_data.data.buffer.buffers, write_data.data.buffer.offsets, write_data.data.buffer.ranges, write_data.binding, GetVulkanDescriptorType(write_data.type), count, array_element);
+				}
+				else if (GetVulkanDescriptorType(write_data.type) == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER)
+				{
+					(*descriptor)->WriteImage(write_data.data.image.image_views, write_data.data.image.samplers, write_data.binding, GetVulkanDescriptorType(write_data.type), count, array_element);
 				}
 			}
 			(*descriptor)->Update(m_device);
@@ -797,7 +824,7 @@ namespace hellengine
 			return texture;
 		}
 
-		void VulkanContext::Update(VulkanTexture* texture, const void* data)
+		void VulkanContext::UpdateTexture(VulkanTexture* texture, const void* data)
 		{
 			texture->Update(m_instance, m_device, m_command_pool, data);
 		}

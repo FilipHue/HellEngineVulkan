@@ -20,12 +20,12 @@ namespace hellengine
 
 		void TextureManager::Shutdown()
 		{
-			for (auto& texture : m_textures_2d)
+			for (auto& texture : m_textures_2d_vector)
 			{
-				m_backend->DestroyTexture(texture.second);
+				m_backend->DestroyTexture(texture);
 			}
 
-			for (auto& texture : m_textures_cubemap)
+			for (auto& texture : m_textures_cubemap_map)
 			{
 				m_backend->DestroyTexture(texture.second);
 			}
@@ -33,39 +33,94 @@ namespace hellengine
 
 		VulkanTexture2D* TextureManager::CreateTexture2D(std::string name, const File& file)
 		{
-			
-			if (m_textures_2d.find(name) != m_textures_2d.end())
+			if (m_textures_2d_index_map.find(name) != m_textures_2d_index_map.end())
 			{
 				HE_GRAPHICS_DEBUG("Texture with name {0} already exists", name);
 
-				return m_textures_2d[DEFAULT_ERROR_TEXTURE];
+				return m_textures_2d_vector[m_textures_2d_index_map[name]];
 			}
 
 			VulkanTexture2D* texture = m_backend->CreateTexture2D(file);
-			m_textures_2d[name] = texture;
+			
+			u32 index = 0;
+			if (!m_textures_2d_free_indices.empty())
+			{
+				index = m_textures_2d_free_indices.front();
+				m_textures_2d_free_indices.pop();
+				m_textures_2d_vector[index] = texture;
+			}
+			else
+			{
+				index = (u32)m_textures_2d_vector.size();
+				m_textures_2d_vector.push_back(texture);
+			}
+
+			m_textures_2d_index_map[name] = index;
 
 			return texture;
 		}
 
-		VulkanTexture2D* TextureManager::CreateTexture2D(std::string name, VkFormat format, const void* data, i32 width, i32 height)
+		VulkanTexture2D* TextureManager::CreateTexture2D(std::string name, VkFormat format, u32 width, u32 height)
 		{
-
-			if (m_textures_2d.find(name) != m_textures_2d.end())
+			if (m_textures_2d_index_map.find(name) != m_textures_2d_index_map.end())
 			{
 				HE_GRAPHICS_DEBUG("Texture with name {0} already exists", name);
 
-				return m_textures_2d[DEFAULT_ERROR_TEXTURE];
+				return m_textures_2d_vector[m_textures_2d_index_map[name]];
+			}
+
+			VulkanTexture2D* texture = m_backend->CreateTexture2D(format, width, height);
+
+			u32 index = 0;
+			if (!m_textures_2d_free_indices.empty())
+			{
+				index = m_textures_2d_free_indices.front();
+				m_textures_2d_free_indices.pop();
+				m_textures_2d_vector[index] = texture;
+			}
+			else
+			{
+				index = (u32)m_textures_2d_vector.size();
+				m_textures_2d_vector.push_back(texture);
+			}
+
+			m_textures_2d_index_map[name] = index;
+
+			return texture;
+		}
+
+		VulkanTexture2D* TextureManager::CreateTexture2D(std::string name, VkFormat format, const void* data, u32 width, u32 height)
+		{
+			if (m_textures_2d_index_map.find(name) != m_textures_2d_index_map.end())
+			{
+				HE_GRAPHICS_DEBUG("Texture with name {0} already exists", name);
+
+				return m_textures_2d_vector[m_textures_2d_index_map[name]];
 			}
 
 			VulkanTexture2D* texture = m_backend->CreateTexture2D(format, data, width, height);
-			m_textures_2d[name] = texture;
+
+			u32 index = 0;
+			if (!m_textures_2d_free_indices.empty())
+			{
+				index = m_textures_2d_free_indices.front();
+				m_textures_2d_free_indices.pop();
+				m_textures_2d_vector[index] = texture;
+			}
+			else
+			{
+				index = (u32)m_textures_2d_vector.size();
+				m_textures_2d_vector.push_back(texture);
+			}
+
+			m_textures_2d_index_map[name] = index;
 
 			return texture;
 		}
 
 		VulkanTextureCubemap* TextureManager::CreateTextureCubemap(std::string name, const File& file)
 		{
-			if (m_textures_2d.find(name) != m_textures_2d.end())
+			if (m_textures_2d_index_map.find(name) != m_textures_2d_index_map.end())
 			{
 				HE_GRAPHICS_DEBUG("Texture with name {0} already exists", name);
 
@@ -73,13 +128,13 @@ namespace hellengine
 			}
 
 			VulkanTextureCubemap* texture = m_backend->CreateTextureCubemap(file);
-			m_textures_cubemap[name] = texture;
+			m_textures_cubemap_map[name] = texture;
 			return texture;
 		}
 
 		VulkanTextureCubemap* TextureManager::CreateTextureCubemapArray(std::string name, const File& file)
 		{
-			if (m_textures_2d.find(name) != m_textures_2d.end())
+			if (m_textures_2d_index_map.find(name) != m_textures_2d_index_map.end())
 			{
 				HE_GRAPHICS_DEBUG("Texture with name {0} already exists", name);
 
@@ -87,18 +142,42 @@ namespace hellengine
 			}
 
 			VulkanTextureCubemap* texture = m_backend->CreateTextureCubemapArray(file);
-			m_textures_cubemap[name] = texture;
+			m_textures_cubemap_map[name] = texture;
 			return texture;
 		}
 
 		VulkanTexture2D* TextureManager::GetTexture2D(std::string name)
 		{
-			return (m_textures_2d.find(name) != m_textures_2d.end()) ? m_textures_2d[name] : nullptr;
+			return (m_textures_2d_index_map.find(name) != m_textures_2d_index_map.end()) ? m_textures_2d_vector[m_textures_2d_index_map[name]] : nullptr;
 		}
 
 		VulkanTextureCubemap* TextureManager::GetTextureCubemap(std::string name)
 		{
-			return (m_textures_cubemap.find(name) != m_textures_cubemap.end()) ? m_textures_cubemap[name] : nullptr;
+			return (m_textures_cubemap_map.find(name) != m_textures_cubemap_map.end()) ? m_textures_cubemap_map[name] : nullptr;
+		}
+
+		u32 TextureManager::GetTexture2DIndex(std::string name)
+		{
+			if (m_textures_2d_index_map.find(name) != m_textures_2d_index_map.end())
+			{
+				return m_textures_2d_index_map[name];
+			}
+			else
+			{
+				HE_GRAPHICS_ERROR("Texture with name {0} does not exist!", name);
+				return 0;
+			}
+		}
+
+		void TextureManager::DestroyTexture2D(std::string name)
+		{
+			if (m_textures_2d_index_map.find(name) != m_textures_2d_index_map.end())
+			{
+				m_backend->DestroyTexture(m_textures_2d_vector[m_textures_2d_index_map[name]]);
+				m_textures_2d_free_indices.push(m_textures_2d_index_map[name]);
+				m_textures_2d_vector[m_textures_2d_index_map[name]] = nullptr;
+				m_textures_2d_index_map.erase(name);
+			}
 		}
 
 		TextureManager* TextureManager::GetInstance()

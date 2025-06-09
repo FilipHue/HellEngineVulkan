@@ -332,7 +332,7 @@ void TestCpuParticles::CreatePipelines()
 void TestCpuParticles::CreateDescriptorSets()
 {
 	// Init pool
-	m_backend->InitDescriptorPool({
+	m_backend->InitDescriptorPoolGrowable({
 		{ DescriptorType_UniformBuffer, 1 },
 		{ DescriptorType_CombinedImageSampler, 1 }
 		}, 1);
@@ -345,21 +345,21 @@ void TestCpuParticles::CreateDescriptorSets()
 		DescriptorSetWriteData descriptor_data1;
 		descriptor_data1.type = DescriptorType_UniformBuffer;
 		descriptor_data1.binding = 0;
-		descriptor_data1.data.buffer.buffer = m_enviroment_buffer->GetHandle();
-		descriptor_data1.data.buffer.offset = 0;
-		descriptor_data1.data.buffer.range = sizeof(EnviromentData);
+		descriptor_data1.data.buffer.buffers = m_enviroment_buffer->GetHandle();
+		descriptor_data1.data.buffer.offsets = 0;
+		descriptor_data1.data.buffer.ranges = sizeof(EnviromentData);
 
 		DescriptorSetWriteData descriptor_data2;
 		descriptor_data2.type = DescriptorType_CombinedImageSampler;
 		descriptor_data2.binding = 1;
-		descriptor_data2.data.image.image_view = m_texture_color_map->GetImageView();
-		descriptor_data2.data.image.sampler = m_texture_color_map->GetSampler();
+		descriptor_data2.data.image.image_views = m_texture_color_map->GetImageView();
+		descriptor_data2.data.image.samplers = m_texture_color_map->GetSampler();
 
 		DescriptorSetWriteData descriptor_data3;
 		descriptor_data3.type = DescriptorType_CombinedImageSampler;
 		descriptor_data3.binding = 2;
-		descriptor_data3.data.image.image_view = m_texture_normal_map->GetImageView();
-		descriptor_data3.data.image.sampler = m_texture_normal_map->GetSampler();
+		descriptor_data3.data.image.image_views = m_texture_normal_map->GetImageView();
+		descriptor_data3.data.image.samplers = m_texture_normal_map->GetSampler();
 
 		std::vector<DescriptorSetWriteData> descriptor_data_objects = { descriptor_data1, descriptor_data2, descriptor_data3 };
 		m_backend->WriteDescriptor(&m_enviroment_descriptor, descriptor_data_objects);
@@ -373,21 +373,21 @@ void TestCpuParticles::CreateDescriptorSets()
 		DescriptorSetWriteData descriptor_data1;
 		descriptor_data1.type = DescriptorType_UniformBuffer;
 		descriptor_data1.binding = 0;
-		descriptor_data1.data.buffer.buffer = m_particle_buffer->GetHandle();
-		descriptor_data1.data.buffer.offset = 0;
-		descriptor_data1.data.buffer.range = sizeof(ParticleData);
+		descriptor_data1.data.buffer.buffers = m_particle_buffer->GetHandle();
+		descriptor_data1.data.buffer.offsets = 0;
+		descriptor_data1.data.buffer.ranges = sizeof(ParticleData);
 
 		DescriptorSetWriteData descriptor_data2;
 		descriptor_data2.type = DescriptorType_CombinedImageSampler;
 		descriptor_data2.binding = 1;
-		descriptor_data2.data.image.image_view = m_texture_smoke->GetImageView();
-		descriptor_data2.data.image.sampler = m_texture_smoke->GetSampler();
+		descriptor_data2.data.image.image_views = m_texture_smoke->GetImageView();
+		descriptor_data2.data.image.samplers = m_texture_smoke->GetSampler();
 
 		DescriptorSetWriteData descriptor_data3;
 		descriptor_data3.type = DescriptorType_CombinedImageSampler;
 		descriptor_data3.binding = 2;
-		descriptor_data3.data.image.image_view = m_texture_flame->GetImageView();
-		descriptor_data3.data.image.sampler = m_texture_flame->GetSampler();
+		descriptor_data3.data.image.image_views = m_texture_flame->GetImageView();
+		descriptor_data3.data.image.samplers = m_texture_flame->GetSampler();
 
 		std::vector<DescriptorSetWriteData> descriptor_data_objects = { descriptor_data1, descriptor_data2, descriptor_data3 };
 		m_backend->WriteDescriptor(&m_particle_descriptor, descriptor_data_objects);

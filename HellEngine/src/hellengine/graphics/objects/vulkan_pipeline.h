@@ -65,8 +65,6 @@ namespace hellengine
 			PipelineType m_type;
 		};
 
-		
-
 	} // namespace graphics
 
 } // namespace hellengine

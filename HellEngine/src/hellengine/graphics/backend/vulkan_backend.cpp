@@ -255,7 +255,7 @@ namespace hellengine
 		}
 
 		// Descriptor
-		void VulkanBackend::InitDescriptorPool(const std::vector<DescriptorPoolSizeInfo>& pool_sizes, u32 max_sets)
+		void VulkanBackend::InitDescriptorPoolGrowable(const std::vector<DescriptorPoolSizeInfo>& pool_sizes, u32 max_sets)
 		{
 			m_context->InitDescriptorPoolGrowable(pool_sizes, max_sets);
 		}
@@ -265,9 +265,19 @@ namespace hellengine
 			return m_context->CreateDescriptorSet(pipeline, set);
 		}
 
+		VulkanDescriptorSet* VulkanBackend::CreateDescriptorSetVariable(VulkanPipeline* pipeline, u32 set, std::vector<u32> count)
+		{
+			return m_context->CreateDescriptorSetVariable(pipeline, set, count);
+		}
+
 		void VulkanBackend::WriteDescriptor(VulkanDescriptorSet** descriptor, std::vector<DescriptorSetWriteData>& data)
 		{
 			m_context->WriteDescriptor(descriptor, data);
+		}
+
+		void VulkanBackend::WriteDescriptorVariable(VulkanDescriptorSet** descriptor, std::vector<DescriptorSetWriteData>& data, u32 count, u32 array_element)
+		{
+			m_context->WriteDescriptor(descriptor, data, count, array_element);
 		}
 
 		void VulkanBackend::BindDescriptorSet(VulkanPipeline* pipeline, VulkanDescriptorSet* descriptor_set, u32 offsets_count, u32* offsets) const
@@ -308,7 +318,7 @@ namespace hellengine
 
 		void VulkanBackend::UpdateTexture(VulkanTexture* texture, const void* data)
 		{
-			return m_context->Update(texture, data);
+			m_context->UpdateTexture(texture, data);
 		}
 
 		void VulkanBackend::DestroyTexture(VulkanTexture* texture) const
@@ -318,7 +328,7 @@ namespace hellengine
 
 		void VulkanBackend::Draw(u32 vertex_count, u32 instance_count, u32 first_vertex, u32 first_instance) const
 		{
-			return m_context->Draw(vertex_count, instance_count, first_vertex, first_instance);
+			m_context->Draw(vertex_count, instance_count, first_vertex, first_instance);
 		}
 
 		// Draw

@@ -495,7 +495,7 @@ void TestGBuffer::CreatePipeline()
 void TestGBuffer::CreateDescriptorSets()
 {
 	// Init pool
-	m_backend->InitDescriptorPool({
+	m_backend->InitDescriptorPoolGrowable({
 		{ DescriptorType_UniformBuffer, 1 },
 		{ DescriptorType_CombinedImageSampler, 1 }
 		}, 1);
@@ -508,9 +508,9 @@ void TestGBuffer::CreateDescriptorSets()
 		DescriptorSetWriteData descriptor_data;
 		descriptor_data.type = DescriptorType_UniformBuffer;
 		descriptor_data.binding = 0;
-		descriptor_data.data.buffer.buffer = m_camera_buffer->GetHandle();
-		descriptor_data.data.buffer.offset = 0;
-		descriptor_data.data.buffer.range = sizeof(CameraData);
+		descriptor_data.data.buffer.buffers = m_camera_buffer->GetHandle();
+		descriptor_data.data.buffer.offsets = 0;
+		descriptor_data.data.buffer.ranges = sizeof(CameraData);
 
 		std::vector<DescriptorSetWriteData> descriptor_data_camera = { descriptor_data };
 		m_backend->WriteDescriptor(&m_camera_descriptor, descriptor_data_camera);
@@ -526,9 +526,9 @@ void TestGBuffer::CreateDescriptorSets()
 		DescriptorSetWriteData descriptor_data;
 		descriptor_data.type = DescriptorType_UniformBuffer;
 		descriptor_data.binding = 0;
-		descriptor_data.data.buffer.buffer = m_object_buffer->GetHandle();
-		descriptor_data.data.buffer.offset = 0;
-		descriptor_data.data.buffer.range = sizeof(ObjectData);
+		descriptor_data.data.buffer.buffers = m_object_buffer->GetHandle();
+		descriptor_data.data.buffer.offsets = 0;
+		descriptor_data.data.buffer.ranges = sizeof(ObjectData);
 
 		std::vector<DescriptorSetWriteData> descriptor_data_object = { descriptor_data };
 		m_backend->WriteDescriptor(&m_object_descriptor, descriptor_data_object);
@@ -544,27 +544,27 @@ void TestGBuffer::CreateDescriptorSets()
 		DescriptorSetWriteData descriptor_data1;
 		descriptor_data1.type = DescriptorType_CombinedImageSampler;
 		descriptor_data1.binding = 0;
-		descriptor_data1.data.image.image_view = m_gbuffer_position_texture->GetImageView();
-		descriptor_data1.data.image.sampler = m_gbuffer_position_texture->GetSampler();
+		descriptor_data1.data.image.image_views = m_gbuffer_position_texture->GetImageView();
+		descriptor_data1.data.image.samplers = m_gbuffer_position_texture->GetSampler();
 
 		DescriptorSetWriteData descriptor_data2;
 		descriptor_data2.type = DescriptorType_CombinedImageSampler;
 		descriptor_data2.binding = 1;
-		descriptor_data2.data.image.image_view = m_gbuffer_normal_texture->GetImageView();
-		descriptor_data2.data.image.sampler = m_gbuffer_normal_texture->GetSampler();
+		descriptor_data2.data.image.image_views = m_gbuffer_normal_texture->GetImageView();
+		descriptor_data2.data.image.samplers = m_gbuffer_normal_texture->GetSampler();
 
 		DescriptorSetWriteData descriptor_data3;
 		descriptor_data3.type = DescriptorType_CombinedImageSampler;
 		descriptor_data3.binding = 2;
-		descriptor_data3.data.image.image_view = m_gbuffer_albedo_texture->GetImageView();
-		descriptor_data3.data.image.sampler = m_gbuffer_albedo_texture->GetSampler();
+		descriptor_data3.data.image.image_views = m_gbuffer_albedo_texture->GetImageView();
+		descriptor_data3.data.image.samplers = m_gbuffer_albedo_texture->GetSampler();
 
 		DescriptorSetWriteData descriptor_data4;
 		descriptor_data4.type = DescriptorType_StorageBuffer;
 		descriptor_data4.binding = 3;
-		descriptor_data4.data.buffer.buffer = m_lights_buffer->GetHandle();
-		descriptor_data4.data.buffer.offset = 0;
-		descriptor_data4.data.buffer.range = sizeof(Light) * m_lights.size();
+		descriptor_data4.data.buffer.buffers = m_lights_buffer->GetHandle();
+		descriptor_data4.data.buffer.offsets = 0;
+		descriptor_data4.data.buffer.ranges = sizeof(Light) * m_lights.size();
 
 		std::vector<DescriptorSetWriteData> descriptor_data_final = { descriptor_data1, descriptor_data2, descriptor_data3, descriptor_data4 };
 		m_backend->WriteDescriptor(&m_composition_descriptor, descriptor_data_final);
@@ -577,8 +577,8 @@ void TestGBuffer::CreateDescriptorSets()
 		DescriptorSetWriteData descriptor_data;
 		descriptor_data.type = DescriptorType_CombinedImageSampler;
 		descriptor_data.binding = 0;
-		descriptor_data.data.image.image_view = m_glass_texture->GetImageView();
-		descriptor_data.data.image.sampler = m_glass_texture->GetSampler();
+		descriptor_data.data.image.image_views = m_glass_texture->GetImageView();
+		descriptor_data.data.image.samplers = m_glass_texture->GetSampler();
 
 		std::vector<DescriptorSetWriteData> descriptor_data_final = { descriptor_data };
 		m_backend->WriteDescriptor(&m_glass_descriptor, descriptor_data_final);
@@ -591,26 +591,26 @@ void TestGBuffer::CreateDescriptorSets()
 		DescriptorSetWriteData descriptor_data1;
 		descriptor_data1.type = DescriptorType_CombinedImageSampler;
 		descriptor_data1.binding = 0;
-		descriptor_data1.data.image.image_view = m_glass_color_texture->GetImageView();
-		descriptor_data1.data.image.sampler = m_glass_color_texture->GetSampler();
+		descriptor_data1.data.image.image_views = m_glass_color_texture->GetImageView();
+		descriptor_data1.data.image.samplers = m_glass_color_texture->GetSampler();
 
 		DescriptorSetWriteData descriptor_data2;
 		descriptor_data2.type = DescriptorType_CombinedImageSampler;
 		descriptor_data2.binding = 1;
-		descriptor_data2.data.image.image_view = m_glass_depth_texture->GetImageView();
-		descriptor_data2.data.image.sampler = m_glass_depth_texture->GetSampler();
+		descriptor_data2.data.image.image_views = m_glass_depth_texture->GetImageView();
+		descriptor_data2.data.image.samplers = m_glass_depth_texture->GetSampler();
 
 		DescriptorSetWriteData descriptor_data3;
 		descriptor_data3.type = DescriptorType_CombinedImageSampler;
 		descriptor_data3.binding = 2;
-		descriptor_data3.data.image.image_view = m_composition_color_texture->GetImageView();
-		descriptor_data3.data.image.sampler = m_composition_color_texture->GetSampler();
+		descriptor_data3.data.image.image_views = m_composition_color_texture->GetImageView();
+		descriptor_data3.data.image.samplers = m_composition_color_texture->GetSampler();
 
 		DescriptorSetWriteData descriptor_data4;
 		descriptor_data4.type = DescriptorType_CombinedImageSampler;
 		descriptor_data4.binding = 3;
-		descriptor_data4.data.image.image_view = m_gbuffer_depth_texture->GetImageView();
-		descriptor_data4.data.image.sampler = m_gbuffer_depth_texture->GetSampler();
+		descriptor_data4.data.image.image_views = m_gbuffer_depth_texture->GetImageView();
+		descriptor_data4.data.image.samplers = m_gbuffer_depth_texture->GetSampler();
 
 		std::vector<DescriptorSetWriteData> descriptor_data_final = { descriptor_data1, descriptor_data2, descriptor_data3, descriptor_data4 };
 		m_backend->WriteDescriptor(&m_final_descriptor, descriptor_data_final);
@@ -636,20 +636,20 @@ void TestGBuffer::UpdateAttachments()
 		DescriptorSetWriteData descriptor_data1;
 		descriptor_data1.type = DescriptorType_CombinedImageSampler;
 		descriptor_data1.binding = 0;
-		descriptor_data1.data.image.image_view = m_gbuffer_position_texture->GetImageView();
-		descriptor_data1.data.image.sampler = m_gbuffer_position_texture->GetSampler();
+		descriptor_data1.data.image.image_views = m_gbuffer_position_texture->GetImageView();
+		descriptor_data1.data.image.samplers = m_gbuffer_position_texture->GetSampler();
 
 		DescriptorSetWriteData descriptor_data2;
 		descriptor_data2.type = DescriptorType_CombinedImageSampler;
 		descriptor_data2.binding = 1;
-		descriptor_data2.data.image.image_view = m_gbuffer_normal_texture->GetImageView();
-		descriptor_data2.data.image.sampler = m_gbuffer_normal_texture->GetSampler();
+		descriptor_data2.data.image.image_views = m_gbuffer_normal_texture->GetImageView();
+		descriptor_data2.data.image.samplers = m_gbuffer_normal_texture->GetSampler();
 
 		DescriptorSetWriteData descriptor_data3;
 		descriptor_data3.type = DescriptorType_CombinedImageSampler;
 		descriptor_data3.binding = 2;
-		descriptor_data3.data.image.image_view = m_gbuffer_albedo_texture->GetImageView();
-		descriptor_data3.data.image.sampler = m_gbuffer_albedo_texture->GetSampler();
+		descriptor_data3.data.image.image_views = m_gbuffer_albedo_texture->GetImageView();
+		descriptor_data3.data.image.samplers = m_gbuffer_albedo_texture->GetSampler();
 
 		std::vector<DescriptorSetWriteData> descriptor_data_composition = { descriptor_data1, descriptor_data2, descriptor_data3 };
 		m_backend->WriteDescriptor(&m_composition_descriptor, descriptor_data_composition);
@@ -660,26 +660,26 @@ void TestGBuffer::UpdateAttachments()
 		DescriptorSetWriteData descriptor_data1;
 		descriptor_data1.type = DescriptorType_CombinedImageSampler;
 		descriptor_data1.binding = 0;
-		descriptor_data1.data.image.image_view = m_glass_color_texture->GetImageView();
-		descriptor_data1.data.image.sampler = m_glass_color_texture->GetSampler();
+		descriptor_data1.data.image.image_views = m_glass_color_texture->GetImageView();
+		descriptor_data1.data.image.samplers = m_glass_color_texture->GetSampler();
 
 		DescriptorSetWriteData descriptor_data2;
 		descriptor_data2.type = DescriptorType_CombinedImageSampler;
 		descriptor_data2.binding = 1;
-		descriptor_data2.data.image.image_view = m_glass_depth_texture->GetImageView();
-		descriptor_data2.data.image.sampler = m_glass_depth_texture->GetSampler();
+		descriptor_data2.data.image.image_views = m_glass_depth_texture->GetImageView();
+		descriptor_data2.data.image.samplers = m_glass_depth_texture->GetSampler();
 
 		DescriptorSetWriteData descriptor_data3;
 		descriptor_data3.type = DescriptorType_CombinedImageSampler;
 		descriptor_data3.binding = 2;
-		descriptor_data3.data.image.image_view = m_composition_color_texture->GetImageView();
-		descriptor_data3.data.image.sampler = m_composition_color_texture->GetSampler();
+		descriptor_data3.data.image.image_views = m_composition_color_texture->GetImageView();
+		descriptor_data3.data.image.samplers = m_composition_color_texture->GetSampler();
 
 		DescriptorSetWriteData descriptor_data4;
 		descriptor_data4.type = DescriptorType_CombinedImageSampler;
 		descriptor_data4.binding = 3;
-		descriptor_data4.data.image.image_view = m_gbuffer_depth_texture->GetImageView();
-		descriptor_data4.data.image.sampler = m_gbuffer_depth_texture->GetSampler();
+		descriptor_data4.data.image.image_views = m_gbuffer_depth_texture->GetImageView();
+		descriptor_data4.data.image.samplers = m_gbuffer_depth_texture->GetSampler();
 
 		std::vector<DescriptorSetWriteData> descriptor_data_final = { descriptor_data1, descriptor_data2, descriptor_data3, descriptor_data4 };
 		m_backend->WriteDescriptor(&m_final_descriptor, descriptor_data_final);

@@ -16,6 +16,7 @@ namespace hellengine
 
 		PerspectiveController::~PerspectiveController()
 		{
+			delete m_camera;
 		}
 
 		void PerspectiveController::Init()
@@ -83,7 +84,7 @@ namespace hellengine
 			m_last_mouse_x = Input::GetMouseX();
 			m_last_mouse_y = Input::GetMouseY();
 
-			return true;
+			return false;
 		}
 
 	} // graphics

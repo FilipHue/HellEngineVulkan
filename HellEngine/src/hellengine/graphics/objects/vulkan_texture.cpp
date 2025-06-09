@@ -128,7 +128,7 @@ namespace hellengine
 			VkImageAspectFlags aspect = GetAspectMaskFromVkFormat(format);
 			VkImageUsageFlags usage = GetUsageFlagsFromVkFormat(format);
 
-			m_image.Create(instance, device, VK_IMAGE_TYPE_2D, m_format, { (u32)width, (u32)height, 1 }, m_mip_levels, m_layer_count * m_faces, VK_IMAGE_TILING_OPTIMAL, usage, 0, 0);
+			m_image.Create(instance, device, VK_IMAGE_TYPE_2D, m_format, { (u32)width, (u32)height, 1 }, m_mip_levels, m_layer_count * m_faces, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TILING_OPTIMAL, usage, 0, 0);
 			m_image.CreateImageView(instance, device, VK_IMAGE_VIEW_TYPE_2D, m_format, { aspect, 0, m_mip_levels, 0, m_layer_count });
 
 			ImageSamplerCreationInfo info = {};
@@ -152,7 +152,7 @@ namespace hellengine
 			subresource_range.baseArrayLayer = 0;
 			subresource_range.layerCount = m_layer_count;
 
-			m_image.Create(instance, device, VK_IMAGE_TYPE_2D, m_format, { (u32)width, (u32)height, 1 }, m_mip_levels, m_layer_count * m_faces, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, 0, 0);
+			m_image.Create(instance, device, VK_IMAGE_TYPE_2D, m_format, { (u32)width, (u32)height, 1 }, m_mip_levels, m_layer_count * m_faces, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, 0, 0);
 			m_image.CreateImageView(instance, device, VK_IMAGE_VIEW_TYPE_2D, m_format, subresource_range);
 			
 			VkDeviceSize image_size = m_image.GetWidth() * m_image.GetHeight() * m_image.GetDepth() * m_channels;
@@ -214,7 +214,7 @@ namespace hellengine
 			subresource_range.baseArrayLayer = 0;
 			subresource_range.layerCount = m_layer_count;
 
-			m_image.Create(instance, device, VK_IMAGE_TYPE_2D, m_format, { width, height, depth }, m_mip_levels, m_layer_count * m_faces, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, 0, 0);
+			m_image.Create(instance, device, VK_IMAGE_TYPE_2D, m_format, { width, height, depth }, m_mip_levels, m_layer_count * m_faces, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, 0, 0);
 			m_image.CreateImageView(instance, device, m_layer_count > 1 ? VK_IMAGE_VIEW_TYPE_2D_ARRAY : VK_IMAGE_VIEW_TYPE_2D, m_format, subresource_range);
 
 			ktx_uint8_t* ktx_data = ktxTexture_GetData(ktx_texture);
@@ -280,7 +280,7 @@ namespace hellengine
 			subresource_range.baseArrayLayer = 0;
 			subresource_range.layerCount = m_layer_count;
 
-			m_image.Create(instance, device, VK_IMAGE_TYPE_2D, m_format, { (u32)width, (u32)height, 1 }, m_mip_levels, m_layer_count * m_faces, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, 0, 0);
+			m_image.Create(instance, device, VK_IMAGE_TYPE_2D, m_format, { (u32)width, (u32)height, 1 }, m_mip_levels, m_layer_count * m_faces, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, 0, 0);
 			m_image.CreateImageView(instance, device, VK_IMAGE_VIEW_TYPE_2D, m_format, subresource_range);
 
 			VkDeviceSize image_size = width * height * m_channels;
@@ -337,7 +337,7 @@ namespace hellengine
 			m_layer_count = 1;
 			m_faces = 1;
 
-			m_image.Create(instance, device, VK_IMAGE_TYPE_3D, m_format, { (u32)width, (u32)height, (u32)depth }, m_mip_levels, m_layer_count * m_faces, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, 0, 0);
+			m_image.Create(instance, device, VK_IMAGE_TYPE_3D, m_format, { (u32)width, (u32)height, (u32)depth }, m_mip_levels, m_layer_count * m_faces, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, 0, 0);
 			m_image.CreateImageView(instance, device, VK_IMAGE_VIEW_TYPE_3D, m_format, { VK_IMAGE_ASPECT_COLOR_BIT, 0, m_mip_levels, 0, m_layer_count });
 
 			ImageSamplerCreationInfo info = {};
@@ -361,7 +361,7 @@ namespace hellengine
 			subresource_range.baseArrayLayer = 0;
 			subresource_range.layerCount = m_layer_count;
 
-			m_image.Create(instance, device, VK_IMAGE_TYPE_3D, m_format, { (u32)width, (u32)height, (u32)depth }, m_mip_levels, m_layer_count * m_faces, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, 0, 0);
+			m_image.Create(instance, device, VK_IMAGE_TYPE_3D, m_format, { (u32)width, (u32)height, (u32)depth }, m_mip_levels, m_layer_count * m_faces, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, 0, 0);
 			m_image.CreateImageView(instance, device, VK_IMAGE_VIEW_TYPE_3D, m_format, subresource_range);
 
 			u32 max_image_size = device.GetProperties().limits.maxImageDimension3D;
@@ -435,7 +435,7 @@ namespace hellengine
 			subresource_range.baseArrayLayer = 0;
 			subresource_range.layerCount = m_layer_count;
 
-			m_image.Create(instance, device, VK_IMAGE_TYPE_2D, m_format, { width, height, depth }, m_mip_levels, m_layer_count * m_faces, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT, 0);
+			m_image.Create(instance, device, VK_IMAGE_TYPE_2D, m_format, { width, height, depth }, m_mip_levels, m_layer_count * m_faces, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT, 0);
 			m_image.CreateImageView(instance, device, VK_IMAGE_VIEW_TYPE_CUBE, m_format, subresource_range);
 
 			ktx_uint8_t* ktx_data = ktxTexture_GetData(ktx_texture);
@@ -506,7 +506,7 @@ namespace hellengine
 			subresource_range.baseArrayLayer = 0;
 			subresource_range.layerCount = m_layer_count * m_faces;
 
-			m_image.Create(instance, device, VK_IMAGE_TYPE_2D, m_format, { width, height, depth }, m_mip_levels, m_layer_count * m_faces, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT, 0);
+			m_image.Create(instance, device, VK_IMAGE_TYPE_2D, m_format, { width, height, depth }, m_mip_levels, m_layer_count * m_faces, VK_SAMPLE_COUNT_1_BIT, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT, VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT, 0);
 			m_image.CreateImageView(instance, device, VK_IMAGE_VIEW_TYPE_CUBE_ARRAY, m_format, subresource_range);
 
 			ktx_uint8_t* ktx_data = ktxTexture_GetData(ktx_texture);
@@ -567,7 +567,7 @@ namespace hellengine
 			{
 				aspect_mask = VK_IMAGE_ASPECT_DEPTH_BIT;
 			}
-			else if (format == VK_FORMAT_D24_UNORM_S8_UINT || format == VK_FORMAT_D16_UNORM_S8_UINT)
+			else if (format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT || format == VK_FORMAT_D16_UNORM_S8_UINT)
 			{
 				aspect_mask = VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
 			}

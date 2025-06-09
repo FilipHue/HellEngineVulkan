@@ -31,7 +31,8 @@ namespace hellengine
 			virtual void Begin() = 0;
 			virtual void End() = 0;
 
-			virtual b8 HandleEvents(EventContext& event) = 0;
+			virtual void BeginDocking() = 0;
+			virtual void EndDocking() = 0;
 		};
 
 		class UIBackend_ImGui : public IUIBackend
@@ -46,11 +47,11 @@ namespace hellengine
 			void Begin() override;
 			void End() override;
 
-			b8 HandleEvents(EventContext& event) override;
-
-		private:
 			void BeginDocking();
 			void EndDocking();
+
+		private:
+			void SetDarkTheme();
 
 		private:
 			VulkanBackend* m_backend = nullptr;

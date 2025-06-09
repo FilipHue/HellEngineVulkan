@@ -3,6 +3,7 @@
 
 // Internal
 #include <hellengine/graphics/managers/mesh_manager.h>
+#include <hellengine/graphics/managers/texture_manager.h>
 
 namespace hellengine
 {
@@ -11,42 +12,34 @@ namespace hellengine
 
 		Model::Model()
 		{
-			m_vertex_buffer = nullptr;
-			m_index_buffer = nullptr;
-
-			m_backend = MeshManager::GetInstance()->GetBackend();
+			NO_OP;
 		}
 
 		Model::~Model()
 		{
-			if (m_vertex_buffer)
-			{
-				m_backend->DestroyBuffer(m_vertex_buffer);
-			}
+			NO_OP;
+		}
 
-			if (m_index_buffer)
-			{
-				m_backend->DestroyBuffer(m_index_buffer);
-			}
+		void Model::Init(VulkanBackend* backend)
+		{
+			m_vertex_buffer = nullptr;
+			m_index_buffer = nullptr;
 
+			m_textures.push_back(TextureManager::GetInstance()->GetTexture2D(DEFAULT_ERROR_TEXTURE));
+
+			m_backend = MeshManager::GetInstance()->GetBackend();
+		}
+
+		void Model::Destroy()
+		{
 			for (Mesh* mesh : m_meshes)
 			{
 				delete mesh;
 			}
-		}
 
-		void Model::GenerateDescriptorSets(VulkanPipeline* pipeline, u32 set)
-		{
-			for (Mesh* mesh : m_meshes)
-			{
-				VulkanDescriptorSet* descriptor_set = m_backend->CreateDescriptorSet(pipeline, set);
-				m_descriptor_sets.push_back(descriptor_set);
-
-				std::vector<DescriptorSetWriteData> descriptor_data;
-				mesh->GetMaterial()->GenerateDescriptorSets(descriptor_data);
-
-				m_backend->WriteDescriptor(&descriptor_set, descriptor_data);
-			}
+			m_backend->DestroyBuffer(m_vertex_buffer);
+			m_backend->DestroyBuffer(m_index_buffer);
+			m_backend->DestroyBuffer(m_meshes_buffer);
 		}
 
 		template HE_API void Model::UploadToGPU<VertexFormatBase>();
@@ -54,9 +47,8 @@ namespace hellengine
 		template<typename VertexT>
 		void Model::UploadToGPU()
 		{
-			std::vector<VertexT> final_vertices;
+			/*std::vector<VertexT> final_vertices;
 			final_vertices.reserve(m_vertices_raw_data.positions.size());
-			HE_CORE_INFO("Size: {0}", sizeof(m_vertices_raw_data));
 
 			for (size_t i = 0; i < m_vertices_raw_data.positions.size(); ++i)
 			{
@@ -90,7 +82,67 @@ namespace hellengine
 			}
 
 			m_vertex_buffer = m_backend->CreateVertexBuffer(final_vertices.data(), static_cast<u32>(final_vertices.size()));
-			m_index_buffer = m_backend->CreateIndexBuffer(m_indices.data(), static_cast<u32>(m_indices.size()));
+			m_index_buffer = m_backend->CreateIndexBuffer(m_indices.data(), static_cast<u32>(m_indices.size()));*/
+		}
+
+		void Model::GenerateModelResources(VulkanPipeline* pipeline, u32 set, TextureType types)
+		{
+			for (Mesh* mesh : m_meshes)
+			{
+				MaterialGPUInfo info{};
+				info.diffuse_index = mesh->GetMaterialInfo()->Get(TextureType_Diffuse & types);
+				info.specular_index = mesh->GetMaterialInfo()->Get(TextureType_Specular & types);
+				info.ambient_index = mesh->GetMaterialInfo()->Get(TextureType_Ambient & types);
+				info.emissive_index = mesh->GetMaterialInfo()->Get(TextureType_Emissive & types);
+				info.height_index = mesh->GetMaterialInfo()->Get(TextureType_Emissive & types);
+				info.normal_index = mesh->GetMaterialInfo()->Get(TextureType_Normals & types);
+				info.shininess_index = mesh->GetMaterialInfo()->Get(TextureType_Shininess & types);
+				info.opacity_index = mesh->GetMaterialInfo()->Get(TextureType_Opacity & types);
+				info.displacement_index = mesh->GetMaterialInfo()->Get(TextureType_Displacement & types);
+				info.lightmap_index = mesh->GetMaterialInfo()->Get(TextureType_Lightmap & types);
+				info.reflection_index = mesh->GetMaterialInfo()->Get(TextureType_Reflection & types);
+
+				m_mesh_gpu_info.push_back(info);
+			}
+
+			void* data = m_mesh_gpu_info.data();
+			m_meshes_buffer = m_backend->CreateUniformBufferMappedOnce(data, sizeof(MaterialGPUInfo) * (u32)m_mesh_gpu_info.size());
+
+			for (u32 i = 0; i < (u32)m_meshes.size(); i++)
+			{
+				m_meshes_descriptor.push_back(m_backend->CreateDescriptorSet(pipeline, set));
+
+				DescriptorSetWriteData buffer_data{};
+				buffer_data.type = DescriptorType_UniformBuffer;
+				buffer_data.binding = 0;
+				buffer_data.data.buffer.buffers = new VkBuffer(m_meshes_buffer->GetHandle());
+				buffer_data.data.buffer.offsets = new VkDeviceSize(i * sizeof(MaterialGPUInfo));
+				buffer_data.data.buffer.ranges = new VkDeviceSize(sizeof(MaterialGPUInfo));
+
+				std::vector<DescriptorSetWriteData> material_writes = { buffer_data };
+				m_backend->WriteDescriptor(&m_meshes_descriptor[i], material_writes);
+			}
+
+			m_textures_descriptor = m_backend->CreateDescriptorSetVariable(pipeline, set + 1, { (u32)m_textures.size() });
+
+			DescriptorSetWriteData image_data;
+			image_data.type = DescriptorType_CombinedImageSampler;
+			image_data.binding = 0;
+			image_data.data.image.image_views;
+			image_data.data.image.samplers;
+
+			std::vector<VkImageView> views;
+			std::vector<VkSampler> samplers;
+			for (u32 i = 0; i < (u32)m_textures.size(); i++)
+			{
+				views.push_back(m_textures[i]->GetImageView());
+				samplers.push_back(m_textures[i]->GetSampler());
+			}
+			image_data.data.image.image_views = views.data();
+			image_data.data.image.samplers = samplers.data();
+
+			std::vector<DescriptorSetWriteData> texture_writes = { image_data };
+			m_backend->WriteDescriptorVariable(&m_textures_descriptor, texture_writes, (u32)m_textures.size(), 0);
 		}
 
 		void Model::Draw(VulkanPipeline* pipeline, u32 pipeline_index)
@@ -98,20 +150,12 @@ namespace hellengine
 			m_backend->BindVertexBuffer(m_vertex_buffer, 0);
 			m_backend->BindIndexBuffer(m_index_buffer, 0);
 
-			if (m_descriptor_sets.size() && pipeline_index != -1)
+			m_backend->BindDescriptorSet(pipeline, m_textures_descriptor);
+
+			for (i32 i = 0; i < (i32)m_meshes.size(); i++)
 			{
-				for (u32 i = 0; i < m_meshes.size(); i++)
-				{
-					m_backend->BindDescriptorSet(pipeline, m_descriptor_sets[i + pipeline_index * m_meshes.size()]);
-					m_backend->DrawIndexed(m_meshes[i]->GetIndexCount(), 1, m_meshes[i]->GetFirstIndex(), m_meshes[i]->GetVertexStart(), 0);
-				}
-			}
-			else
-			{
-				for (u32 i = 0; i < m_meshes.size(); i++)
-				{
-					m_backend->DrawIndexed(m_meshes[i]->GetIndexCount(), 1, m_meshes[i]->GetFirstIndex(), m_meshes[i]->GetVertexStart(), 0);
-				}
+				m_backend->BindDescriptorSet(pipeline, m_meshes_descriptor[i]);
+				m_backend->DrawIndexed(m_meshes[i]->GetIndexCount(), 1, m_meshes[i]->GetFirstIndex(), m_meshes[i]->GetVertexStart(), 0);
 			}
 		}
 

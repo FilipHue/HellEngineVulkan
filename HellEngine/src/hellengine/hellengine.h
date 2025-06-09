@@ -26,13 +26,18 @@
 #include "hellengine/core/events/event.h"
 #include "hellengine/core/input/input.h"
 
+// Ecs
+#include "hellengine/ecs/scene/scene.h"
+
 // Graphics
 #include "hellengine/graphics/backend/vulkan_backend.h"
 #include "hellengine/graphics/frontend/vulkan_frontend.h"
 #include "hellengine/graphics/graphic_types.h"
 
-#include "hellengine/graphics/camera/perspective.h"
-#include "hellengine/graphics/camera/perspective_controller.h"
+#include "hellengine/graphics/camera/perspective/perspective.h"
+#include "hellengine/graphics/camera/perspective/perspective_controller.h"
+#include "hellengine/graphics/camera/multiprojection/multiprojection.h"
+#include "hellengine/graphics/camera/multiprojection/multiprojection_controller.h"
 
 // UI
 #include "hellengine/ui/ui.h"

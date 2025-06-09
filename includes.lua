@@ -9,5 +9,6 @@ IncludeDirs["STB"] = "%{wks.location}/HellEngine/dependencies/STB/include"
 IncludeDirs["ASSIMP"] = "%{wks.location}/HellEngine/dependencies/ASSIMP/include"
 IncludeDirs["KTX"] = "%{wks.location}/HellEngine/dependencies/KTX/include"
 IncludeDirs["IMGUI"] = "%{wks.location}/HellEngine/dependencies/IMGUI"
+IncludeDirs["ENTT"] = "%{wks.location}/HellEngine/dependencies/ENTT/include"
 
 IncludeDirs["VULKAN"] = "%{EnvVars.VULKAN_SDK}/Include"

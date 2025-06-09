@@ -27,7 +27,7 @@ void TestStencil::Setup()
 	CreateDescriptorSets();
 
 	m_model->UploadToGPU<VertexFormatBase>();
-	m_model->GenerateDescriptorSets(m_pipeline_toon, 2);
+	m_model->GenerateModelResources(m_pipeline_toon, 2);
 }
 
 void TestStencil::ProcessUpdate(f32 dt)
@@ -181,14 +181,19 @@ void TestStencil::CreatePipeline()
 	pipeline_info.dynamic_states = { PipelineDynamicState_Viewport, PipelineDynamicState_Scissor };
 	pipeline_info.layout = {
 		{
-			{ 0, DescriptorType_UniformBuffer, ShaderStage_Vertex }
+			{ { 0, DescriptorType_UniformBuffer, 1, ShaderStage_Vertex, DescriptorBindingFlags_None } },
+			DescriptorSetFlags_None
 		},
 		{
-			{ 0, DescriptorType_UniformBuffer, ShaderStage_Vertex}
+			{ { 0, DescriptorType_UniformBuffer, 1, ShaderStage_Vertex, DescriptorBindingFlags_None } },
+			DescriptorSetFlags_None
 		},
 		{
-			{ 0, DescriptorType_UniformBuffer, ShaderStage_Fragment },
-			{ 1, DescriptorType_CombinedImageSampler, ShaderStage_Fragment }
+			{
+				{ 0, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_None },
+				{ 1, DescriptorType_CombinedImageSampler, 1, ShaderStage_Fragment, DescriptorBindingFlags_None }
+			},
+			DescriptorSetFlags_None
 		}
 	};
 	pipeline_info.vertex_binding_description = VertexFormatBase::GetBindingDescription();
@@ -222,10 +227,12 @@ void TestStencil::CreatePipeline()
 
 	pipeline_info.layout = {
 		{
-			{ 0, DescriptorType_UniformBuffer, ShaderStage_Vertex }
+			{ { 0, DescriptorType_UniformBuffer, 1, ShaderStage_Vertex, DescriptorBindingFlags_None } },
+			DescriptorSetFlags_None
 		},
 		{
-			{ 0, DescriptorType_UniformBuffer, ShaderStage_Vertex }
+			{ { 0, DescriptorType_UniformBuffer, 1, ShaderStage_Vertex, DescriptorBindingFlags_None } },
+			DescriptorSetFlags_None
 		}
 	};
 
@@ -253,7 +260,7 @@ void TestStencil::CreatePipeline()
 void TestStencil::CreateDescriptorSets()
 {
 	// Init pool
-	m_backend->InitDescriptorPool({
+	m_backend->InitDescriptorPoolGrowable({
 		{ DescriptorType_UniformBuffer, 1 },
 		{ DescriptorType_CombinedImageSampler, 1 }
 	}, 1);
@@ -266,9 +273,12 @@ void TestStencil::CreateDescriptorSets()
 		DescriptorSetWriteData descriptor_data;
 		descriptor_data.type = DescriptorType_UniformBuffer;
 		descriptor_data.binding = 0;
-		descriptor_data.data.buffer.buffer = m_camera_buffer->GetHandle();
-		descriptor_data.data.buffer.offset = 0;
-		descriptor_data.data.buffer.range = sizeof(CameraData);
+		descriptor_data.data.buffer.buffers = new VkBuffer[1];
+		descriptor_data.data.buffer.buffers[0] = m_camera_buffer->GetHandle();
+		descriptor_data.data.buffer.offsets = new VkDeviceSize[1];
+		descriptor_data.data.buffer.offsets[0] = 0;
+		descriptor_data.data.buffer.ranges = new VkDeviceSize[1];
+		descriptor_data.data.buffer.ranges[0] = sizeof(CameraData);
 
 		std::vector<DescriptorSetWriteData> descriptor_data_camera = { descriptor_data };
 		m_backend->WriteDescriptor(&m_camera_descriptor, descriptor_data_camera);
@@ -287,9 +297,12 @@ void TestStencil::CreateDescriptorSets()
 		DescriptorSetWriteData descriptor_data;
 		descriptor_data.type = DescriptorType_UniformBuffer;
 		descriptor_data.binding = 0;
-		descriptor_data.data.buffer.buffer = m_object_buffer_toon->GetHandle();
-		descriptor_data.data.buffer.offset = 0;
-		descriptor_data.data.buffer.range = sizeof(ModelDataToon);
+		descriptor_data.data.buffer.buffers = new VkBuffer[1];
+		descriptor_data.data.buffer.buffers[0] = m_object_buffer_toon->GetHandle();
+		descriptor_data.data.buffer.offsets = new VkDeviceSize[1];
+		descriptor_data.data.buffer.offsets[0] = 0;
+		descriptor_data.data.buffer.ranges = new VkDeviceSize[1];
+		descriptor_data.data.buffer.ranges[0] = sizeof(ModelDataToon);
 
 		std::vector<DescriptorSetWriteData> descriptor_data_objects = { descriptor_data };
 		m_backend->WriteDescriptor(&m_object_descriptor_toon, descriptor_data_objects);
@@ -308,9 +321,12 @@ void TestStencil::CreateDescriptorSets()
 		DescriptorSetWriteData descriptor_data;
 		descriptor_data.type = DescriptorType_UniformBuffer;
 		descriptor_data.binding = 0;
-		descriptor_data.data.buffer.buffer = m_object_buffer_outline->GetHandle();
-		descriptor_data.data.buffer.offset = 0;
-		descriptor_data.data.buffer.range = sizeof(ModelDataOutline);
+		descriptor_data.data.buffer.buffers = new VkBuffer[1];
+		descriptor_data.data.buffer.buffers[0] = m_object_buffer_outline->GetHandle();
+		descriptor_data.data.buffer.offsets = new VkDeviceSize[1];
+		descriptor_data.data.buffer.offsets[0] = 0;
+		descriptor_data.data.buffer.ranges = new VkDeviceSize[1];
+		descriptor_data.data.buffer.ranges[0] = sizeof(ModelDataOutline);
 
 		std::vector<DescriptorSetWriteData> descriptor_data_objects = { descriptor_data };
 		m_backend->WriteDescriptor(&m_object_descriptor_outline, descriptor_data_objects);

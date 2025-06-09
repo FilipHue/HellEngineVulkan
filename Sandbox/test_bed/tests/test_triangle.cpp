@@ -157,10 +157,14 @@ void TestTriangle::CreatePipeline()
 	pipeline_info.dynamic_states = { PipelineDynamicState_Viewport, PipelineDynamicState_Scissor };
 	pipeline_info.layout = {
 		{
-			{ 0, DescriptorType_UniformBuffer, ShaderStage_Vertex }
+			{ 
+				{ 0, DescriptorType_UniformBuffer, 1, ShaderStage_Vertex, DescriptorBindingFlags_None }
+			},
+			DescriptorSetFlags_None
 		},
 		{
-			{ 0, DescriptorType_UniformBuffer, ShaderStage_Vertex}
+			{ { 0, DescriptorType_UniformBuffer, 1, ShaderStage_Vertex, DescriptorBindingFlags_None } },
+			DescriptorSetFlags_None
 		}
 	};
 	pipeline_info.vertex_binding_description = VertexFormatBase::GetBindingDescription();
@@ -188,7 +192,7 @@ void TestTriangle::CreatePipeline()
 void TestTriangle::CreateDescriptorSets()
 {
 	// Init pool
-	m_backend->InitDescriptorPool({
+	m_backend->InitDescriptorPoolGrowable({
 		{ DescriptorType_UniformBuffer, 1 },
 		{ DescriptorType_CombinedImageSampler, 1 }
 		}, 1);
@@ -201,9 +205,12 @@ void TestTriangle::CreateDescriptorSets()
 		DescriptorSetWriteData descriptor_data;
 		descriptor_data.type = DescriptorType_UniformBuffer;
 		descriptor_data.binding = 0;
-		descriptor_data.data.buffer.buffer = m_camera_buffer->GetHandle();
-		descriptor_data.data.buffer.offset = 0;
-		descriptor_data.data.buffer.range = sizeof(CameraData);
+		descriptor_data.data.buffer.buffers = new VkBuffer[1];
+		descriptor_data.data.buffer.buffers[0] = m_camera_buffer->GetHandle();
+		descriptor_data.data.buffer.offsets = new VkDeviceSize[1];
+		descriptor_data.data.buffer.offsets[0] = 0;
+		descriptor_data.data.buffer.ranges = new VkDeviceSize[1];
+		descriptor_data.data.buffer.ranges[0] = sizeof(CameraData);
 
 		std::vector<DescriptorSetWriteData> descriptor_data_camera = { descriptor_data };
 		m_backend->WriteDescriptor(&m_camera_descriptor, descriptor_data_camera);
@@ -221,9 +228,12 @@ void TestTriangle::CreateDescriptorSets()
 		DescriptorSetWriteData descriptor_data;
 		descriptor_data.type = DescriptorType_UniformBuffer;
 		descriptor_data.binding = 0;
-		descriptor_data.data.buffer.buffer = m_triangle_buffer->GetHandle();
-		descriptor_data.data.buffer.offset = 0;
-		descriptor_data.data.buffer.range = sizeof(ObjectData);
+		descriptor_data.data.buffer.buffers = new VkBuffer[1];
+		descriptor_data.data.buffer.buffers[0] = m_triangle_buffer->GetHandle();
+		descriptor_data.data.buffer.offsets = new VkDeviceSize[1];
+		descriptor_data.data.buffer.offsets[0] = 0;
+		descriptor_data.data.buffer.ranges = new VkDeviceSize[1];
+		descriptor_data.data.buffer.ranges[0] = sizeof(ObjectData);
 
 		std::vector<DescriptorSetWriteData> descriptor_data_objects = { descriptor_data };
 		m_backend->WriteDescriptor(&m_triangle_descriptor, descriptor_data_objects);

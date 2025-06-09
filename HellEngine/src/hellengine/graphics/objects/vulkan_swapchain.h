@@ -45,6 +45,8 @@ namespace hellengine
 			VulkanImage& GetDepthStencilImage() { return m_depth_stencil_image; }
 			const VulkanImage& GetDepthStencilImage() const { return m_depth_stencil_image; }
 
+			VulkanImage& GetDepthAttachemntImage(VkFormat format);
+
 			u32 GetFramesInFlight() const { return m_frames_in_flight; }
 
 			void SetFramesInFlight(u32 frames_in_flight) { m_frames_in_flight = frames_in_flight; }

@@ -1,7 +1,7 @@
 #pragma once
 
 // Internal
-#include "camera.h"
+#include "hellengine/graphics/camera/camera.h"
 
 namespace hellengine
 {

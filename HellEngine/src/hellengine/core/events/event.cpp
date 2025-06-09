@@ -40,13 +40,6 @@ namespace hellengine
 		{
 			for (auto& listener : m_listeners[event.type])
 			{
-				ImGuiIO& io = ImGui::GetIO();
-				if (io.WantCaptureMouse || io.WantCaptureKeyboard)
-				{
-					event.handled = true;
-					break;
-				}
-
 				if (listener(event))
 				{
 					event.handled = true;

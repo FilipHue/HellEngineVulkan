@@ -64,3 +64,46 @@ INLINE std::string ConcatPaths(std::initializer_list<std::string> parts) {
 }
 
 #define CONCAT_PATHS(...) ConcatPaths({ __VA_ARGS__ })
+
+// Default constructor
+#define _DEFAULT_CTOR_IMPL(_Type) _Type() = default;
+#define DEFAULT_CTOR(Type) _DEFAULT_CTOR_IMPL(Type)
+
+// Copy constructor and assignment
+#define _DEFAULT_COPY_IMPL(_Type) \
+    _Type(const _Type&) = default; \
+    _Type& operator=(const _Type&) = default;
+#define DEFAULT_COPY(Type) _DEFAULT_COPY_IMPL(Type)
+
+// Move constructor and assignment
+#define _DEFAULT_MOVE_IMPL(_Type) \
+    _Type(_Type&&) noexcept = default; \
+    _Type& operator=(_Type&&) noexcept = default;
+#define DEFAULT_MOVE(Type) _DEFAULT_MOVE_IMPL(Type)
+
+// Destructor
+#define _DEFAULT_DTOR_IMPL(_Type) ~_Type() = default;
+#define DEFAULT_DTOR(Type) _DEFAULT_DTOR_IMPL(Type)
+
+// Rule of Five (default all fundamental special functions)
+#define _DEFAULT_RULE_OF_FIVE_IMPL(_Type) \
+    DEFAULT_CTOR(_Type) \
+    DEFAULT_COPY(_Type) \
+    DEFAULT_MOVE(_Type) \
+    DEFAULT_DTOR(_Type)
+#define DEFAULT_RULE_OF_FIVE(Type) _DEFAULT_RULE_OF_FIVE_IMPL(Type)
+
+// Default comparisons
+#if __cplusplus >= 202002L
+#define _DEFAULT_COMPARE_IMPL(_Type) auto operator<=>(const _Type&) const = default;
+#else
+#define _DEFAULT_COMPARE_IMPL(_Type) bool operator==(const _Type& other) const = default;
+#endif
+#define DEFAULT_COMPARE(Type) _DEFAULT_COMPARE_IMPL(Type)
+
+// All defaulted methods
+#define _DEFAULT_ALL_IMPL(_Type) \
+    DEFAULT_RULE_OF_FIVE(_Type) \
+    DEFAULT_COMPARE(_Type)
+#define DEFAULT_ALL(Type) _DEFAULT_ALL_IMPL(Type)
+

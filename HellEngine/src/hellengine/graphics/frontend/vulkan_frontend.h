@@ -27,13 +27,16 @@ namespace hellengine
 
 			// Texture
 			HE_API VulkanTexture2D* CreateTexture2D(std::string name, const File& file);
-			HE_API VulkanTexture2D* CreateTexture2D(std::string name, VkFormat format, const void* data, i32 width, i32 height);
+			HE_API VulkanTexture2D* CreateTexture2D(std::string name, VkFormat format, u32 width, u32 height);
+			HE_API VulkanTexture2D* CreateTexture2D(std::string name, VkFormat format, const void* data, u32 width, u32 height);
 
 			HE_API VulkanTextureCubemap* CreateTextureCubemap(std::string name, const File& file);
 			HE_API VulkanTextureCubemap* CreateTextureCubemapArray(std::string name, const File& file);
 
 			HE_API VulkanTexture2D* GetTexture2D(std::string name);
 			HE_API VulkanTextureCubemap* GetTextureCubemap(std::string name);
+
+			HE_API void DestroyTexture2D(std::string name);
 
 		private:
 			VulkanBackend* m_backend;

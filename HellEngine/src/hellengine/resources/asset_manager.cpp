@@ -13,7 +13,7 @@ namespace hellengine
 	using namespace math;
 	namespace resources
 	{
-		Model* AssetManager::LoadModel(const File& file)
+		void AssetManager::LoadModel(const File& file)
 		{
 			HE_GRAPHICS_INFO("Loading asset: {0}", file.GetRelativePath());
 
@@ -28,15 +28,9 @@ namespace hellengine
 
 			ExtractTextures(scene, file);
 
-			Model* model = new Model();
-			ModelManager::GetInstance()->AddModel(model);
-
-			PreProcessModelRawData(scene->mRootNode, scene, model);
-			ProcessNode(scene->mRootNode, scene, model, glm::mat4(1.0f), file);
+			ProcessNode(scene->mRootNode, scene, glm::mat4(1.0f), file);
 
 			HE_GRAPHICS_INFO("\tLoaded");
-
-			return model;
 		}
 
 		Texture2D AssetManager::LoadTexture2D(const File& file)
@@ -61,149 +55,85 @@ namespace hellengine
 			return TextureManager::GetInstance()->CreateTextureCubemap(file.GetName(), file);
 		}
 
-		void AssetManager::PreProcessModelRawData(aiNode* node, const aiScene* scene, Model* model)
-		{
-			for (u32 i = 0; i < node->mNumMeshes; i++)
-			{
-				aiMesh* ai_mesh = scene->mMeshes[node->mMeshes[i]];
-
-				RawVertexData& raw_data = model->GetVerticesRawData();
-
-				if (ai_mesh->HasVertexColors(0) && !raw_data.colors.has_value())
-				{
-					raw_data.colors = std::vector<glm::vec4>();
-				}
-
-				if (ai_mesh->HasTextureCoords(0) && !raw_data.tex_coords.has_value())
-				{
-					raw_data.tex_coords = std::vector<glm::vec2>();
-				}
-
-				if (ai_mesh->HasNormals() && !raw_data.normals.has_value())
-				{
-					raw_data.normals = std::vector<glm::vec3>();
-				}
-
-				if (ai_mesh->HasTangentsAndBitangents() && !raw_data.tangents.has_value())
-				{
-					raw_data.tangents = std::vector<glm::vec3>();
-					raw_data.bitangents = std::vector<glm::vec3>();
-				}
-			}
-
-			for (u32 i = 0; i < node->mNumChildren; i++)
-			{
-				PreProcessModelRawData(node->mChildren[i], scene, model);
-			}
-		}
-
-		void AssetManager::ProcessNode(aiNode* node, const aiScene* scene, Model* model, const glm::mat4& parent_transform, const File& file)
+		void AssetManager::ProcessNode(aiNode* node, const aiScene* scene, const glm::mat4& parent_transform, const File& file)
 		{
 			glm::mat4 transform = parent_transform * glm::transpose(glm::make_mat4(&node->mTransformation.a1));
 			for (u32 i = 0; i < node->mNumMeshes; i++)
 			{
 				aiMesh* ai_mesh = scene->mMeshes[node->mMeshes[i]];
-				ProcessMesh(ai_mesh, scene, model, transform, file);
+				ProcessMesh(ai_mesh, scene, transform, file);
 			}
 
 			for (u32 i = 0; i < node->mNumChildren; i++)
 			{
-				ProcessNode(node->mChildren[i], scene, model, transform, file);
+				ProcessNode(node->mChildren[i], scene, transform, file);
 			}
 		}
 
-		void AssetManager::ProcessMesh(aiMesh* ai_mesh, const aiScene* scene, Model* model, const glm::mat4& transform, const File& file)
+		void AssetManager::ProcessMesh(aiMesh* ai_mesh, const aiScene* scene, const glm::mat4& transform, const File& file)
 		{
-			u32 first_vertex = static_cast<u32>(model->GetVerticesRawData().positions.size());
-			u32 first_index = static_cast<u32>(model->GetIndices().size());
-
-			Mesh* mesh = new Mesh();
-			mesh->SetVertexStart(first_vertex);
-			mesh->SetFirstIndex(first_index);
-
 			// Vertices
-			RawVertexData& vertex = model->GetVerticesRawData();
+			RawVertexData verticies = {};
 
 			for (u32 j = 0; j < ai_mesh->mNumVertices; j++)
 			{
 
 				glm::vec4 position(ai_mesh->mVertices[j].x, ai_mesh->mVertices[j].y, ai_mesh->mVertices[j].z, 1.0f);
-				vertex.positions.push_back(glm::vec3(transform * position));
+				verticies.positions.push_back(glm::vec3(transform * position));
 
 				if (ai_mesh->HasVertexColors(0))
 				{
-					vertex.colors.value().push_back(glm::vec4(ai_mesh->mColors[0][j].r, ai_mesh->mColors[0][j].g, ai_mesh->mColors[0][j].b, 1.0f));
-				}
-				else if (vertex.colors.has_value())
-				{
-					vertex.colors.value().push_back(glm::vec4(1.0f));
+					verticies.colors.push_back(glm::vec4(ai_mesh->mColors[0][j].r, ai_mesh->mColors[0][j].g, ai_mesh->mColors[0][j].b, 1.0f));
 				}
 
 				if (ai_mesh->HasTextureCoords(0))
 				{
-					vertex.tex_coords.value().push_back(glm::vec2(ai_mesh->mTextureCoords[0][j].x, ai_mesh->mTextureCoords[0][j].y));
-				}
-				else if (vertex.tex_coords.has_value())
-				{
-					vertex.tex_coords.value().push_back(glm::vec2(0.0f));
+					verticies.tex_coords.push_back(glm::vec2(ai_mesh->mTextureCoords[0][j].x, ai_mesh->mTextureCoords[0][j].y));
 				}
 
 				if (ai_mesh->HasNormals())
 				{
-					vertex.normals.value().push_back(glm::vec3(glm::normalize(glm::vec3(ai_mesh->mNormals[j].x, ai_mesh->mNormals[j].y, ai_mesh->mNormals[j].z))));
-				}
-				else if (vertex.normals.has_value())
-				{
-					vertex.normals.value().push_back(glm::vec3(0.0f));
+					verticies.normals.push_back(glm::vec3(glm::normalize(glm::vec3(ai_mesh->mNormals[j].x, ai_mesh->mNormals[j].y, ai_mesh->mNormals[j].z))));
 				}
 
 				if (ai_mesh->HasTangentsAndBitangents())
 				{
-					vertex.tangents.value().push_back(glm::vec3(ai_mesh->mTangents[j].x, ai_mesh->mTangents[j].y, ai_mesh->mTangents[j].z));
-					vertex.bitangents.value().push_back(glm::vec3(ai_mesh->mBitangents[j].x, ai_mesh->mBitangents[j].y, ai_mesh->mBitangents[j].z));
-				}
-				else if (vertex.tangents.has_value())
-				{
-					vertex.tangents.value().push_back(glm::vec3(0.0f));
-					vertex.bitangents.value().push_back(glm::vec3(0.0f));
+					verticies.tangents.push_back(glm::vec3(ai_mesh->mTangents[j].x, ai_mesh->mTangents[j].y, ai_mesh->mTangents[j].z));
+					verticies.bitangents.push_back(glm::vec3(ai_mesh->mBitangents[j].x, ai_mesh->mBitangents[j].y, ai_mesh->mBitangents[j].z));
 				}
 			}
 
 			// Indices
+			std::vector<u32> indices;
 			for (u32 j = 0; j < ai_mesh->mNumFaces; j++)
 			{
 				aiFace face = ai_mesh->mFaces[j];
 				for (u32 k = 0; k < face.mNumIndices; k++)
 				{
-					model->GetIndices().push_back(face.mIndices[k]);
+					indices.push_back(face.mIndices[k]);
 				}
 			}
 
 			// Material
 			aiMaterial* ai_material = scene->mMaterials[ai_mesh->mMaterialIndex];
-			aiColor3D color(0.f, 0.f, 0.f);
+			MaterialInfo* mesh_mat_info = new MaterialInfo();
 
-			LitMaterial* material = new LitMaterial();
+			for (int t = aiTextureType_NONE; t <= AI_TEXTURE_TYPE_MAX; ++t) {
+				aiTextureType aiType = static_cast<aiTextureType>(t);
+				unsigned int texCount = ai_material->GetTextureCount(aiType);
+				if (texCount > 0) {
+					aiString path;
+					if (ai_material->GetTexture(aiType, 0, &path) == AI_SUCCESS) {
+						TextureType textureType = GetTextureType(aiType);
 
-			ai_material->Get(AI_MATKEY_BASE_COLOR, color);
-			material->color = glm::vec4(color.r, color.g, color.b, 1.0f);
+						i32 index = TextureManager::GetInstance()->GetTexture2DIndex(path.C_Str());
 
-			// Texture
-			if (ai_material->GetTextureCount(aiTextureType_BASE_COLOR) > 0)
-			{
-				aiString path;
-				ai_material->GetTexture(aiTextureType_BASE_COLOR, 0, &path);
-				File texture_path = FileManager::ReadFile((file.GetRelativeDirectory() + "/" + std::string(path.C_Str())).c_str());
-
-				material->texture_base_color = TextureManager::GetInstance()->GetTexture2D(texture_path.GetName());
+						mesh_mat_info->Set(textureType, index);
+					}
+				}
 			}
 
-			mesh->SetIndexCount(static_cast<u32>(model->GetIndices().size()) - first_index);
-			mesh->SetMaterial(material);
-
-			mesh->SetModelMatrix(transform);
-
-			model->AddMesh(mesh);
+			MeshManager::GetInstance()->CreateMesh<VertexFormatBase>(ai_mesh->mName.C_Str(), verticies, indices, mesh_mat_info);
 		}
 
 		void AssetManager::ExtractTextures(const aiScene* scene, const File& file)
@@ -228,6 +158,37 @@ namespace hellengine
 					File texture_path = FileManager::ReadFile(file.GetRelativeDirectory() + "/" + std::string(path.C_Str()));
 					TextureManager::GetInstance()->CreateTexture2D(texture_path.GetName(), texture_path);
 				}
+			}
+		}
+
+		TextureType GetTextureType(aiTextureType type)
+		{
+			switch (type)
+			{
+			case aiTextureType_NONE:              return TextureType_None;
+			case aiTextureType_DIFFUSE:           return TextureType_Diffuse;
+			case aiTextureType_SPECULAR:          return TextureType_Specular;
+			case aiTextureType_AMBIENT:           return TextureType_Ambient;
+			case aiTextureType_EMISSIVE:          return TextureType_Emissive;
+			case aiTextureType_HEIGHT:            return TextureType_Height;
+			case aiTextureType_NORMALS:           return TextureType_Normals;
+			case aiTextureType_SHININESS:         return TextureType_Shininess;
+			case aiTextureType_OPACITY:           return TextureType_Opacity;
+			case aiTextureType_DISPLACEMENT:      return TextureType_Displacement;
+			case aiTextureType_LIGHTMAP:          return TextureType_Lightmap;
+			case aiTextureType_REFLECTION:        return TextureType_Reflection;
+
+			case aiTextureType_BASE_COLOR:        return TextureType_BaseColor;
+			case aiTextureType_NORMAL_CAMERA:     return TextureType_NormalCamera;
+			case aiTextureType_EMISSION_COLOR:    return TextureType_EmissionColor;
+			case aiTextureType_METALNESS:         return TextureType_Metalness;
+			case aiTextureType_DIFFUSE_ROUGHNESS: return TextureType_DiffuseRoughness;
+			case aiTextureType_AMBIENT_OCCLUSION: return TextureType_AmbientOcclusion;
+			case aiTextureType_SHEEN:             return TextureType_Sheen;
+			case aiTextureType_CLEARCOAT:         return TextureType_Clearcoat;
+			case aiTextureType_TRANSMISSION:      return TextureType_Transmission;
+
+			default:                              return TextureType_Unknown;
 			}
 		}
 

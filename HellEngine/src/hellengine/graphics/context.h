@@ -111,8 +111,10 @@ namespace hellengine
 			// Descriptor
 			void InitDescriptorPoolGrowable(const std::vector<DescriptorPoolSizeInfo>& pool_sizes, u32 max_sets);
 			VulkanDescriptorSet* CreateDescriptorSet(VulkanPipeline* pipeline, u32 set);
+			VulkanDescriptorSet* CreateDescriptorSetVariable(VulkanPipeline* pipeline, u32 set, std::vector<u32> count);
 
 			void WriteDescriptor(VulkanDescriptorSet** descriptor, std::vector<DescriptorSetWriteData>& data);
+			void WriteDescriptor(VulkanDescriptorSet** descriptor, std::vector<DescriptorSetWriteData>& data, u32 count, u32 array_element);
 
 			void BindDescriptorSet(VulkanPipeline* pipeline, VulkanDescriptorSet* descriptor, u32 offsets_count = 0, u32* offsets = VK_NULL_HANDLE);
 
@@ -126,7 +128,7 @@ namespace hellengine
 			VulkanTextureCubemap* CreateTextureCubemap(const File& file);
 			VulkanTextureCubemap* CreateTextureCubemapArray(const File& file);
 
-			void Update(VulkanTexture* texture, const void* data);
+			void UpdateTexture(VulkanTexture* texture, const void* data);
 
 			void DestroyTexture(VulkanTexture* texture) const;
 
@@ -137,8 +139,6 @@ namespace hellengine
 			// UI
 			void CreateImGuiResources(Window* window);
 			void DestroyImGuiResources();
-
-			// TEMP
 
 		private:
 			VulkanBuffer CreateStagingBuffer(VkDeviceSize size, void* data) const;
@@ -160,8 +160,6 @@ namespace hellengine
 			std::function<void()> m_record_callback;
 
 			VulkanDescriptorPool m_imgui_descriptor_pool;
-
-			// TEMP
 			VulkanDescriptorPoolGrowable m_descriptor_pool_growable;
 		};
 

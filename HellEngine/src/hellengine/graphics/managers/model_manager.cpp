@@ -16,6 +16,7 @@ namespace hellengine
 		{
 			for (auto& model : m_models)
 			{
+				model->Destroy();
 				delete model;
 			}
 		}
@@ -23,6 +24,16 @@ namespace hellengine
 		void ModelManager::AddModel(Model* model)
 		{
 			m_models.push_back(model);
+		}
+
+		Model* ModelManager::CreateModel()
+		{
+			Model* model = new Model();
+			model->Init(m_backend);
+
+			m_models.push_back(model);
+
+			return model;
 		}
 
 		ModelManager* ModelManager::GetInstance()
