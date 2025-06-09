@@ -90,10 +90,12 @@ namespace hellengine
 			HE_API void BindIndexBuffer(VulkanBuffer* buffer, VkDeviceSize offset) const;
 
 			// Descriptor
-			HE_API void InitDescriptorPool(const std::vector<DescriptorPoolSizeInfo>& pool_sizes, u32 max_sets);
+			HE_API void InitDescriptorPoolGrowable(const std::vector<DescriptorPoolSizeInfo>& pool_sizes, u32 max_sets);
 			HE_API VulkanDescriptorSet* CreateDescriptorSet(VulkanPipeline* pipeline, u32 set);
+			HE_API VulkanDescriptorSet* CreateDescriptorSetVariable(VulkanPipeline* pipeline, u32 set, std::vector<u32> count);
 
 			HE_API void WriteDescriptor(VulkanDescriptorSet** descriptor, std::vector<DescriptorSetWriteData>& data);
+			HE_API void WriteDescriptorVariable(VulkanDescriptorSet** descriptor, std::vector<DescriptorSetWriteData>& data, u32 count, u32 array_element);
 
 			HE_API void BindDescriptorSet(VulkanPipeline* pipeline, VulkanDescriptorSet* descriptor_set, u32 offsets_count = 0, u32* offsets = nullptr) const;
 
@@ -114,8 +116,6 @@ namespace hellengine
 			// Draw
 			HE_API void Draw(u32 vertex_count, u32 instance_count, u32 first_vertex, u32 first_instance) const;
 			HE_API void DrawIndexed(u32 index_count, u32 instance_count, u32 first_index, u32 vertex_offset, u32 first_instance) const;
-
-			// TEMP
 
 		private:
 			VulkanContext* m_context;

@@ -150,14 +150,14 @@ b8 TestDynamicAttachment::OnWindowResize(EventContext& event)
 	DescriptorSetWriteData descriptor_data1;
 	descriptor_data1.type = DescriptorType_CombinedImageSampler;
 	descriptor_data1.binding = 0;
-	descriptor_data1.data.image.image_view = m_color_texture->GetImageView();
-	descriptor_data1.data.image.sampler = m_color_texture->GetSampler();
+	descriptor_data1.data.image.image_views = m_color_texture->GetImageView();
+	descriptor_data1.data.image.samplers = m_color_texture->GetSampler();
 
 	DescriptorSetWriteData descriptor_data2;
 	descriptor_data2.type = DescriptorType_CombinedImageSampler;
 	descriptor_data2.binding = 1;
-	descriptor_data2.data.image.image_view = m_depth_texture->GetImageView();
-	descriptor_data2.data.image.sampler = m_depth_texture->GetSampler();
+	descriptor_data2.data.image.image_views = m_depth_texture->GetImageView();
+	descriptor_data2.data.image.samplers = m_depth_texture->GetSampler();
 
 	std::vector<DescriptorSetWriteData> descriptor_data = { descriptor_data1, descriptor_data2 };
 	m_backend->WriteDescriptor(&m_attachment_descriptor, descriptor_data);
@@ -370,7 +370,7 @@ void TestDynamicAttachment::CreatePipelines()
 void TestDynamicAttachment::CreateDescriptorSets()
 {
 	// Init pool
-	m_backend->InitDescriptorPool({
+	m_backend->InitDescriptorPoolGrowable({
 		{ DescriptorType_UniformBuffer, 1 },
 		{ DescriptorType_CombinedImageSampler, 1 }
 		}, 1);
@@ -383,9 +383,9 @@ void TestDynamicAttachment::CreateDescriptorSets()
 		DescriptorSetWriteData descriptor_data;
 		descriptor_data.type = DescriptorType_UniformBuffer;
 		descriptor_data.binding = 0;
-		descriptor_data.data.buffer.buffer = m_camera_buffer->GetHandle();
-		descriptor_data.data.buffer.offset = 0;
-		descriptor_data.data.buffer.range = sizeof(CameraData);
+		descriptor_data.data.buffer.buffers = m_camera_buffer->GetHandle();
+		descriptor_data.data.buffer.offsets = 0;
+		descriptor_data.data.buffer.ranges = sizeof(CameraData);
 
 		std::vector<DescriptorSetWriteData> descriptor_data_camera = { descriptor_data };
 		m_backend->WriteDescriptor(&m_camera_descriptor, descriptor_data_camera);
@@ -402,9 +402,9 @@ void TestDynamicAttachment::CreateDescriptorSets()
 		DescriptorSetWriteData descriptor_data;
 		descriptor_data.type = DescriptorType_UniformBuffer;
 		descriptor_data.binding = 0;
-		descriptor_data.data.buffer.buffer = m_model_buffer->GetHandle();
-		descriptor_data.data.buffer.offset = 0;
-		descriptor_data.data.buffer.range = sizeof(ObjectData);
+		descriptor_data.data.buffer.buffers = m_model_buffer->GetHandle();
+		descriptor_data.data.buffer.offsets = 0;
+		descriptor_data.data.buffer.ranges = sizeof(ObjectData);
 
 		std::vector<DescriptorSetWriteData> descriptor_data_objects = { descriptor_data };
 		m_backend->WriteDescriptor(&m_model_descriptor, descriptor_data_objects);
@@ -417,14 +417,14 @@ void TestDynamicAttachment::CreateDescriptorSets()
 		DescriptorSetWriteData descriptor_data1;
 		descriptor_data1.type = DescriptorType_CombinedImageSampler;
 		descriptor_data1.binding = 0;
-		descriptor_data1.data.image.image_view = m_color_texture->GetImageView();
-		descriptor_data1.data.image.sampler = m_color_texture->GetSampler();
+		descriptor_data1.data.image.image_views = m_color_texture->GetImageView();
+		descriptor_data1.data.image.samplers = m_color_texture->GetSampler();
 
 		DescriptorSetWriteData descriptor_data2;
 		descriptor_data2.type = DescriptorType_CombinedImageSampler;
 		descriptor_data2.binding = 1;
-		descriptor_data2.data.image.image_view = m_depth_texture->GetImageView();
-		descriptor_data2.data.image.sampler = m_depth_texture->GetSampler();
+		descriptor_data2.data.image.image_views = m_depth_texture->GetImageView();
+		descriptor_data2.data.image.samplers = m_depth_texture->GetSampler();
 
 		std::vector<DescriptorSetWriteData> descriptor_data_screen = { descriptor_data1, descriptor_data2 };
 		m_backend->WriteDescriptor(&m_attachment_descriptor, descriptor_data_screen);
@@ -442,9 +442,9 @@ void TestDynamicAttachment::CreateDescriptorSets()
 		DescriptorSetWriteData descriptor_data;
 		descriptor_data.type = DescriptorType_UniformBuffer;
 		descriptor_data.binding = 0;
-		descriptor_data.data.buffer.buffer = m_data_buffer->GetHandle();
-		descriptor_data.data.buffer.offset = 0;
-		descriptor_data.data.buffer.range = sizeof(Data);
+		descriptor_data.data.buffer.buffers = m_data_buffer->GetHandle();
+		descriptor_data.data.buffer.offsets = 0;
+		descriptor_data.data.buffer.ranges = sizeof(Data);
 
 		std::vector<DescriptorSetWriteData> descriptor_data_screen = { descriptor_data };
 		m_backend->WriteDescriptor(&m_data_descriptor, descriptor_data_screen);

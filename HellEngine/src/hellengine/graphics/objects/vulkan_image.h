@@ -15,7 +15,7 @@ namespace hellengine
 			VulkanImage();
 			~VulkanImage();
 
-			void Create(const VulkanInstance& instance, const VulkanDevice& device, VkImageType image_type, VkFormat format, VkExtent3D extent, u32 mip_levels, u32 array_layers, VkImageTiling tiling, VkImageUsageFlags usage, VkImageCreateFlags flags, VkMemoryPropertyFlags properties);
+			void Create(const VulkanInstance& instance, const VulkanDevice& device, VkImageType image_type, VkFormat format, VkExtent3D extent, u32 mip_levels, u32 array_layers, VkSampleCountFlagBits sample_count, VkImageTiling tiling, VkImageUsageFlags usage, VkImageCreateFlags flags, VkMemoryPropertyFlags properties);
 			void CreateImageView(const VulkanInstance& instance, const VulkanDevice& device, VkImageViewType view_type, VkFormat format, VkImageSubresourceRange range);
 			void Destroy(const VulkanInstance& instance, const VulkanDevice& device) const;
 

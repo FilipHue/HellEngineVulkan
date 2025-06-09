@@ -310,7 +310,7 @@ void TestPipelines::CreatePipelines()
 void TestPipelines::CreateDescriptorSets()
 {
 	// Init pool
-	m_backend->InitDescriptorPool({
+	m_backend->InitDescriptorPoolGrowable({
 		{ DescriptorType_UniformBuffer, 1 },
 		{ DescriptorType_CombinedImageSampler, 1 }
 		}, 1);
@@ -323,9 +323,9 @@ void TestPipelines::CreateDescriptorSets()
 		DescriptorSetWriteData descriptor_data{};
 		descriptor_data.type = DescriptorType_UniformBuffer;
 		descriptor_data.binding = 0;
-		descriptor_data.data.buffer.buffer = m_camera_buffer->GetHandle();
-		descriptor_data.data.buffer.offset = 0;
-		descriptor_data.data.buffer.range = sizeof(CameraData);
+		descriptor_data.data.buffer.buffers = m_camera_buffer->GetHandle();
+		descriptor_data.data.buffer.offsets = 0;
+		descriptor_data.data.buffer.ranges = sizeof(CameraData);
 
 		std::vector<DescriptorSetWriteData> descriptor_data_camera = { descriptor_data };
 		m_backend->WriteDescriptor(&m_camera_descriptor, descriptor_data_camera);
@@ -341,9 +341,9 @@ void TestPipelines::CreateDescriptorSets()
 		DescriptorSetWriteData descriptor_data;
 		descriptor_data.type = DescriptorType_UniformBuffer;
 		descriptor_data.binding = 0;
-		descriptor_data.data.buffer.buffer = m_model_buffer->GetHandle();
-		descriptor_data.data.buffer.offset = 0;
-		descriptor_data.data.buffer.range = sizeof(ObjectData);
+		descriptor_data.data.buffer.buffers = m_model_buffer->GetHandle();
+		descriptor_data.data.buffer.offsets = 0;
+		descriptor_data.data.buffer.ranges = sizeof(ObjectData);
 
 		std::vector<DescriptorSetWriteData> descriptor_data_objects = { descriptor_data };
 		m_backend->WriteDescriptor(&m_model_descriptor, descriptor_data_objects);
@@ -358,9 +358,9 @@ void TestPipelines::CreateDescriptorSets()
 		DescriptorSetWriteData descriptor_data;
 		descriptor_data.type = DescriptorType_UniformBuffer;
 		descriptor_data.binding = 0;
-		descriptor_data.data.buffer.buffer = m_light_buffer->GetHandle();
-		descriptor_data.data.buffer.offset = 0;
-		descriptor_data.data.buffer.range = sizeof(LightData);
+		descriptor_data.data.buffer.buffers = m_light_buffer->GetHandle();
+		descriptor_data.data.buffer.offsets = 0;
+		descriptor_data.data.buffer.ranges = sizeof(LightData);
 
 		std::vector<DescriptorSetWriteData> descriptor_data_light = { descriptor_data };
 		m_backend->WriteDescriptor(&m_light_descriptor, descriptor_data_light);

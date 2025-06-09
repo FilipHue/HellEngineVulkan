@@ -9,6 +9,7 @@ namespace hellengine
 
 		Shared<spdlog::logger> Logger::s_core_logger;
 		Shared<spdlog::logger> Logger::s_graphics_logger;
+		Shared<spdlog::logger> Logger::s_ecs_logger;
 		Shared<spdlog::logger> Logger::s_client_logger;
 
 		void Logger::Init()
@@ -29,6 +30,12 @@ namespace hellengine
 
 			s_graphics_logger->set_level(spdlog::level::trace);
 			s_graphics_logger->flush_on(spdlog::level::trace);
+
+			s_ecs_logger = MakeShared<spdlog::logger>(ECS_LOGGER_NAME, begin(logSinks), end(logSinks));
+			spdlog::register_logger(s_ecs_logger);
+
+			s_ecs_logger->set_level(spdlog::level::trace);
+			s_ecs_logger->flush_on(spdlog::level::trace);
 
 			s_client_logger = MakeShared<spdlog::logger>(CLIENT_LOGGER_NAME, begin(logSinks), end(logSinks));
 			spdlog::register_logger(s_client_logger);

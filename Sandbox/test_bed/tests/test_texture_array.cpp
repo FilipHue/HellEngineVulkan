@@ -207,10 +207,12 @@ void TestTextureArray::CreatePipelines()
 
 	pipeline_info.layout = {
 		{
-			{ 0, DescriptorType_UniformBuffer, ShaderStage_Vertex }
+			{ { 0, DescriptorType_UniformBuffer, 1, ShaderStage_Vertex, DescriptorBindingFlags_None } },
+			DescriptorSetFlags_None
 		},
 		{
-			{ 0, DescriptorType_CombinedImageSampler, ShaderStage_Fragment }
+			{ { 0, DescriptorType_CombinedImageSampler, 1, ShaderStage_Fragment, DescriptorBindingFlags_None  } },
+			DescriptorSetFlags_None
 		}
 	};
 
@@ -230,7 +232,7 @@ void TestTextureArray::CreatePipelines()
 void TestTextureArray::CreateDescriptorSets()
 {
 	// Init pool
-	m_backend->InitDescriptorPool({
+	m_backend->InitDescriptorPoolGrowable({
 		{ DescriptorType_UniformBuffer, 1 },
 		{ DescriptorType_CombinedImageSampler, 1 }
 		}, 1);
@@ -256,9 +258,11 @@ void TestTextureArray::CreateDescriptorSets()
 		DescriptorSetWriteData descriptor_data{};
 		descriptor_data.type = DescriptorType_UniformBuffer;
 		descriptor_data.binding = 0;
-		descriptor_data.data.buffer.buffer = m_instance_buffer->GetHandle();
-		descriptor_data.data.buffer.offset = 0;
-		descriptor_data.data.buffer.range = sizeof(CameraData) + MAX_OBJECTS * sizeof(InstanceData);
+		descriptor_data.data.buffer.buffers = new VkBuffer[1];
+		descriptor_data.data.buffer.buffers[0] = m_instance_buffer->GetHandle();
+		descriptor_data.data.buffer.offsets = new VkDeviceSize[1];
+		descriptor_data.data.buffer.offsets[0] = 0;
+		descriptor_data.data.buffer.ranges[0] = sizeof(CameraData) + MAX_OBJECTS * sizeof(InstanceData);
 
 		std::vector<DescriptorSetWriteData> descriptor_data_model = { descriptor_data };
 		m_backend->WriteDescriptor(&m_instances_descriptor, descriptor_data_model);
@@ -271,8 +275,10 @@ void TestTextureArray::CreateDescriptorSets()
 		DescriptorSetWriteData descriptor_data{};
 		descriptor_data.type = DescriptorType_CombinedImageSampler;
 		descriptor_data.binding = 0;
-		descriptor_data.data.image.image_view = m_texture->GetImageView();
-		descriptor_data.data.image.sampler = m_texture->GetSampler();
+		descriptor_data.data.image.image_views = new VkImageView[1];
+		descriptor_data.data.image.image_views[0] = m_texture->GetImageView();
+		descriptor_data.data.image.samplers = new VkSampler[1];
+		descriptor_data.data.image.samplers[0] = m_texture->GetSampler();
 
 		std::vector<DescriptorSetWriteData> descriptor_data_texture = { descriptor_data };
 		m_backend->WriteDescriptor(&m_texture_descriptor, descriptor_data_texture);

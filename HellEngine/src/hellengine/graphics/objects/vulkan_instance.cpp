@@ -99,7 +99,7 @@ namespace hellengine
 				VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
 #endif
 #if defined(HE_DEBUG)
-				VK_EXT_DEBUG_UTILS_EXTENSION_NAME
+				VK_EXT_DEBUG_UTILS_EXTENSION_NAME,
 #endif
 			};
 		}

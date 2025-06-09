@@ -149,10 +149,34 @@ namespace hellengine
 			dynamic_rendering_features.pNext = VK_NULL_HANDLE;
 			dynamic_rendering_features.dynamicRendering = VK_TRUE;
 
+			VkPhysicalDeviceDescriptorIndexingFeatures indexing_features = {};
+			indexing_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
+			indexing_features.pNext = &dynamic_rendering_features;
+			indexing_features.shaderInputAttachmentArrayDynamicIndexing = VK_TRUE;
+			indexing_features.shaderUniformTexelBufferArrayDynamicIndexing = VK_TRUE;
+			indexing_features.shaderStorageTexelBufferArrayDynamicIndexing = VK_TRUE;
+			indexing_features.shaderUniformBufferArrayNonUniformIndexing = VK_TRUE;
+			indexing_features.shaderSampledImageArrayNonUniformIndexing = VK_TRUE;
+			indexing_features.shaderStorageBufferArrayNonUniformIndexing = VK_TRUE;
+			indexing_features.shaderStorageImageArrayNonUniformIndexing = VK_TRUE;
+			indexing_features.shaderInputAttachmentArrayNonUniformIndexing = VK_TRUE;
+			indexing_features.shaderUniformTexelBufferArrayNonUniformIndexing = VK_TRUE;
+			indexing_features.shaderStorageTexelBufferArrayNonUniformIndexing = VK_TRUE;
+			indexing_features.descriptorBindingUniformBufferUpdateAfterBind = VK_TRUE;
+			indexing_features.descriptorBindingSampledImageUpdateAfterBind = VK_TRUE;
+			indexing_features.descriptorBindingStorageImageUpdateAfterBind = VK_TRUE;
+			indexing_features.descriptorBindingStorageBufferUpdateAfterBind = VK_TRUE;
+			indexing_features.descriptorBindingUniformTexelBufferUpdateAfterBind = VK_TRUE;
+			indexing_features.descriptorBindingStorageTexelBufferUpdateAfterBind = VK_TRUE;
+			indexing_features.descriptorBindingUpdateUnusedWhilePending = VK_TRUE;
+			indexing_features.descriptorBindingPartiallyBound = VK_TRUE;
+			indexing_features.descriptorBindingVariableDescriptorCount = VK_TRUE;
+			indexing_features.runtimeDescriptorArray = VK_TRUE;
+
 			VkDeviceCreateInfo device_create_info = {};
 			device_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 			device_create_info.flags = 0;
-			device_create_info.pNext = &dynamic_rendering_features;
+			device_create_info.pNext = &indexing_features;
 			device_create_info.queueCreateInfoCount = static_cast<u32>(queue_create_infos.size());
 			device_create_info.pQueueCreateInfos = queue_create_infos.data();
 			device_create_info.enabledLayerCount = 0;

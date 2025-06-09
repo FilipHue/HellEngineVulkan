@@ -211,7 +211,7 @@ void SandboxApplication::CreatePipeline()
 void SandboxApplication::CreateDescriptorSet()
 {
 	// Init pool
-	m_backend->InitDescriptorPool({
+	m_backend->InitDescriptorPoolGrowable({
 		{ DescriptorType_UniformBuffer, 1 },
 		{ DescriptorType_CombinedImageSampler, 1 }
 		}, 1);
@@ -224,9 +224,9 @@ void SandboxApplication::CreateDescriptorSet()
 		DescriptorSetWriteData descriptor_data{};
 		descriptor_data.type = DescriptorType_UniformBuffer;
 		descriptor_data.binding = 0;
-		descriptor_data.data.buffer.buffer = m_camera_buffer->GetHandle();
-		descriptor_data.data.buffer.offset = 0;
-		descriptor_data.data.buffer.range = sizeof(CameraData);
+		descriptor_data.data.buffer.buffers = m_camera_buffer->GetHandle();
+		descriptor_data.data.buffer.offsets = 0;
+		descriptor_data.data.buffer.ranges = sizeof(CameraData);
 
 		std::vector<DescriptorSetWriteData> descriptor_data_camera = { descriptor_data };
 		m_backend->WriteDescriptor(&m_camera_descriptor, descriptor_data_camera);
@@ -247,9 +247,9 @@ void SandboxApplication::CreateDescriptorSet()
 			DescriptorSetWriteData descriptor_data;
 			descriptor_data.type = DescriptorType_UniformBuffer;
 			descriptor_data.binding = 0;
-			descriptor_data.data.buffer.buffer = m_mesh_buffers[i]->GetHandle();
-			descriptor_data.data.buffer.offset = 0;
-			descriptor_data.data.buffer.range = sizeof(ObjectData);
+			descriptor_data.data.buffer.buffers = m_mesh_buffers[i]->GetHandle();
+			descriptor_data.data.buffer.offsets = 0;
+			descriptor_data.data.buffer.ranges = sizeof(ObjectData);
 
 			std::vector<DescriptorSetWriteData> descriptor_data_objects = { descriptor_data };
 			m_backend->WriteDescriptor(&m_mesh_descriptors[i], descriptor_data_objects);
@@ -263,8 +263,8 @@ void SandboxApplication::CreateDescriptorSet()
 		DescriptorSetWriteData descriptor_data{};
 		descriptor_data.type = DescriptorType_CombinedImageSampler;
 		descriptor_data.binding = 0;
-		descriptor_data.data.image.image_view = m_test_texture->GetImageView();
-		descriptor_data.data.image.sampler = m_test_texture->GetSampler();
+		descriptor_data.data.image.image_views = m_test_texture->GetImageView();
+		descriptor_data.data.image.samplers = m_test_texture->GetSampler();
 
 		std::vector<DescriptorSetWriteData> descriptor_data_material = { descriptor_data };
 		m_backend->WriteDescriptor(&m_material_descriptor, descriptor_data_material);
@@ -350,9 +350,9 @@ void SandboxApplication::CreateCubeDescriptorSet(std::string name)
 	DescriptorSetWriteData descriptor_data;
 	descriptor_data.type = DescriptorType_UniformBuffer;
 	descriptor_data.binding = 0;
-	descriptor_data.data.buffer.buffer = m_mesh_buffers[m_meshes - 1]->GetHandle();
-	descriptor_data.data.buffer.offset = 0;
-	descriptor_data.data.buffer.range = sizeof(ObjectData);
+	descriptor_data.data.buffer.buffers = m_mesh_buffers[m_meshes - 1]->GetHandle();
+	descriptor_data.data.buffer.offsets = 0;
+	descriptor_data.data.buffer.ranges = sizeof(ObjectData);
 
 	std::vector<DescriptorSetWriteData> descriptor_data_objects = { descriptor_data };
 	m_backend->WriteDescriptor(&m_mesh_descriptors[m_meshes - 1], descriptor_data_objects);

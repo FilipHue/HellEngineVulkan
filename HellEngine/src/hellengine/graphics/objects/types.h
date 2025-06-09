@@ -94,7 +94,8 @@ namespace hellengine
 		{
 			std::vector<DynamicRenderingAttachmentInfo> color_attachments;
 			std::optional<DynamicRenderingAttachmentInfo> depth_attachment;
-			VkRenderingFlags flags;
+			VkRenderingFlags flags{};
+			VkExtent2D extent{};
 		};
 
 		/*************\
@@ -261,21 +262,38 @@ namespace hellengine
 			DescriptorType_Count
 		};
 
+		enum DescriptorBindingFlags
+		{
+			DescriptorBindingFlags_None							= 0,
+			DescriptorBindingFlags_UpdateAfterBind				= 1,
+			DescriptorBindingFlags_UpdateUnusedWhilePending		= 2,
+			DescriptorBindingFlags_PartiallyBound				= 4,
+			DescriptorBindingFlags_VariableCount				= 8,
+
+			DescriptorBindingFlags_Count
+		};
+
+		enum DescriptorSetFlags
+		{
+			DescriptorSetFlags_None					= 0,
+			DescriptorSetFlags_UpdateAfterBindPool	= 2
+		};
+
 		struct DescriptorSetWriteData
 		{
 			union WriteData
 			{
 				struct Buffer
 				{
-					VkBuffer buffer;
-					VkDeviceSize offset;
-					VkDeviceSize range;
+					VkBuffer* buffers;
+					VkDeviceSize* offsets;
+					VkDeviceSize* ranges;
 				} buffer;
 
 				struct Image
 				{
-					VkImageView image_view;
-					VkSampler sampler;
+					VkImageView* image_views;
+					VkSampler* samplers;
 				} image;
 			} data;
 
@@ -289,11 +307,19 @@ namespace hellengine
 			u32 count;
 		};
 
-		struct DescriptorLayoutBindingInfo
+		struct DescriptorSetBindingInfo
 		{
 			u32 binding;
 			DescriptorType type;
+			u32 count;
 			ShaderStage stage;
+			DescriptorBindingFlags flags;
+		};
+
+		struct DescriptorSetInfo
+		{
+			std::vector<DescriptorSetBindingInfo> bindings;
+			DescriptorSetFlags flags;
 		};
 
 		/**********\
@@ -396,10 +422,10 @@ namespace hellengine
 
 		struct PipelineDynamicRenderingInfo
 		{
+			b8 blend_enable = false;
 			std::vector<VkFormat> color_formats;
 			std::optional<VkFormat> depth_format;
 			std::optional<VkFormat> stencil_format;
-			b8 blend_enable = false;
 		};
 
 		struct PipelineRenderPassInfo
@@ -417,7 +443,7 @@ namespace hellengine
 			f32 line_width;
 
 			std::vector<PipelineDynamicState> dynamic_states;
-			std::vector<std::vector<DescriptorLayoutBindingInfo>> layout;
+			std::vector<DescriptorSetInfo> layout;
 			VkVertexInputBindingDescription vertex_binding_description;
 			std::vector<VkVertexInputAttributeDescription> vertex_attribute_descriptions;
 			std::vector<PipelinePushConstantRange> push_constant_ranges;

@@ -33,7 +33,8 @@ namespace hellengine
 
 		b8 VulkanFrontend::CreateMesh(std::string name, std::vector<VertexFormatBase> vertices, std::vector<u32> indices)
 		{
-			return m_mesh_manager->CreateMesh(name, vertices, indices);
+			//return m_mesh_manager->CreateMesh(name, vertices, indices);
+			return false;
 		}
 
 		void VulkanFrontend::DrawMesh(std::string name, u32 instance_count)
@@ -46,7 +47,12 @@ namespace hellengine
 			return m_texture_manager->CreateTexture2D(name, file);
 		}
 
-		VulkanTexture2D* VulkanFrontend::CreateTexture2D(std::string name, VkFormat format, const void* data, i32 width, i32 height)
+		VulkanTexture2D* VulkanFrontend::CreateTexture2D(std::string name, VkFormat format, u32 width, u32 height)
+		{
+			return m_texture_manager->CreateTexture2D(name, format, width, height);
+		}
+
+		VulkanTexture2D* VulkanFrontend::CreateTexture2D(std::string name, VkFormat format, const void* data, u32 width, u32 height)
 		{
 			return m_texture_manager->CreateTexture2D(name, format, data, width, height);
 		}
@@ -69,6 +75,11 @@ namespace hellengine
 		VulkanTextureCubemap* VulkanFrontend::GetTextureCubemap(std::string name)
 		{
 			return m_texture_manager->GetTextureCubemap(name);
+		}
+
+		void VulkanFrontend::DestroyTexture2D(std::string name)
+		{
+			return m_texture_manager->DestroyTexture2D(name);
 		}
 
 	} // namespace graphics

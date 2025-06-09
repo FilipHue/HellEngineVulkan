@@ -90,6 +90,6 @@
 // This macro is set to 199711L by default for compatibility reasons.
 // See https://learn.microsoft.com/en-us/cpp/build/reference/zc-cplusplus?view=msvc-170 for more information.
 // You need to enable /Zc:__cplusplus in Properties->C/C++->Command Line->Additional Options to get the correct value.
-#if __cplusplus < 201703L
+#if __cplusplus < 202002L
     #error "HellEngine requires at least C++17 support! Please enable C++17 or higher."
 #endif

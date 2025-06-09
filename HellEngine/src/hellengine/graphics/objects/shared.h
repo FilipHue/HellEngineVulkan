@@ -162,6 +162,55 @@ namespace hellengine
 			}
 		}
 
+		INLINE DescriptorBindingFlags operator|(DescriptorBindingFlags lhs, DescriptorBindingFlags rhs)
+		{
+			return static_cast<DescriptorBindingFlags>(static_cast<u32>(lhs) | static_cast<u32>(rhs));
+		}
+
+		INLINE VkDescriptorBindingFlags GetVulkanDescriptorSetBindingFlags(DescriptorBindingFlags flags)
+		{
+			VkDescriptorBindingFlags vk_flags = (VkDescriptorBindingFlags)0;
+
+			if (flags & DescriptorBindingFlags_UpdateAfterBind)
+			{
+				vk_flags = (VkDescriptorBindingFlags)(vk_flags | VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT);
+			}
+
+			if (flags & DescriptorBindingFlags_UpdateUnusedWhilePending)
+			{
+				vk_flags = (VkDescriptorBindingFlags)(vk_flags | VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT);
+			}
+
+			if (flags & DescriptorBindingFlags_PartiallyBound)
+			{
+				vk_flags = (VkDescriptorBindingFlags)(vk_flags | VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT);
+			}
+
+			if (flags & DescriptorBindingFlags_VariableCount)
+			{
+				vk_flags = (VkDescriptorBindingFlags)(vk_flags | VK_DESCRIPTOR_BINDING_VARIABLE_DESCRIPTOR_COUNT_BIT);
+			}
+
+			return vk_flags;
+		}
+
+		INLINE DescriptorSetFlags operator|(DescriptorSetFlags lhs, DescriptorSetFlags rhs)
+		{
+			return static_cast<DescriptorSetFlags>(static_cast<u32>(lhs) | static_cast<u32>(rhs));
+		}
+
+		INLINE VkDescriptorSetLayoutCreateFlagBits GetVulkanDescriptorSetFlags(DescriptorSetFlags flags)
+		{
+			VkDescriptorSetLayoutCreateFlagBits vk_flags = (VkDescriptorSetLayoutCreateFlagBits)0;
+
+			if (flags & DescriptorSetFlags_UpdateAfterBindPool)
+			{
+				vk_flags = (VkDescriptorSetLayoutCreateFlagBits)(vk_flags | VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT);
+			}
+
+			return vk_flags;
+		}
+
 		/**********\
 		| PIPELINE |
 		\**********/

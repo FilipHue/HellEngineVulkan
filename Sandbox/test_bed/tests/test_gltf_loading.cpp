@@ -240,7 +240,7 @@ void TestGltfLoading::CreateDescriptorSets()
 	*/
 
 	// Init pool
-	m_backend->InitDescriptorPool({
+	m_backend->InitDescriptorPoolGrowable({
 		{ DescriptorType_UniformBuffer, 1 },
 		{ DescriptorType_CombinedImageSampler, 1 }
 		}, 1);
@@ -256,9 +256,9 @@ void TestGltfLoading::CreateDescriptorSets()
 		DescriptorSetWriteData descriptor_data;
 		descriptor_data.type = DescriptorType_UniformBuffer;
 		descriptor_data.binding = 0;
-		descriptor_data.data.buffer.buffer = m_model_buffer->GetHandle();
-		descriptor_data.data.buffer.offset = 0;
-		descriptor_data.data.buffer.range = sizeof(ObjectData);
+		descriptor_data.data.buffer.buffers = m_model_buffer->GetHandle();
+		descriptor_data.data.buffer.offsets = 0;
+		descriptor_data.data.buffer.ranges = sizeof(ObjectData);
 
 		std::vector<DescriptorSetWriteData> descriptor_data_objects = { descriptor_data };
 		m_backend->WriteDescriptor(&m_lit_model_descriptor, descriptor_data_objects);
@@ -272,18 +272,18 @@ void TestGltfLoading::CreateDescriptorSets()
 		DescriptorSetWriteData descriptor_data1;
 		descriptor_data1.type = DescriptorType_UniformBuffer;
 		descriptor_data1.binding = 0;
-		descriptor_data1.data.buffer.buffer = m_camera_buffer->GetHandle();
-		descriptor_data1.data.buffer.offset = 0;
-		descriptor_data1.data.buffer.range = sizeof(CameraData);
+		descriptor_data1.data.buffer.buffers = m_camera_buffer->GetHandle();
+		descriptor_data1.data.buffer.offsets = 0;
+		descriptor_data1.data.buffer.ranges = sizeof(CameraData);
 
 		m_light_buffer = m_backend->CreateUniformBufferMappedPersistent(sizeof(LightData));
 
 		DescriptorSetWriteData descriptor_data2;
 		descriptor_data2.type = DescriptorType_UniformBuffer;
 		descriptor_data2.binding = 1;
-		descriptor_data2.data.buffer.buffer = m_light_buffer->GetHandle();
-		descriptor_data2.data.buffer.offset = 0;
-		descriptor_data2.data.buffer.range = sizeof(LightData);
+		descriptor_data2.data.buffer.buffers = m_light_buffer->GetHandle();
+		descriptor_data2.data.buffer.offsets = 0;
+		descriptor_data2.data.buffer.ranges = sizeof(LightData);
 
 		std::vector<DescriptorSetWriteData> descriptor_data_camera = { descriptor_data1, descriptor_data2 };
 		m_backend->WriteDescriptor(&m_lit_constants_descriptor, descriptor_data_camera);
@@ -296,9 +296,9 @@ void TestGltfLoading::CreateDescriptorSets()
 		DescriptorSetWriteData descriptor_data;
 		descriptor_data.type = DescriptorType_UniformBuffer;
 		descriptor_data.binding = 0;
-		descriptor_data.data.buffer.buffer = m_camera_buffer->GetHandle();
-		descriptor_data.data.buffer.offset = 0;
-		descriptor_data.data.buffer.range = sizeof(CameraData);
+		descriptor_data.data.buffer.buffers = m_camera_buffer->GetHandle();
+		descriptor_data.data.buffer.offsets = 0;
+		descriptor_data.data.buffer.ranges = sizeof(CameraData);
 
 		std::vector<DescriptorSetWriteData> descriptor_data_camera = { descriptor_data };
 		m_backend->WriteDescriptor(&m_wireframe_constants_descriptor, descriptor_data_camera);

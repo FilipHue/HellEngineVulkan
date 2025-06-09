@@ -28,7 +28,7 @@ namespace hellengine
 			NO_OP;
 		}
 
-		void VulkanImage::Create(const VulkanInstance& instance, const VulkanDevice& device, VkImageType image_type, VkFormat format, VkExtent3D extent, u32 mip_levels, u32 array_layers, VkImageTiling tiling, VkImageUsageFlags usage, VkImageCreateFlags flags, VkMemoryPropertyFlags properties)
+		void VulkanImage::Create(const VulkanInstance& instance, const VulkanDevice& device, VkImageType image_type, VkFormat format, VkExtent3D extent, u32 mip_levels, u32 array_layers, VkSampleCountFlagBits sample_count, VkImageTiling tiling, VkImageUsageFlags usage, VkImageCreateFlags flags, VkMemoryPropertyFlags properties)
 		{
 			m_width = extent.width;
 			m_height = extent.height;
@@ -43,7 +43,7 @@ namespace hellengine
 			image_info.extent = extent;
 			image_info.mipLevels = mip_levels;
 			image_info.arrayLayers = array_layers;
-			image_info.samples = VK_SAMPLE_COUNT_1_BIT;
+			image_info.samples = sample_count;
 			image_info.tiling = tiling;
 			image_info.usage = usage;
 			image_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;

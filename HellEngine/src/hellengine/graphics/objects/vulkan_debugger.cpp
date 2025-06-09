@@ -61,7 +61,7 @@ namespace hellengine
 			if (func == VK_NULL_HANDLE)
 			{
 				HE_GRAPHICS_DEBUG("Failed to get vkCreateDebugUtilsMessengerEXT function pointer. Shutting down appliaction");
-				exit(EXIT_FAILURE);
+				EXIT(-1);
 			}
 
 			VK_CHECK(func(instance, &create_info, allocator, &m_messenger));
@@ -97,6 +97,7 @@ namespace hellengine
 			case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
 				message += "\n";
 				HE_GRAPHICS_ERROR(message.c_str());
+				DEBUG_BREAK;
 				break;
 			default:
 				break;

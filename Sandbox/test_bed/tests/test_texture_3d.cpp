@@ -236,19 +236,24 @@ void TestTexture3D::CreatePipelines()
 
 	pipeline_info.layout = {
 		{
-			{ 0, DescriptorType_UniformBuffer, ShaderStage_Vertex }
+			{ { 0, DescriptorType_UniformBuffer, 1, ShaderStage_Vertex, DescriptorBindingFlags_None } },
+			DescriptorSetFlags_None
 		},
 		{
-			{ 0, DescriptorType_UniformBuffer, ShaderStage_Vertex }
+			{ { 0, DescriptorType_UniformBuffer, 1, ShaderStage_Vertex, DescriptorBindingFlags_None } },
+			DescriptorSetFlags_None
 		},
 		{
-			{ 0, DescriptorType_UniformBuffer, ShaderStage_Vertex }
+			{ { 0, DescriptorType_UniformBuffer, 1, ShaderStage_Vertex, DescriptorBindingFlags_None } },
+			DescriptorSetFlags_None
 		},
 		{
-			{ 0, DescriptorType_UniformBuffer, ShaderStage_Vertex }
+			{ { 0, DescriptorType_UniformBuffer, 1, ShaderStage_Vertex, DescriptorBindingFlags_None } },
+			DescriptorSetFlags_None
 		},
 		{
-			{ 0, DescriptorType_CombinedImageSampler, ShaderStage_Fragment }
+			{ { 0, DescriptorType_CombinedImageSampler, 1, ShaderStage_Fragment, DescriptorBindingFlags_None } },
+			DescriptorSetFlags_None
 		}
 	};
 
@@ -268,7 +273,7 @@ void TestTexture3D::CreatePipelines()
 void TestTexture3D::CreateDescriptorSets()
 {
 	// Init pool
-	m_backend->InitDescriptorPool({
+	m_backend->InitDescriptorPoolGrowable({
 		{ DescriptorType_UniformBuffer, 1 },
 		{ DescriptorType_CombinedImageSampler, 1 }
 		}, 1);
@@ -281,9 +286,12 @@ void TestTexture3D::CreateDescriptorSets()
 		DescriptorSetWriteData descriptor_data{};
 		descriptor_data.type = DescriptorType_UniformBuffer;
 		descriptor_data.binding = 0;
-		descriptor_data.data.buffer.buffer = m_camera_buffer->GetHandle();
-		descriptor_data.data.buffer.offset = 0;
-		descriptor_data.data.buffer.range = sizeof(CameraData);
+		descriptor_data.data.buffer.buffers = new VkBuffer[1];
+		descriptor_data.data.buffer.buffers[0] = m_camera_buffer->GetHandle();
+		descriptor_data.data.buffer.offsets = new VkDeviceSize[1];
+		descriptor_data.data.buffer.offsets[0] = 0;
+		descriptor_data.data.buffer.ranges = new VkDeviceSize[1];
+		descriptor_data.data.buffer.ranges[0] = sizeof(CameraData);
 
 		std::vector<DescriptorSetWriteData> descriptor_data_camera = { descriptor_data };
 		m_backend->WriteDescriptor(&m_camera_descriptor, descriptor_data_camera);
@@ -299,9 +307,12 @@ void TestTexture3D::CreateDescriptorSets()
 		DescriptorSetWriteData descriptor_data{};
 		descriptor_data.type = DescriptorType_UniformBuffer;
 		descriptor_data.binding = 0;
-		descriptor_data.data.buffer.buffer = m_model_buffer->GetHandle();
-		descriptor_data.data.buffer.offset = 0;
-		descriptor_data.data.buffer.range = sizeof(ObjectData);
+		descriptor_data.data.buffer.buffers = new VkBuffer[1];
+		descriptor_data.data.buffer.buffers[0] = m_model_buffer->GetHandle();
+		descriptor_data.data.buffer.offsets = new VkDeviceSize[1];
+		descriptor_data.data.buffer.offsets[0] = 0;
+		descriptor_data.data.buffer.ranges = new VkDeviceSize[1];
+		descriptor_data.data.buffer.ranges[0] = sizeof(ObjectData);
 
 		std::vector<DescriptorSetWriteData> descriptor_data_model = { descriptor_data };
 		m_backend->WriteDescriptor(&m_model_descriptor, descriptor_data_model);
@@ -315,9 +326,12 @@ void TestTexture3D::CreateDescriptorSets()
 		DescriptorSetWriteData descriptor_data{};
 		descriptor_data.type = DescriptorType_UniformBuffer;
 		descriptor_data.binding = 0;
-		descriptor_data.data.buffer.buffer = m_light_buffer->GetHandle();
-		descriptor_data.data.buffer.offset = 0;
-		descriptor_data.data.buffer.range = sizeof(LightData);
+		descriptor_data.data.buffer.buffers = new VkBuffer[1];
+		descriptor_data.data.buffer.buffers[0] = m_light_buffer->GetHandle();
+		descriptor_data.data.buffer.offsets = new VkDeviceSize[1];
+		descriptor_data.data.buffer.offsets[0] = 0;
+		descriptor_data.data.buffer.ranges = new VkDeviceSize[1];
+		descriptor_data.data.buffer.ranges[0] = sizeof(LightData);
 
 		std::vector<DescriptorSetWriteData> descriptor_data_light = { descriptor_data };
 		m_backend->WriteDescriptor(&m_light_descriptor, descriptor_data_light);
@@ -331,9 +345,12 @@ void TestTexture3D::CreateDescriptorSets()
 		DescriptorSetWriteData descriptor_data{};
 		descriptor_data.type = DescriptorType_UniformBuffer;
 		descriptor_data.binding = 0;
-		descriptor_data.data.buffer.buffer = m_image_buffer->GetHandle();
-		descriptor_data.data.buffer.offset = 0;
-		descriptor_data.data.buffer.range = sizeof(f32);
+		descriptor_data.data.buffer.buffers = new VkBuffer[1];
+		descriptor_data.data.buffer.buffers[0] = m_image_buffer->GetHandle();
+		descriptor_data.data.buffer.ranges = new VkDeviceSize[1];
+		descriptor_data.data.buffer.offsets[0] = 0;
+		descriptor_data.data.buffer.ranges = new VkDeviceSize[1];
+		descriptor_data.data.buffer.ranges[0] = sizeof(f32);
 
 		std::vector<DescriptorSetWriteData> descriptor_data_image = { descriptor_data };
 		m_backend->WriteDescriptor(&m_image_descriptor, descriptor_data_image);
@@ -346,8 +363,10 @@ void TestTexture3D::CreateDescriptorSets()
 		DescriptorSetWriteData descriptor_data{};
 		descriptor_data.type = DescriptorType_CombinedImageSampler;
 		descriptor_data.binding = 0;
-		descriptor_data.data.image.image_view = m_texture->GetImageView();
-		descriptor_data.data.image.sampler = m_texture->GetSampler();
+		descriptor_data.data.image.image_views = new VkImageView[1];
+		descriptor_data.data.image.image_views[0] = m_texture->GetImageView();
+		descriptor_data.data.image.samplers = new VkSampler[1];
+		descriptor_data.data.image.samplers[0] = m_texture->GetSampler();
 
 		std::vector<DescriptorSetWriteData> descriptor_data_texture = { descriptor_data };
 		m_backend->WriteDescriptor(&m_texture_descriptor, descriptor_data_texture);

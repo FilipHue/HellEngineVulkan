@@ -204,8 +204,11 @@ void TestTextureCubemap::CreatePipelines()
 
 	pipeline_info.layout = {
 		{
-			{ 0, DescriptorType_UniformBuffer, ShaderStage_Vertex | ShaderStage_Fragment },
-			{ 1, DescriptorType_CombinedImageSampler, ShaderStage_Fragment }
+			{
+				{ 0, DescriptorType_UniformBuffer, 1, ShaderStage_Vertex | ShaderStage_Fragment, DescriptorBindingFlags_None },
+				{ 1, DescriptorType_CombinedImageSampler, 1, ShaderStage_Fragment, DescriptorBindingFlags_None }
+			},
+			DescriptorSetFlags_None
 		}
 	};
 
@@ -244,7 +247,7 @@ void TestTextureCubemap::CreatePipelines()
 void TestTextureCubemap::CreateDescriptorSets()
 {
 	// Init pool
-	m_backend->InitDescriptorPool({
+	m_backend->InitDescriptorPoolGrowable({
 		{ DescriptorType_UniformBuffer, 1 },
 		{ DescriptorType_CombinedImageSampler, 1 }
 		}, 1);
@@ -261,15 +264,20 @@ void TestTextureCubemap::CreateDescriptorSets()
 	DescriptorSetWriteData ubo_write1 = {};
 	ubo_write1.type = DescriptorType_UniformBuffer;
 	ubo_write1.binding = 0;
-	ubo_write1.data.buffer.buffer = m_ubo->GetHandle();
-	ubo_write1.data.buffer.offset = 0;
-	ubo_write1.data.buffer.range = sizeof(UBOData);
+	ubo_write1.data.buffer.buffers = new VkBuffer[1];
+	ubo_write1.data.buffer.buffers[0] = m_ubo->GetHandle();
+	ubo_write1.data.buffer.offsets = new VkDeviceSize[1];
+	ubo_write1.data.buffer.offsets[0] = 0;
+	ubo_write1.data.buffer.ranges = new VkDeviceSize[1];
+	ubo_write1.data.buffer.ranges[0] = sizeof(UBOData);
 
 	DescriptorSetWriteData ubo_write2 = {};
 	ubo_write2.type = DescriptorType_CombinedImageSampler;
 	ubo_write2.binding = 1;
-	ubo_write2.data.image.image_view = m_cubemap_texture->GetImageView();
-	ubo_write2.data.image.sampler = m_cubemap_texture->GetSampler();
+	ubo_write2.data.image.image_views = new VkImageView[1];
+	ubo_write2.data.image.image_views[0] = m_cubemap_texture->GetImageView();
+	ubo_write2.data.image.samplers = new VkSampler[1];
+	ubo_write2.data.image.samplers[0] = m_cubemap_texture->GetSampler();
 
 	std::vector<DescriptorSetWriteData> writes = { ubo_write1, ubo_write2 };
 	m_backend->WriteDescriptor(&m_ubo_descriptor, writes);

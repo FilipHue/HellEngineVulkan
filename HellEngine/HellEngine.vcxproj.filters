@@ -22,14 +22,14 @@
     <Filter Include="dependencies\ASSIMP\include\assimp\port\AndroidJNI">
       <UniqueIdentifier>{DC1578A1-C8A9-6D49-316E-C7FD1D21A83B}</UniqueIdentifier>
     </Filter>
-    <Filter Include="dependencies\EXTENSIONS">
-      <UniqueIdentifier>{0BCA1B31-7701-64C8-800B-C8EBECC18AC1}</UniqueIdentifier>
+    <Filter Include="dependencies\ENTT">
+      <UniqueIdentifier>{D6B17F6A-42C8-7D00-8B3F-0922F7944E88}</UniqueIdentifier>
     </Filter>
-    <Filter Include="dependencies\EXTENSIONS\GL">
-      <UniqueIdentifier>{8D6306CE-7973-B29E-E22C-17BDCE5BA137}</UniqueIdentifier>
+    <Filter Include="dependencies\ENTT\include">
+      <UniqueIdentifier>{494F34DE-B511-6868-FEC1-F6F46AC34046}</UniqueIdentifier>
     </Filter>
-    <Filter Include="dependencies\EXTENSIONS\KHR">
-      <UniqueIdentifier>{FFE5D28E-6BF3-0075-F4D9-FC5F60E6CC2B}</UniqueIdentifier>
+    <Filter Include="dependencies\ENTT\include\entt">
+      <UniqueIdentifier>{330A12D4-1F30-DC3A-0876-6106F43A0107}</UniqueIdentifier>
     </Filter>
     <Filter Include="dependencies\GLFW">
       <UniqueIdentifier>{4BC0806A-B7D6-7E00-004E-0A226CA34F88}</UniqueIdentifier>
@@ -145,6 +145,21 @@
     <Filter Include="src\hellengine\core\window">
       <UniqueIdentifier>{56236C87-4233-1858-ABEC-7C76971B07F1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\hellengine\ecs">
+      <UniqueIdentifier>{81224205-6D06-035B-D666-FDADC269EDDC}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\hellengine\ecs\component">
+      <UniqueIdentifier>{43F00B92-2FAB-FB3D-D862-7488C4FC45CE}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\hellengine\ecs\component\components">
+      <UniqueIdentifier>{9869E62A-04F9-A715-0DF5-882D7903E321}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\hellengine\ecs\entity">
+      <UniqueIdentifier>{CD470628-390A-3AB2-82BA-C83EEEBB1290}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\hellengine\ecs\scene">
+      <UniqueIdentifier>{7EBCE7EA-6AE1-366B-932C-1CFB7FB03589}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\hellengine\graphics">
       <UniqueIdentifier>{97C42654-03FC-6EEB-0C06-D30E78BC95E4}</UniqueIdentifier>
     </Filter>
@@ -153,6 +168,12 @@
     </Filter>
     <Filter Include="src\hellengine\graphics\camera">
       <UniqueIdentifier>{4F7D2F3F-3BA3-F9A5-24E9-7E7110AE1E72}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\hellengine\graphics\camera\multiprojection">
+      <UniqueIdentifier>{861CBD8D-729A-0D27-5B92-CBBE47AF4F4F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\hellengine\graphics\camera\perspective">
+      <UniqueIdentifier>{A81261F2-947A-27C0-FDE5-3BD6E96C3EAC}</UniqueIdentifier>
     </Filter>
     <Filter Include="src\hellengine\graphics\frontend">
       <UniqueIdentifier>{A6FAB5AF-924B-A1F1-BBAF-8FB3A75F345B}</UniqueIdentifier>
@@ -201,6 +222,9 @@
     </Filter>
     <Filter Include="src\hellengine\ui\backend">
       <UniqueIdentifier>{3BDDD6AD-A79F-0A38-F04F-99C45C51E315}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="src\hellengine\ui\components">
+      <UniqueIdentifier>{195D0A95-0518-FA40-AECF-728B9A6944D1}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -456,23 +480,8 @@
     <ClInclude Include="dependencies\ASSIMP\include\assimp\version.h">
       <Filter>dependencies\ASSIMP\include\assimp</Filter>
     </ClInclude>
-    <ClInclude Include="dependencies\EXTENSIONS\GL\glcorearb.h">
-      <Filter>dependencies\EXTENSIONS\GL</Filter>
-    </ClInclude>
-    <ClInclude Include="dependencies\EXTENSIONS\GL\glext.h">
-      <Filter>dependencies\EXTENSIONS\GL</Filter>
-    </ClInclude>
-    <ClInclude Include="dependencies\EXTENSIONS\GL\glxext.h">
-      <Filter>dependencies\EXTENSIONS\GL</Filter>
-    </ClInclude>
-    <ClInclude Include="dependencies\EXTENSIONS\GL\wgl.h">
-      <Filter>dependencies\EXTENSIONS\GL</Filter>
-    </ClInclude>
-    <ClInclude Include="dependencies\EXTENSIONS\GL\wglext.h">
-      <Filter>dependencies\EXTENSIONS\GL</Filter>
-    </ClInclude>
-    <ClInclude Include="dependencies\EXTENSIONS\KHR\khrplatform.h">
-      <Filter>dependencies\EXTENSIONS\KHR</Filter>
+    <ClInclude Include="dependencies\ENTT\include\entt\entt.hpp">
+      <Filter>dependencies\ENTT\include\entt</Filter>
     </ClInclude>
     <ClInclude Include="dependencies\GLFW\include\GLFW\glfw3.h">
       <Filter>dependencies\GLFW\include\GLFW</Filter>
@@ -1815,17 +1824,44 @@
     <ClInclude Include="src\hellengine\core\window\window.h">
       <Filter>src\hellengine\core\window</Filter>
     </ClInclude>
+    <ClInclude Include="src\hellengine\ecs\component\components.h">
+      <Filter>src\hellengine\ecs\component</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\ecs\component\components\id.h">
+      <Filter>src\hellengine\ecs\component\components</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\ecs\component\components\tag.h">
+      <Filter>src\hellengine\ecs\component\components</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\ecs\component\components\transform.h">
+      <Filter>src\hellengine\ecs\component\components</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\ecs\entity\entity.h">
+      <Filter>src\hellengine\ecs\entity</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\ecs\scene\scene.h">
+      <Filter>src\hellengine\ecs\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\ecs\shared.h">
+      <Filter>src\hellengine\ecs</Filter>
+    </ClInclude>
     <ClInclude Include="src\hellengine\graphics\backend\vulkan_backend.h">
       <Filter>src\hellengine\graphics\backend</Filter>
     </ClInclude>
     <ClInclude Include="src\hellengine\graphics\camera\camera.h">
       <Filter>src\hellengine\graphics\camera</Filter>
     </ClInclude>
-    <ClInclude Include="src\hellengine\graphics\camera\perspective.h">
-      <Filter>src\hellengine\graphics\camera</Filter>
+    <ClInclude Include="src\hellengine\graphics\camera\multiprojection\multiprojection.h">
+      <Filter>src\hellengine\graphics\camera\multiprojection</Filter>
     </ClInclude>
-    <ClInclude Include="src\hellengine\graphics\camera\perspective_controller.h">
-      <Filter>src\hellengine\graphics\camera</Filter>
+    <ClInclude Include="src\hellengine\graphics\camera\multiprojection\multiprojection_controller.h">
+      <Filter>src\hellengine\graphics\camera\multiprojection</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\graphics\camera\perspective\perspective.h">
+      <Filter>src\hellengine\graphics\camera\perspective</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\graphics\camera\perspective\perspective_controller.h">
+      <Filter>src\hellengine\graphics\camera\perspective</Filter>
     </ClInclude>
     <ClInclude Include="src\hellengine\graphics\context.h">
       <Filter>src\hellengine\graphics</Filter>
@@ -1965,6 +2001,15 @@
     <ClInclude Include="src\hellengine\ui\backend\backend.h">
       <Filter>src\hellengine\ui\backend</Filter>
     </ClInclude>
+    <ClInclude Include="src\hellengine\ui\components\viewport_panel.h">
+      <Filter>src\hellengine\ui\components</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\ui\core.h">
+      <Filter>src\hellengine\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\ui\shared.h">
+      <Filter>src\hellengine\ui</Filter>
+    </ClInclude>
     <ClInclude Include="src\hellengine\ui\ui.h">
       <Filter>src\hellengine\ui</Filter>
     </ClInclude>
@@ -2021,14 +2066,26 @@
     <ClCompile Include="src\hellengine\core\window\window.cpp">
       <Filter>src\hellengine\core\window</Filter>
     </ClCompile>
+    <ClCompile Include="src\hellengine\ecs\entity\entity.cpp">
+      <Filter>src\hellengine\ecs\entity</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hellengine\ecs\scene\scene.cpp">
+      <Filter>src\hellengine\ecs\scene</Filter>
+    </ClCompile>
     <ClCompile Include="src\hellengine\graphics\backend\vulkan_backend.cpp">
       <Filter>src\hellengine\graphics\backend</Filter>
     </ClCompile>
-    <ClCompile Include="src\hellengine\graphics\camera\perspective.cpp">
-      <Filter>src\hellengine\graphics\camera</Filter>
+    <ClCompile Include="src\hellengine\graphics\camera\multiprojection\multiprojection.cpp">
+      <Filter>src\hellengine\graphics\camera\multiprojection</Filter>
     </ClCompile>
-    <ClCompile Include="src\hellengine\graphics\camera\perspective_controller.cpp">
-      <Filter>src\hellengine\graphics\camera</Filter>
+    <ClCompile Include="src\hellengine\graphics\camera\multiprojection\multiprojection_controller.cpp">
+      <Filter>src\hellengine\graphics\camera\multiprojection</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hellengine\graphics\camera\perspective\perspective.cpp">
+      <Filter>src\hellengine\graphics\camera\perspective</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hellengine\graphics\camera\perspective\perspective_controller.cpp">
+      <Filter>src\hellengine\graphics\camera\perspective</Filter>
     </ClCompile>
     <ClCompile Include="src\hellengine\graphics\context.cpp">
       <Filter>src\hellengine\graphics</Filter>
@@ -2125,6 +2182,9 @@
     </ClCompile>
     <ClCompile Include="src\hellengine\ui\backend\backend.cpp">
       <Filter>src\hellengine\ui\backend</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hellengine\ui\components\viewport_panel.cpp">
+      <Filter>src\hellengine\ui\components</Filter>
     </ClCompile>
     <ClCompile Include="src\hellengine\ui\ui.cpp">
       <Filter>src\hellengine\ui</Filter>

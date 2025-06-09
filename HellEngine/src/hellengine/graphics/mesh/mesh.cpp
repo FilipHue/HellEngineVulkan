@@ -8,7 +8,7 @@ namespace hellengine
 
 		Mesh::~Mesh()
 		{
-			delete m_material;
+			delete m_material_info;
 		}
 
 	} // namespace graphics

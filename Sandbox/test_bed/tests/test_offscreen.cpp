@@ -457,7 +457,7 @@ void TestOffscreen::CreatePipeline()
 void TestOffscreen::CreateDescriptorSets()
 {
 	// Init pool
-	m_backend->InitDescriptorPool({
+	m_backend->InitDescriptorPoolGrowable({
 		{ DescriptorType_UniformBuffer, 1 },
 		{ DescriptorType_CombinedImageSampler, 1 }
 	}, 1);
@@ -470,9 +470,9 @@ void TestOffscreen::CreateDescriptorSets()
 		DescriptorSetWriteData descriptor_data;
 		descriptor_data.type = DescriptorType_UniformBuffer;
 		descriptor_data.binding = 0;
-		descriptor_data.data.buffer.buffer = m_camera_buffer->GetHandle();
-		descriptor_data.data.buffer.offset = 0;
-		descriptor_data.data.buffer.range = sizeof(CameraData);
+		descriptor_data.data.buffer.buffers = m_camera_buffer->GetHandle();
+		descriptor_data.data.buffer.offsets = 0;
+		descriptor_data.data.buffer.ranges = sizeof(CameraData);
 
 		std::vector<DescriptorSetWriteData> descriptor_data_camera = { descriptor_data };
 		m_backend->WriteDescriptor(&m_camera_descriptor, descriptor_data_camera);
@@ -490,9 +490,9 @@ void TestOffscreen::CreateDescriptorSets()
 		DescriptorSetWriteData descriptor_data;
 		descriptor_data.type = DescriptorType_UniformBuffer;
 		descriptor_data.binding = 0;
-		descriptor_data.data.buffer.buffer = m_chinese_dragon_buffer->GetHandle();
-		descriptor_data.data.buffer.offset = 0;
-		descriptor_data.data.buffer.range = sizeof(ObjectData);
+		descriptor_data.data.buffer.buffers = m_chinese_dragon_buffer->GetHandle();
+		descriptor_data.data.buffer.offsets = 0;
+		descriptor_data.data.buffer.ranges = sizeof(ObjectData);
 
 		std::vector<DescriptorSetWriteData> descriptor_data_objects = { descriptor_data };
 		m_backend->WriteDescriptor(&m_chinese_dragon_descriptor, descriptor_data_objects);
@@ -510,9 +510,9 @@ void TestOffscreen::CreateDescriptorSets()
 		DescriptorSetWriteData descriptor_data;
 		descriptor_data.type = DescriptorType_UniformBuffer;
 		descriptor_data.binding = 0;
-		descriptor_data.data.buffer.buffer = m_plane_buffer->GetHandle();
-		descriptor_data.data.buffer.offset = 0;
-		descriptor_data.data.buffer.range = sizeof(ObjectData);
+		descriptor_data.data.buffer.buffers = m_plane_buffer->GetHandle();
+		descriptor_data.data.buffer.offsets = 0;
+		descriptor_data.data.buffer.ranges = sizeof(ObjectData);
 
 		std::vector<DescriptorSetWriteData> descriptor_data_plane = { descriptor_data };
 		m_backend->WriteDescriptor(&m_plane_descriptor, descriptor_data_plane);
@@ -530,9 +530,9 @@ void TestOffscreen::CreateDescriptorSets()
 		DescriptorSetWriteData descriptor_data;
 		descriptor_data.type = DescriptorType_UniformBuffer;
 		descriptor_data.binding = 0;
-		descriptor_data.data.buffer.buffer = m_light_buffer->GetHandle();
-		descriptor_data.data.buffer.offset = 0;
-		descriptor_data.data.buffer.range = sizeof(LightData);
+		descriptor_data.data.buffer.buffers = m_light_buffer->GetHandle();
+		descriptor_data.data.buffer.offsets = 0;
+		descriptor_data.data.buffer.ranges = sizeof(LightData);
 
 		std::vector<DescriptorSetWriteData> descriptor_data_light = { descriptor_data };
 		m_backend->WriteDescriptor(&m_light_descriptor, descriptor_data_light);
@@ -550,9 +550,9 @@ void TestOffscreen::CreateDescriptorSets()
 		DescriptorSetWriteData descriptor_data;
 		descriptor_data.type = DescriptorType_UniformBuffer;
 		descriptor_data.binding = 0;
-		descriptor_data.data.buffer.buffer = m_offscreen_buffer->GetHandle();
-		descriptor_data.data.buffer.offset = 0;
-		descriptor_data.data.buffer.range = sizeof(ObjectData);
+		descriptor_data.data.buffer.buffers = m_offscreen_buffer->GetHandle();
+		descriptor_data.data.buffer.offsets = 0;
+		descriptor_data.data.buffer.ranges = sizeof(ObjectData);
 
 		std::vector<DescriptorSetWriteData> descriptor_data_objects = { descriptor_data };
 		m_backend->WriteDescriptor(&m_offscreen_descriptor, descriptor_data_objects);
@@ -565,8 +565,8 @@ void TestOffscreen::CreateDescriptorSets()
 		DescriptorSetWriteData descriptor_data;
 		descriptor_data.type = DescriptorType_CombinedImageSampler;
 		descriptor_data.binding = 0;
-		descriptor_data.data.image.image_view = m_offscreen_color_texture->GetImageView();
-		descriptor_data.data.image.sampler = m_offscreen_color_texture->GetSampler();
+		descriptor_data.data.image.image_views = m_offscreen_color_texture->GetImageView();
+		descriptor_data.data.image.samplers = m_offscreen_color_texture->GetSampler();
 
 		std::vector<DescriptorSetWriteData> descriptor_data_mirror = { descriptor_data };
 		m_backend->WriteDescriptor(&m_mirror_descriptor, descriptor_data_mirror);
@@ -579,8 +579,8 @@ void TestOffscreen::CreateDescriptorSets()
 		DescriptorSetWriteData descriptor_data;
 		descriptor_data.type = DescriptorType_CombinedImageSampler;
 		descriptor_data.binding = 0;
-		descriptor_data.data.image.image_view = m_offscreen_color_texture->GetImageView();
-		descriptor_data.data.image.sampler = m_offscreen_color_texture->GetSampler();
+		descriptor_data.data.image.image_views = m_offscreen_color_texture->GetImageView();
+		descriptor_data.data.image.samplers = m_offscreen_color_texture->GetSampler();
 
 		std::vector<DescriptorSetWriteData> descriptor_data_debug = { descriptor_data };
 		m_backend->WriteDescriptor(&m_debug_descriptor, descriptor_data_debug);

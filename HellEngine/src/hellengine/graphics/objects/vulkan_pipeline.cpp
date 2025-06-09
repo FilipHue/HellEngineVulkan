@@ -3,6 +3,7 @@
 
 // Internal
 #include "vulkan_instance.h"
+#include "vulkan_descriptor.h"
 #include "vulkan_device.h"
 #include "vulkan_shader.h"
 #include "vulkan_swapchain.h"
@@ -117,7 +118,7 @@ namespace hellengine
 			pipeline_info.pNext = info.dynamic_rendering_info.has_value() ? &rendering_info : VK_NULL_HANDLE;
 			pipeline_info.flags = 0;
 			pipeline_info.stageCount = (u32)m_shader_stages.size();
-			pipeline_info.pStages = m_shader_stages.data();
+			pipeline_info.pStages = (u32)m_shader_stages.size() > 0 ? m_shader_stages.data() : nullptr;
 			pipeline_info.pVertexInputState = &m_vertex_input_state;
 			pipeline_info.pInputAssemblyState = &m_input_assembly_state;
 			pipeline_info.pTessellationState = VK_NULL_HANDLE;
@@ -162,32 +163,9 @@ namespace hellengine
 
 		void VulkanPipeline::SetPipelineLayout(const VulkanInstance& instance, const VulkanDevice& device, const PipelineCreateInfo& info)
 		{
-			for (const auto& set : info.layout)
+			for (u32 i = 0; i < (u32)info.layout.size(); i++)
 			{
-				std::vector<VkDescriptorSetLayoutBinding> bindings_layout = {};
-				for (const auto& binding : set)
-				{
-					VkDescriptorSetLayoutBinding layout_binding = {};
-					layout_binding.binding = binding.binding;
-					layout_binding.descriptorType = GetVulkanDescriptorType(binding.type);
-					layout_binding.descriptorCount = 1;
-					layout_binding.stageFlags = GetVulkanStageFlags(binding.stage);
-					layout_binding.pImmutableSamplers = VK_NULL_HANDLE;
-
-					bindings_layout.push_back(layout_binding);
-				}
-
-				VkDescriptorSetLayout layout = VK_NULL_HANDLE;
-
-				VkDescriptorSetLayoutCreateInfo layout_info = {};
-				layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-				layout_info.pNext = VK_NULL_HANDLE;
-				layout_info.flags = 0;
-				layout_info.bindingCount = (u32)bindings_layout.size();
-				layout_info.pBindings = bindings_layout.data();
-
-				VK_CHECK(vkCreateDescriptorSetLayout(device.GetLogicalDevice(), &layout_info, instance.GetAllocator(), &layout));
-				m_descriptor_set_layouts.push_back(layout);
+				m_descriptor_set_layouts.push_back(CreateDescriptorSetLayout(instance, device, info.layout[i]));
 			}
 
 			VkPipelineLayoutCreateInfo pipeline_layout_info = {};
@@ -259,7 +237,7 @@ namespace hellengine
 			m_multisample_state.pNext = VK_NULL_HANDLE;
 			m_multisample_state.flags = 0;
 			m_multisample_state.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
-			m_multisample_state.sampleShadingEnable = VK_FALSE;
+			m_multisample_state.sampleShadingEnable = VK_TRUE;
 			m_multisample_state.minSampleShading = 1.0f;
 			m_multisample_state.pSampleMask = VK_NULL_HANDLE;
 			m_multisample_state.alphaToCoverageEnable = VK_FALSE;
@@ -288,7 +266,7 @@ namespace hellengine
 
 					color_blend_attachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
 					color_blend_attachment.blendEnable = info.dynamic_rendering_info.value().blend_enable ? VK_TRUE : VK_FALSE;
-					color_blend_attachment.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
+					color_blend_attachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
 					color_blend_attachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
 					color_blend_attachment.colorBlendOp = VK_BLEND_OP_ADD;
 					color_blend_attachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
@@ -330,8 +308,8 @@ namespace hellengine
 			m_vertex_input_state.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 			m_vertex_input_state.pNext = VK_NULL_HANDLE;
 			m_vertex_input_state.flags = 0;
-			m_vertex_input_state.vertexBindingDescriptionCount = 1;
-			m_vertex_input_state.pVertexBindingDescriptions = &info.vertex_binding_description;
+			m_vertex_input_state.vertexBindingDescriptionCount = info.vertex_attribute_descriptions.size() > 0 ? 1 : 0;
+			m_vertex_input_state.pVertexBindingDescriptions = info.vertex_attribute_descriptions.size() > 0 ? &info.vertex_binding_description : nullptr;
 			m_vertex_input_state.vertexAttributeDescriptionCount = static_cast<u32>(info.vertex_attribute_descriptions.size());
 			m_vertex_input_state.pVertexAttributeDescriptions = info.vertex_attribute_descriptions.data();
 		}
