@@ -1,8 +1,19 @@
 #include "hepch.h"
 #include "file_manager.h"
 
+// Internal
+#include <hellengine/core/engine/engine.h>
+
+// External
+#include "GLFW/glfw3.h"
+#define GLFW_EXPOSE_NATIVE_WIN32
+#include "GLFW/glfw3native.h"
+
+#include <commdlg.h>
+
 namespace hellengine
 {
+
 	namespace resources
 	{
 
@@ -42,6 +53,36 @@ namespace hellengine
 		File FileManager::ReadFile(const std::string& path)
 		{
 			return ReadFile(path.c_str());
+		}
+
+		File FileManager::OpenFile(const char* filter)
+		{
+#ifdef HE_PLATFORM_WINDOWS
+			OPENFILENAMEA ofn;
+			CHAR sz_file[FILE_MAX_PATH] = { 0 };
+
+			ZeroMemory(&ofn, sizeof(ofn));
+			ofn.lStructSize = sizeof(ofn);
+			ofn.hwndOwner = glfwGetWin32Window((GLFWwindow*)core::Engine::GetInstance().GetApplication().GetWindow()->GetHandle());
+			ofn.lpstrFile = sz_file;
+			ofn.nMaxFile = sizeof(sz_file);
+			ofn.lpstrFilter = filter;
+			ofn.nFilterIndex = 1;
+			ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
+
+			File file;
+			if (GetOpenFileNameA(&ofn) == TRUE)
+			{
+				file = ReadFile(sz_file);
+			}
+
+			return file;
+#endif
+		}
+
+		File FileManager::OpenFile(const std::string& path)
+		{
+			return OpenFile(path.c_str());
 		}
 
 	} // namespace resources

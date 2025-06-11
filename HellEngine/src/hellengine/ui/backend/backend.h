@@ -47,8 +47,8 @@ namespace hellengine
 			void Begin() override;
 			void End() override;
 
-			void BeginDocking();
-			void EndDocking();
+			void BeginDocking() override;
+			void EndDocking() override;
 
 		private:
 			void SetDarkTheme();

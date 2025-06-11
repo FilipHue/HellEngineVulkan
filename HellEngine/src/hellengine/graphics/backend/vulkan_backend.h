@@ -111,6 +111,9 @@ namespace hellengine
 
 			HE_API void UpdateTexture(VulkanTexture* texture, const void* data);
 
+			template<typename T>
+			HE_API T ReadPixel(VulkanTexture* texture, u32 x, u32 y, u32 layer = 0, u32 face = 0);
+
 			HE_API void DestroyTexture(VulkanTexture* texture) const;
 
 			// Draw

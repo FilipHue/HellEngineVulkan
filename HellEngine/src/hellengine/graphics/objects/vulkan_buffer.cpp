@@ -112,6 +112,18 @@ namespace hellengine
 			command_buffer.Free(device, command_pool);
 		}
 
+		void VulkanBuffer::CopyFromImage(const VulkanDevice& device, const VulkanCommandPool& command_pool, VkImage src_image, std::vector<VkBufferImageCopy> buffer_ranges) const
+		{
+			VulkanCommandBuffer command_buffer;
+			command_buffer.Allocate(device, command_pool, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+			command_buffer.BeginRecordingOneTime(device, command_pool);
+
+			vkCmdCopyImageToBuffer(command_buffer.GetHandle(), src_image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, m_handle, static_cast<u32>(buffer_ranges.size()), buffer_ranges.data());
+
+			command_buffer.EndRecordingOneTime(device, command_pool);
+			command_buffer.Free(device, command_pool);
+		}
+
 		VulkanUniformBuffer::VulkanUniformBuffer()
 		{
 			m_handle = VK_NULL_HANDLE;

@@ -5,8 +5,6 @@
 #include <hellengine/graphics/objects/vulkan_texture.h>
 #include <hellengine/graphics/objects/vulkan_buffer.h>
 
-#include <hellengine/graphics/managers/material_manager.h>
-
 namespace hellengine
 {
 

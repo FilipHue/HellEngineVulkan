@@ -75,9 +75,6 @@
       <AdditionalDependencies>dependencies\SPDLOG\spdlogd.lib;dependencies\GLFW\lib-vc2022\glfw3.lib;dependencies\ASSIMP\lib\assimp-vc143-mtd.lib;dependencies\KTX\lib\ktx.lib;C:\VulkanSDK\1.3.290.0\Lib\vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>dependencies\SPDLOG;dependencies\GLFW\lib-vc2022;dependencies\ASSIMP\lib;dependencies\KTX\lib;C:\VulkanSDK\1.3.290.0\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
-    <PostBuildEvent>
-      <Command>copy /B /Y "$(SolutionDir)bin\Debug-windows-x86_64\HellEngine\HellEngine.dll" "$(SolutionDir)bin\Debug-windows-x86_64\Sandbox\"</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -106,9 +103,6 @@
       <AdditionalDependencies>dependencies\SPDLOG\spdlogd.lib;dependencies\GLFW\lib-vc2022\glfw3.lib;dependencies\ASSIMP\lib\assimp-vc143-mtd.lib;dependencies\KTX\lib\ktx.lib;C:\VulkanSDK\1.3.290.0\Lib\vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>dependencies\SPDLOG;dependencies\GLFW\lib-vc2022;dependencies\ASSIMP\lib;dependencies\KTX\lib;C:\VulkanSDK\1.3.290.0\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
-    <PostBuildEvent>
-      <Command>copy /B /Y "$(SolutionDir)bin\Release-windows-x86_64\HellEngine\HellEngine.dll" "$(SolutionDir)bin\Release-windows-x86_64\Sandbox\"</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="dependencies\ASSIMP\include\assimp\AssertHandler.h" />
@@ -661,13 +655,10 @@
     <ClInclude Include="src\hellengine\graphics\frontend\vulkan_frontend.h" />
     <ClInclude Include="src\hellengine\graphics\graphic_types.h" />
     <ClInclude Include="src\hellengine\graphics\graphics_core.h" />
-    <ClInclude Include="src\hellengine\graphics\managers\material_manager.h" />
     <ClInclude Include="src\hellengine\graphics\managers\mesh_manager.h" />
-    <ClInclude Include="src\hellengine\graphics\managers\model_manager.h" />
     <ClInclude Include="src\hellengine\graphics\managers\texture_manager.h" />
     <ClInclude Include="src\hellengine\graphics\mesh\material.h" />
     <ClInclude Include="src\hellengine\graphics\mesh\mesh.h" />
-    <ClInclude Include="src\hellengine\graphics\mesh\model.h" />
     <ClInclude Include="src\hellengine\graphics\objects\shared.h" />
     <ClInclude Include="src\hellengine\graphics\objects\types.h" />
     <ClInclude Include="src\hellengine\graphics\objects\vulkan_buffer.h" />
@@ -702,7 +693,8 @@
     <ClInclude Include="src\hellengine\resources\file_manager.h" />
     <ClInclude Include="src\hellengine\tools\profiling\profiler.h" />
     <ClInclude Include="src\hellengine\ui\backend\backend.h" />
-    <ClInclude Include="src\hellengine\ui\components\viewport_panel.h" />
+    <ClInclude Include="src\hellengine\ui\components\panel.h" />
+    <ClInclude Include="src\hellengine\ui\components\viewport.h" />
     <ClInclude Include="src\hellengine\ui\core.h" />
     <ClInclude Include="src\hellengine\ui\shared.h" />
     <ClInclude Include="src\hellengine\ui\ui.h" />
@@ -752,13 +744,10 @@
     <ClCompile Include="src\hellengine\graphics\camera\perspective\perspective_controller.cpp" />
     <ClCompile Include="src\hellengine\graphics\context.cpp" />
     <ClCompile Include="src\hellengine\graphics\frontend\vulkan_frontend.cpp" />
-    <ClCompile Include="src\hellengine\graphics\managers\material_manager.cpp" />
     <ClCompile Include="src\hellengine\graphics\managers\mesh_manager.cpp" />
-    <ClCompile Include="src\hellengine\graphics\managers\model_manager.cpp" />
     <ClCompile Include="src\hellengine\graphics\managers\texture_manager.cpp" />
     <ClCompile Include="src\hellengine\graphics\mesh\material.cpp" />
     <ClCompile Include="src\hellengine\graphics\mesh\mesh.cpp" />
-    <ClCompile Include="src\hellengine\graphics\mesh\model.cpp" />
     <ClCompile Include="src\hellengine\graphics\objects\vulkan_buffer.cpp" />
     <ClCompile Include="src\hellengine\graphics\objects\vulkan_command_buffer.cpp" />
     <ClCompile Include="src\hellengine\graphics\objects\vulkan_debugger.cpp" />
@@ -782,7 +771,8 @@
     <ClCompile Include="src\hellengine\resources\file_manager.cpp" />
     <ClCompile Include="src\hellengine\tools\profiling\profiler.cpp" />
     <ClCompile Include="src\hellengine\ui\backend\backend.cpp" />
-    <ClCompile Include="src\hellengine\ui\components\viewport_panel.cpp" />
+    <ClCompile Include="src\hellengine\ui\components\panel.cpp" />
+    <ClCompile Include="src\hellengine\ui\components\viewport.cpp" />
     <ClCompile Include="src\hellengine\ui\ui.cpp" />
     <ClCompile Include="src\hepch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>

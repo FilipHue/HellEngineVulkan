@@ -321,6 +321,13 @@ namespace hellengine
 			m_context->UpdateTexture(texture, data);
 		}
 
+		template u32 VulkanBackend::ReadPixel<u32>(VulkanTexture* texture, u32 x, u32 y, u32 layer, u32 face);
+		template <typename T>
+		T VulkanBackend::ReadPixel(VulkanTexture* texture, u32 x, u32 y, u32 layer, u32 face)
+		{
+			return m_context->ReadPixel<T>(texture, x, y, layer, face);
+		}
+
 		void VulkanBackend::DestroyTexture(VulkanTexture* texture) const
 		{
 			m_context->DestroyTexture(texture);

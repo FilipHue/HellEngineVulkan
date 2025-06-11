@@ -829,6 +829,17 @@ namespace hellengine
 			texture->Update(m_instance, m_device, m_command_pool, data);
 		}
 
+		template u32 VulkanContext::ReadPixel<u32>(VulkanTexture* texture, u32 x, u32 y, u32 layer, u32 face);
+		template<typename T>
+		T VulkanContext::ReadPixel(VulkanTexture* texture, u32 x, u32 y, u32 layer, u32 face)
+		{
+			T pixel_data = {};
+
+			pixel_data = texture->ReadPixel<T>(m_instance, m_device, m_command_pool, x, y, layer, face);
+
+			return pixel_data;
+		}
+
 		void VulkanContext::DestroyTexture(VulkanTexture* texture) const
 		{
 			m_device.WaitForIdle();

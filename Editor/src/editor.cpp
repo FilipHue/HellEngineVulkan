@@ -22,12 +22,9 @@ void Editor::Init()
 	EventDispatcher::AddListener(EventType_MouseScrolled, HE_BIND_EVENTCALLBACK(OnEventMouseScrolled));
 
 
-	CreateEditorPipeline();
+	CreateEditorPipelines();
 	CreateEditorResources();
-
-	InitializeViewportState();
-	CreateViewportAttachments();
-	CreateViewportResources();
+	CreateEditorUI();
 
 	LoadResourcesForTest();
 }
@@ -38,6 +35,7 @@ void Editor::OnProcessUpdate(f32 delta_time)
 	{
 		m_editor_camera_controller.OnProcessUpdate(delta_time);
 		m_global_shader_data.view = m_editor_camera.GetView();
+		m_global_shader_data.camera_position = m_editor_camera.GetPosition();
 
 		m_grid_data.proj = m_editor_camera.GetProjection();
 		m_grid_data.view = m_editor_camera.GetView();
@@ -70,7 +68,6 @@ void Editor::OnRenderUpdate()
 	m_backend->BindPipeline(m_test_pipeline);
 	m_backend->BindDescriptorSet(m_test_pipeline, m_test_descriptor);
 	
-	//m_sponza->Draw(m_test_pipeline, 0);
 	MeshManager::GetInstance()->DrawAll(m_test_pipeline);
 
 	m_backend->EndDynamicRenderingWithAttachments(m_viewport_dri);
@@ -89,7 +86,14 @@ void Editor::OnUIRender()
 {
 	m_ui->BeginDocking();
 
+	m_hierarchy_panel->Draw();
+
 	m_viewport_panel->Draw();
+
+	m_viewport_panel_bounds = m_viewport_panel->GetBounds();
+	m_viewport_panel_size = m_viewport_panel->GetSize();
+
+	MenuBar();
 
 	m_ui->EndDocking();
 }
@@ -103,6 +107,8 @@ void Editor::Shutdown()
 
 	m_backend->DestroyBuffer(m_test_ubo);
 	m_backend->DestroyPipeline(m_test_pipeline);
+
+	delete m_hierarchy_panel;
 }
 
 b8 Editor::OnEventWindowClose(EventContext& event)
@@ -163,6 +169,31 @@ b8 Editor::OnEventMouseButtonPressed(EventContext& event)
 		m_editor_camera_controller.SetActive(true);
 		m_window->SetCursorMode(GLFW_CURSOR_DISABLED);
 	}
+	else if (event.data.mouse_button_event.button == MOUSE_BUTTON_LEFT && m_viewport_panel->IsFocused() && m_viewport_panel->IsHovered())
+	{
+		auto mouse_pos = Input::GetMousePosition();
+		i32 mx = (i32)mouse_pos.GetFirst();
+		i32 my = (i32)mouse_pos.GetSecond();
+
+		mx -= m_viewport_panel_bounds.min.x;
+		my -= m_viewport_panel_bounds.min.y;
+
+		auto viewport_width = m_viewport_panel_bounds.max.x - m_viewport_panel_bounds.min.x;
+		auto viewport_height = m_viewport_panel_bounds.max.y - m_viewport_panel_bounds.min.y;
+
+		i32 mouse_x = mx;
+		i32 mouse_y = viewport_height - my;
+
+		if (mouse_x >= 0 && mouse_y >= 0 && mouse_x < (int)viewport_width && mouse_y < (int)viewport_height)
+		{
+			HE_CLIENT_INFO("Mouse Position: ({}, {})", mx, my);
+
+			u32 id = m_backend->ReadPixel<u32>(m_viewport_pick_texture, (u32)mouse_x, (u32)mouse_y, 0, 0);
+
+			HE_CLIENT_INFO("Picked ID: {}", id);
+		}
+
+	}
 
 	return false;
 }
@@ -188,7 +219,7 @@ b8 Editor::OnEventMouseScrolled(EventContext& event)
 	return false;
 }
 
-void Editor::CreateEditorPipeline()
+void Editor::CreateEditorPipelines()
 {
 	PipelineCreateInfo pipeline_info = {};
 
@@ -218,8 +249,8 @@ void Editor::CreateEditorPipeline()
 	};
 
 	ShaderStageInfo shader_info = {};
-	shader_info.sources[ShaderType_Vertex] = CONCAT_PATHS(EDITOR_SHADER_PATH, "base.vert");
-	shader_info.sources[ShaderType_Fragment] = CONCAT_PATHS(EDITOR_SHADER_PATH, "base.frag");
+	shader_info.sources[ShaderType_Vertex] = CONCAT_PATHS(EDITOR_SHADER_PATH, "screen.vert");
+	shader_info.sources[ShaderType_Fragment] = CONCAT_PATHS(EDITOR_SHADER_PATH, "screen.frag");
 
 	m_editor_pipeline = m_backend->CreatePipeline(pipeline_info, shader_info);
 
@@ -250,10 +281,10 @@ void Editor::CreateEditorResources()
 {
 	// Init descriptor pool
 	m_backend->InitDescriptorPoolGrowable({
-		{ DescriptorType_UniformBuffer, 1 },
-		{ DescriptorType_StorageBuffer, 1 },
-		{ DescriptorType_CombinedImageSampler, 1 }
-	}, 1);
+		{ DescriptorType_UniformBuffer, 100 },
+		{ DescriptorType_StorageBuffer, 100 },
+		{ DescriptorType_CombinedImageSampler, 100 }
+	}, 100);
 
 	// Camera
 	m_editor_camera = MultiProjectionCamera();
@@ -264,6 +295,18 @@ void Editor::CreateEditorResources()
 	m_editor_camera_controller = MultiProjectionController();
 	m_editor_camera_controller.Init();
 	m_editor_camera_controller.SetCamera(&m_editor_camera);
+}
+
+void Editor::CreateEditorUI()
+{
+	InitializeViewportState();
+	CreateViewportResources();
+
+	// Panels
+	m_viewport_panel = new Viewport("Viewport");
+	m_viewport_panel->SetHandle(m_viewport_descriptor->GetHandle());
+
+	m_hierarchy_panel = new EditorHierarchy();
 }
 
 void Editor::DrawGrid()
@@ -296,15 +339,17 @@ void Editor::DrawToSwapchain()
 
 void Editor::InitializeViewportState()
 {
-	m_viewport_clear_color = { 0.1f, 0.1f, 0.1f, 1.0f };
+	m_viewport_clear_color = { 0.0f, 0.0f, 0.0f, 1.0f };
 	m_viewport_clear_depth = { 1.0f, 0.0f };
 
 	m_viewport_size = { m_window->GetWidth(), m_window->GetHeight() };
 }
 
-void Editor::CreateViewportAttachments()
+void Editor::CreateViewportResources()
 {
+	// Viewport attachments
 	m_viewport_color_texture = m_frontend->CreateTexture2D(VIEWPORT_COLOR, VK_FORMAT_B8G8R8A8_SRGB, m_viewport_size.x, m_viewport_size.y);
+	m_viewport_pick_texture = m_frontend->CreateTexture2D(VIEWPORT_PICK, VK_FORMAT_R32_UINT, m_viewport_size.x, m_viewport_size.y);
 	m_viewport_depth_texture = m_frontend->CreateTexture2D(VIEWPORT_DEPTH, VK_FORMAT_D32_SFLOAT, m_viewport_size.x, m_viewport_size.y);
 
 	m_viewport_color_attachment = {
@@ -315,6 +360,16 @@ void Editor::CreateViewportAttachments()
 		VK_ATTACHMENT_LOAD_OP_CLEAR,
 		VK_ATTACHMENT_STORE_OP_STORE,
 		{ { m_viewport_clear_color.r, m_viewport_clear_color.g, m_viewport_clear_color.b, m_viewport_clear_color.a } }
+	};
+
+	m_viewport_pick_attachment = {
+		m_viewport_pick_texture->GetHandle(),
+		m_viewport_pick_texture->GetImageView(),
+		m_viewport_pick_texture->GetFormat(),
+		VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+		VK_ATTACHMENT_LOAD_OP_CLEAR,
+		VK_ATTACHMENT_STORE_OP_STORE,
+		{ { 0.0f, 0.0f, 0.0f, 0.0f } }
 	};
 
 	m_viewport_depth_attachment = {
@@ -328,13 +383,13 @@ void Editor::CreateViewportAttachments()
 	};
 
 	m_viewport_dri = {
-		{ m_viewport_color_attachment },
+		{ m_viewport_color_attachment, m_viewport_pick_attachment },
 		m_viewport_depth_attachment,
 		0,
 		{ m_viewport_size.x, m_viewport_size.y }
 	};
 
-	// Grid
+	// Grid attachments
 	m_grid_color_attachment = {
 		m_viewport_color_texture->GetHandle(),
 		m_viewport_color_texture->GetImageView(),
@@ -361,10 +416,7 @@ void Editor::CreateViewportAttachments()
 		0,
 		{ m_viewport_size.x, m_viewport_size.y }
 	};
-}
 
-void Editor::CreateViewportResources()
-{
 	// Viewport descriptors
 	{
 		m_viewport_descriptor = m_backend->CreateDescriptorSet(m_editor_pipeline, 0);
@@ -380,7 +432,6 @@ void Editor::CreateViewportResources()
 
 		std::vector<DescriptorSetWriteData> write_data = { editor_write_data };
 		m_backend->WriteDescriptor(&m_viewport_descriptor, write_data);
-
 	}
 
 	// Grid descriptors
@@ -403,23 +454,25 @@ void Editor::CreateViewportResources()
 		std::vector<DescriptorSetWriteData> write_data = { data };
 		m_backend->WriteDescriptor(&m_grid_descriptor, write_data);
 	}
-
-	// UI
-	m_viewport_panel = new ViewportPanel("Viewport");
-	m_viewport_panel->SetHandle(m_viewport_descriptor->GetHandle());
 }
 
 void Editor::ViewportResize()
 {
 	m_frontend->DestroyTexture2D(VIEWPORT_COLOR);
+	m_frontend->DestroyTexture2D(VIEWPORT_PICK);
 	m_frontend->DestroyTexture2D(VIEWPORT_DEPTH);
 
 	m_viewport_color_texture = m_frontend->CreateTexture2D(VIEWPORT_COLOR, VK_FORMAT_B8G8R8A8_SRGB, m_viewport_size.x, m_viewport_size.y);
+	m_viewport_pick_texture = m_frontend->CreateTexture2D(VIEWPORT_PICK, VK_FORMAT_R32_UINT, m_viewport_size.x, m_viewport_size.y);
 	m_viewport_depth_texture = m_frontend->CreateTexture2D(VIEWPORT_DEPTH, VK_FORMAT_D32_SFLOAT, m_viewport_size.x, m_viewport_size.y);
 
 	m_viewport_color_attachment.image = m_viewport_color_texture->GetHandle();
 	m_viewport_color_attachment.image_view = m_viewport_color_texture->GetImageView();
 	m_viewport_color_attachment.format = m_viewport_color_texture->GetFormat();
+
+	m_viewport_pick_attachment.image = m_viewport_pick_texture->GetHandle();
+	m_viewport_pick_attachment.image_view = m_viewport_pick_texture->GetImageView();
+	m_viewport_pick_attachment.format = m_viewport_pick_texture->GetFormat();
 
 	m_viewport_depth_attachment.image = m_viewport_depth_texture->GetHandle();
 	m_viewport_depth_attachment.image_view = m_viewport_depth_texture->GetImageView();
@@ -434,7 +487,7 @@ void Editor::ViewportResize()
 	m_grid_depth_attachment.format = m_viewport_depth_texture->GetFormat();
 
 	m_viewport_dri = {
-		{ m_viewport_color_attachment },
+		{ m_viewport_color_attachment, m_viewport_pick_attachment },
 		m_viewport_depth_attachment,
 		0,
 		{ m_viewport_size.x, m_viewport_size.y }
@@ -460,6 +513,24 @@ void Editor::ViewportResize()
 	m_editor_camera.SetAspect((f32)m_viewport_size.x, (f32)m_viewport_size.y);
 }
 
+void Editor::MenuBar()
+{
+	if (ImGui::BeginMenuBar())
+	{
+		if (ImGui::BeginMenu("File"))
+		{
+			if (ImGui::MenuItem("Load Modle File"))
+			{
+				File file = FileManager::OpenFile("Model Files (*.gltf)\0*.gltf\0Model Files (*.glb)\0*.glb\0All Files (*.*)\0*.*\0");
+			}
+
+			ImGui::EndMenu();
+		}
+
+		ImGui::EndMenuBar();
+	}
+}
+
 void Editor::LoadResourcesForTest()
 {
 	PipelineCreateInfo pipeline_info = {};
@@ -474,7 +545,7 @@ void Editor::LoadResourcesForTest()
 	pipeline_info.layout = {
 		{
 			{ 
-				{ 0, DescriptorType_UniformBuffer, 1, ShaderStage_Vertex, DescriptorBindingFlags_None }
+				{ 0, DescriptorType_UniformBuffer, 1, ShaderStage_Vertex | ShaderStage_Fragment, DescriptorBindingFlags_None }
 			},
 			DescriptorSetFlags_None
 		},
@@ -502,7 +573,7 @@ void Editor::LoadResourcesForTest()
 
 	pipeline_info.dynamic_rendering_info = {
 		false,
-		{ VK_FORMAT_B8G8R8A8_SRGB },
+		{ VK_FORMAT_B8G8R8A8_SRGB, VK_FORMAT_R32_UINT },
 		VK_FORMAT_D32_SFLOAT
 	};
 
@@ -517,19 +588,20 @@ void Editor::LoadResourcesForTest()
 	m_global_shader_data = {};
 	m_global_shader_data.proj = m_editor_camera.GetProjection();
 	m_global_shader_data.view = m_editor_camera.GetView();
+	m_global_shader_data.camera_position = m_editor_camera.GetPosition();
 
 	m_test_ubo = m_backend->CreateUniformBufferMappedPersistent(sizeof(GlobalShaderData));
 
-	DescriptorSetWriteData data{};
-	data.type = DescriptorType_UniformBuffer;
-	data.binding = 0;
-	data.data.buffer.buffers = new VkBuffer(m_test_ubo->GetHandle());
-	data.data.buffer.offsets = new VkDeviceSize(0);
-	data.data.buffer.ranges = new VkDeviceSize(sizeof(GlobalShaderData));
+	DescriptorSetWriteData data1{};
+	data1.type = DescriptorType_UniformBuffer;
+	data1.binding = 0;
+	data1.data.buffer.buffers = new VkBuffer(m_test_ubo->GetHandle());
+	data1.data.buffer.offsets = new VkDeviceSize(0);
+	data1.data.buffer.ranges = new VkDeviceSize(sizeof(GlobalShaderData));
 
-	std::vector<DescriptorSetWriteData> write_data = { data };
+	std::vector<DescriptorSetWriteData> write_data = { data1 };
 	m_backend->WriteDescriptor(&m_test_descriptor, write_data);
 
 	AssetManager::LoadModel(FileManager::ReadFile(CONCAT_PATHS(EDITOR_MODEL_PATH, "Sponza/glTF/Sponza.gltf")));
-	MeshManager::GetInstance()->GenerateResources(m_test_pipeline, 1, TextureType_Diffuse);
+	MeshManager::GetInstance()->GenerateResources(m_test_pipeline, 1, TextureType_Diffuse | TextureType_Ambient | TextureType_Specular);
 }

@@ -23,6 +23,7 @@ namespace hellengine
 
 		void Engine::Run(Application& application)
 		{
+			m_application = &application;
 			application.Setup(application.m_configuration);
 
 			m_last_frame_time = m_timer.GetElapsedTime();
@@ -56,6 +57,11 @@ namespace hellengine
 			}
 
 			application.Cleanup();
+		}
+
+		f32 Engine::GetFrameTime() const
+		{
+			return m_frame_time;
 		}
 
 		f32 Engine::GetTimeElapsed()

@@ -1,7 +1,6 @@
 #pragma once
 
 // Internal
-#include <hellengine/graphics/mesh/model.h>
 #include <hellengine/graphics/graphic_types.h> 
 #include <hellengine/resources/file_manager.h>
 #include <hellengine/graphics/managers/mesh_manager.h>

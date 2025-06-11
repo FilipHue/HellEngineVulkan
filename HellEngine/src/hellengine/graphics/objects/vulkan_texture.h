@@ -20,6 +20,9 @@ namespace hellengine
 
 			void Destroy(const VulkanInstance& instance, const VulkanDevice& device);
 
+			template<typename T>
+			T ReadPixel(const VulkanInstance& instance, const VulkanDevice& device, const VulkanCommandPool& command_pool, u32 x, u32 y, u32 layer = 0, u32 face = 0);
+
 			VkImage GetHandle() const { return m_image.GetHandle(); }
 			VkImageView GetImageView() const { return m_image.GetImageView(); }
 			VkSampler GetSampler() const { return m_sampler; }
@@ -81,7 +84,6 @@ namespace hellengine
 
 		VkImageAspectFlags GetAspectMaskFromVkFormat(VkFormat format);
 		VkImageUsageFlags GetUsageFlagsFromVkFormat(VkFormat format);
-
 
 	} // namespace graphics
 
