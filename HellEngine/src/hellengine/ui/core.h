@@ -1,3 +1,4 @@
 #pragma once
 
-#include "components/viewport_panel.h"
+#include "components/panel.h"
+#include "components/viewport.h"

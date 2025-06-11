@@ -72,9 +72,6 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
-    <PostBuildEvent>
-      <Command>copy /B /Y "$(SolutionDir)bin\Debug-windows-x86_64\HellEngine\HellEngine.dll" "$(SolutionDir)bin\Debug-windows-x86_64\Editor\"</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -98,9 +95,6 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
-    <PostBuildEvent>
-      <Command>copy /B /Y "$(SolutionDir)bin\Release-windows-x86_64\HellEngine\HellEngine.dll" "$(SolutionDir)bin\Release-windows-x86_64\Editor\"</Command>
-    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="src\editor.h" />

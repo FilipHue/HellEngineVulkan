@@ -10,14 +10,8 @@ namespace hellengine
 		{
 			m_backend = backend;
 
-			m_material_manager = MaterialManager::GetInstance();
-			m_material_manager->Init(m_backend);
-
 			m_mesh_manager = MeshManager::GetInstance();
 			m_mesh_manager->Init(m_backend);
-
-			m_model_manager = ModelManager::GetInstance();
-			m_model_manager->Init(m_backend);
 
 			m_texture_manager = TextureManager::GetInstance();
 			m_texture_manager->Init(m_backend);
@@ -25,9 +19,7 @@ namespace hellengine
 		}
 		void VulkanFrontend::Shutdown()
 		{
-			m_material_manager->Shutdown();
 			m_mesh_manager->Shutdown();
-			m_model_manager->Shutdown();
 			m_texture_manager->Shutdown();
 		}
 

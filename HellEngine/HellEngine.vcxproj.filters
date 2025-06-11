@@ -1878,13 +1878,7 @@
     <ClInclude Include="src\hellengine\graphics\graphics_core.h">
       <Filter>src\hellengine\graphics</Filter>
     </ClInclude>
-    <ClInclude Include="src\hellengine\graphics\managers\material_manager.h">
-      <Filter>src\hellengine\graphics\managers</Filter>
-    </ClInclude>
     <ClInclude Include="src\hellengine\graphics\managers\mesh_manager.h">
-      <Filter>src\hellengine\graphics\managers</Filter>
-    </ClInclude>
-    <ClInclude Include="src\hellengine\graphics\managers\model_manager.h">
       <Filter>src\hellengine\graphics\managers</Filter>
     </ClInclude>
     <ClInclude Include="src\hellengine\graphics\managers\texture_manager.h">
@@ -1894,9 +1888,6 @@
       <Filter>src\hellengine\graphics\mesh</Filter>
     </ClInclude>
     <ClInclude Include="src\hellengine\graphics\mesh\mesh.h">
-      <Filter>src\hellengine\graphics\mesh</Filter>
-    </ClInclude>
-    <ClInclude Include="src\hellengine\graphics\mesh\model.h">
       <Filter>src\hellengine\graphics\mesh</Filter>
     </ClInclude>
     <ClInclude Include="src\hellengine\graphics\objects\shared.h">
@@ -2001,7 +1992,10 @@
     <ClInclude Include="src\hellengine\ui\backend\backend.h">
       <Filter>src\hellengine\ui\backend</Filter>
     </ClInclude>
-    <ClInclude Include="src\hellengine\ui\components\viewport_panel.h">
+    <ClInclude Include="src\hellengine\ui\components\panel.h">
+      <Filter>src\hellengine\ui\components</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\ui\components\viewport.h">
       <Filter>src\hellengine\ui\components</Filter>
     </ClInclude>
     <ClInclude Include="src\hellengine\ui\core.h">
@@ -2093,13 +2087,7 @@
     <ClCompile Include="src\hellengine\graphics\frontend\vulkan_frontend.cpp">
       <Filter>src\hellengine\graphics\frontend</Filter>
     </ClCompile>
-    <ClCompile Include="src\hellengine\graphics\managers\material_manager.cpp">
-      <Filter>src\hellengine\graphics\managers</Filter>
-    </ClCompile>
     <ClCompile Include="src\hellengine\graphics\managers\mesh_manager.cpp">
-      <Filter>src\hellengine\graphics\managers</Filter>
-    </ClCompile>
-    <ClCompile Include="src\hellengine\graphics\managers\model_manager.cpp">
       <Filter>src\hellengine\graphics\managers</Filter>
     </ClCompile>
     <ClCompile Include="src\hellengine\graphics\managers\texture_manager.cpp">
@@ -2109,9 +2097,6 @@
       <Filter>src\hellengine\graphics\mesh</Filter>
     </ClCompile>
     <ClCompile Include="src\hellengine\graphics\mesh\mesh.cpp">
-      <Filter>src\hellengine\graphics\mesh</Filter>
-    </ClCompile>
-    <ClCompile Include="src\hellengine\graphics\mesh\model.cpp">
       <Filter>src\hellengine\graphics\mesh</Filter>
     </ClCompile>
     <ClCompile Include="src\hellengine\graphics\objects\vulkan_buffer.cpp">
@@ -2183,7 +2168,10 @@
     <ClCompile Include="src\hellengine\ui\backend\backend.cpp">
       <Filter>src\hellengine\ui\backend</Filter>
     </ClCompile>
-    <ClCompile Include="src\hellengine\ui\components\viewport_panel.cpp">
+    <ClCompile Include="src\hellengine\ui\components\panel.cpp">
+      <Filter>src\hellengine\ui\components</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hellengine\ui\components\viewport.cpp">
       <Filter>src\hellengine\ui\components</Filter>
     </ClCompile>
     <ClCompile Include="src\hellengine\ui\ui.cpp">

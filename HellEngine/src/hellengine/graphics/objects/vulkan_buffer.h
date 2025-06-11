@@ -32,6 +32,7 @@ namespace hellengine
 
 			void CopyFromBuffer(const VulkanDevice& device, const VulkanCommandPool& command_pool, VkBuffer src_buffer, u32 src_size = 0, u32 offset = 0) const;
 			void CopyToImage(const VulkanDevice& device, const VulkanCommandPool& command_pool, VkImage src_image, std::vector<VkBufferImageCopy> buffer_ranges) const;
+			void CopyFromImage(const VulkanDevice& device, const VulkanCommandPool& command_pool, VkImage src_image, std::vector<VkBufferImageCopy> buffer_ranges) const;
 			
 		protected:
 			VkBuffer m_handle;

@@ -78,6 +78,47 @@ namespace hellengine
 			m_image.Destroy(instance, device);
 		}
 
+		template u32 VulkanTexture::ReadPixel<u32>(const VulkanInstance& instance, const VulkanDevice& device, const VulkanCommandPool& command_pool, u32 x, u32 y, u32 layer, u32 face);
+		template <typename T>
+		T VulkanTexture::ReadPixel(const VulkanInstance& instance, const VulkanDevice& device, const VulkanCommandPool& command_pool, u32 x, u32 y, u32 layer, u32 face)
+		{
+			if (x >= m_image.GetWidth() || y >= m_image.GetHeight() || layer >= m_layer_count || face >= m_faces)
+			{
+				HE_GRAPHICS_ERROR("Attempted to read pixel out of bounds: ({}, {}) layer {}, face {} for texture with dimensions {}x{}x{} and {} layers and {} faces", x, y, layer, face, m_image.GetWidth(), m_image.GetHeight(), m_image.GetDepth(), m_layer_count, m_faces);
+			}
+
+			T pixel_data;
+			VkDeviceSize size = sizeof(T);
+
+			VulkanBuffer staging_buffer;
+			staging_buffer.Create(instance, device, size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+			std::vector<VkBufferImageCopy> buffer_ranges = {
+				{
+					.bufferOffset = 0,
+					.bufferRowLength = 0,
+					.bufferImageHeight = 0,
+					.imageSubresource = { GetAspectMaskFromVkFormat(m_format), face, layer, 1 },
+					.imageOffset = { (i32)x, (i32)y, 0 },
+					.imageExtent = { 1, 1, 1 }
+				}
+			};
+
+			VulkanImage::Transition(device, command_pool, m_image.GetHandle(), { VK_IMAGE_ASPECT_COLOR_BIT, 0, m_mip_levels, 0, m_layer_count }, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+
+			staging_buffer.CopyFromImage(device, command_pool, m_image.GetHandle(), buffer_ranges);
+
+			VulkanImage::Transition(device, command_pool, m_image.GetHandle(), { VK_IMAGE_ASPECT_COLOR_BIT, 0, m_mip_levels, 0, m_layer_count }, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+			void* data = nullptr;
+			staging_buffer.Map(device, size, 0, data);
+			memcpy(&pixel_data, data, size);
+			staging_buffer.Unmap(device);
+			staging_buffer.Destroy(instance, device);
+
+			return pixel_data;
+		}
+
 		void VulkanTexture::CreateSampler(const VulkanInstance& instance, const VulkanDevice& device, const ImageSamplerCreationInfo& info, VkSampler* sampler)
 		{
 			VkSamplerCreateInfo sampler_info = {};

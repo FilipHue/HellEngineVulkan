@@ -66,19 +66,19 @@ INLINE std::string ConcatPaths(std::initializer_list<std::string> parts) {
 #define CONCAT_PATHS(...) ConcatPaths({ __VA_ARGS__ })
 
 // Default constructor
-#define _DEFAULT_CTOR_IMPL(_Type) _Type() = default;
+#define _DEFAULT_CTOR_IMPL(_Type) HE_API _Type() = default;
 #define DEFAULT_CTOR(Type) _DEFAULT_CTOR_IMPL(Type)
 
 // Copy constructor and assignment
 #define _DEFAULT_COPY_IMPL(_Type) \
-    _Type(const _Type&) = default; \
-    _Type& operator=(const _Type&) = default;
+    HE_API _Type(const _Type&) = default; \
+    HE_API _Type& operator=(const _Type&) = default;
 #define DEFAULT_COPY(Type) _DEFAULT_COPY_IMPL(Type)
 
 // Move constructor and assignment
 #define _DEFAULT_MOVE_IMPL(_Type) \
-    _Type(_Type&&) noexcept = default; \
-    _Type& operator=(_Type&&) noexcept = default;
+    HE_API _Type(_Type&&) noexcept = default; \
+    HE_API _Type& operator=(_Type&&) noexcept = default;
 #define DEFAULT_MOVE(Type) _DEFAULT_MOVE_IMPL(Type)
 
 // Destructor
@@ -95,9 +95,9 @@ INLINE std::string ConcatPaths(std::initializer_list<std::string> parts) {
 
 // Default comparisons
 #if __cplusplus >= 202002L
-#define _DEFAULT_COMPARE_IMPL(_Type) auto operator<=>(const _Type&) const = default;
+#define _DEFAULT_COMPARE_IMPL(_Type) HE_API auto operator<=>(const _Type&) const = default;
 #else
-#define _DEFAULT_COMPARE_IMPL(_Type) bool operator==(const _Type& other) const = default;
+#define _DEFAULT_COMPARE_IMPL(_Type) HE_API bool operator==(const _Type& other) const = default;
 #endif
 #define DEFAULT_COMPARE(Type) _DEFAULT_COMPARE_IMPL(Type)
 

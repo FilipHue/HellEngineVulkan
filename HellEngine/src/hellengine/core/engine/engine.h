@@ -19,6 +19,8 @@ namespace hellengine
 
 			HE_API void Run(Application& application);
 
+			HE_API const Application& GetApplication() const { return *m_application; }
+			HE_API f32 GetFrameTime() const;
 			HE_API f32 GetTimeElapsed();
 
 			HE_API static Engine& GetInstance();
@@ -27,6 +29,8 @@ namespace hellengine
 			Engine() = default;
 
 		private:
+			Application* m_application{ nullptr };
+
 			f32 m_frame_time{ 0.0f };
 			f32 m_last_frame_time{ 0.0f };
 			u64 m_frame_count{ 0 };

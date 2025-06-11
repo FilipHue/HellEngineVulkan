@@ -4,7 +4,6 @@
 // Internal
 #include <hellengine/math/core.h>
 #include <hellengine/graphics/managers/texture_manager.h>
-#include <hellengine/graphics/managers/model_manager.h>
 
 namespace hellengine
 {

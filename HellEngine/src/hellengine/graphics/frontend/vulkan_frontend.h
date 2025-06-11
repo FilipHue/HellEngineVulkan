@@ -1,9 +1,7 @@
 #pragma once
 
 // Internal
-#include <hellengine/graphics/managers/material_manager.h>
 #include <hellengine/graphics/managers/mesh_manager.h>
-#include <hellengine/graphics/managers/model_manager.h>
 #include <hellengine/graphics/managers/texture_manager.h>
 
 namespace hellengine
@@ -41,9 +39,7 @@ namespace hellengine
 		private:
 			VulkanBackend* m_backend;
 
-			MaterialManager* m_material_manager;
 			MeshManager* m_mesh_manager;
-			ModelManager* m_model_manager;
 			TextureManager* m_texture_manager;
 		};
 

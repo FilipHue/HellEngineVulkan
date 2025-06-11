@@ -19,6 +19,9 @@ namespace hellengine
 			void CreateImageView(const VulkanInstance& instance, const VulkanDevice& device, VkImageViewType view_type, VkFormat format, VkImageSubresourceRange range);
 			void Destroy(const VulkanInstance& instance, const VulkanDevice& device) const;
 
+			template<typename T>
+			T ReadPixel(u32 x, u32 y, u32 layer = 0, u32 face = 0) const;
+
 			VkImage GetHandle() const { return m_handle; }
 			VkImageView GetImageView() const { return m_image_view; }
 			VkDeviceMemory GetMemory() const { return m_memory; }

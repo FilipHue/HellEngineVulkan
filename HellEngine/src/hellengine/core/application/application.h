@@ -41,6 +41,8 @@ namespace hellengine
 			INLINE b8 IsRunning() const { return m_running; }
 			INLINE b8 IsSuspended() const { return m_suspended; }
 
+			HE_API Window* GetWindow() const { return m_window; }
+
 		private:
 			void Setup(ApplicationConfiguration* configuration);
 			void Cleanup();

@@ -38,6 +38,36 @@ namespace hellengine
 			glm::mat4 model;
 		};
 
+		struct Bounds2D {
+			glm::vec2 min;
+			glm::vec2 max;
+			glm::vec2 extent;
+			glm::vec2 center;
+
+			HE_API Bounds2D() : min(glm::vec2(0.0f)), max(glm::vec2(0.0f)), extent(glm::vec2(0.0f)), center(glm::vec2(0.0f)) {}
+			HE_API Bounds2D(const glm::vec2& min, const glm::vec2& max) : min(min), max(max)
+			{
+				extent = max - min;
+				center = (min + max) * 0.5f;
+			}
+
+			HE_API void Encapsulate(const glm::vec2& point)
+			{
+				min = glm::min(min, point);
+				max = glm::max(max, point);
+				extent = max - min;
+				center = (min + max) * 0.5f;
+			}
+
+			HE_API void SetMinMax(const glm::vec2& new_min, const glm::vec2& new_max)
+			{
+				min = new_min;
+				max = new_max;
+				extent = max - min;
+				center = (min + max) * 0.5f;
+			}
+		};
+
 	} // namespace math
 
 } // namespace hellengine

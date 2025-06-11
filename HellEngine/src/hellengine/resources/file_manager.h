@@ -5,14 +5,21 @@
 
 namespace hellengine
 {
+
 	namespace resources
 	{
+
+		constexpr u32 FILE_MAX_PATH = 255;
+
 		class File;
 		class FileManager
 		{
 		public:
 			HE_API static File ReadFile(const char* path);
 			HE_API static File ReadFile(const std::string& path);
+
+			HE_API static File OpenFile(const char* path);
+			HE_API static File OpenFile(const std::string& path);
 
 		private:
 			FileManager() = delete;

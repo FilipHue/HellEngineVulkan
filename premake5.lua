@@ -76,10 +76,10 @@ project "HellEngine"
 
     -- If it is a fresh build, comment out the post build command
     -- It will give an error since the folder does not exist
-    postbuildcommands
-    {
-        ("{COPYFILE} %[%{!wks.location}bin/%{output_dir}/HellEngine/HellEngine.dll] %[%{!wks.location}bin/%{output_dir}/Sandbox/]")
-    }
+    -- postbuildcommands
+    -- {
+    --     ("{COPYFILE} %[%{!wks.location}bin/%{output_dir}/HellEngine/HellEngine.dll] %[%{!wks.location}bin/%{output_dir}/Sandbox/]")
+    -- }
 
     filter "files:HellEngine/dependencies/GLM/include/**.c*"
         flags { "NoPCH" }
@@ -163,10 +163,10 @@ project "Editor"
         "HellEngine"
     }
 
-    postbuildcommands
-    {
-        ("{COPYFILE} %[%{!wks.location}bin/%{output_dir}/HellEngine/HellEngine.dll] %[%{!wks.location}bin/%{output_dir}/Editor/]")
-    }
+    -- postbuildcommands
+    -- {
+    --     ("{COPYFILE} %[%{!wks.location}bin/%{output_dir}/HellEngine/HellEngine.dll] %[%{!wks.location}bin/%{output_dir}/Editor/]")
+    -- }
 
     filter "system:windows"
         cppdialect "C++20"
@@ -234,10 +234,10 @@ project "Sandbox"
         "HellEngine"
     }
 
-    postbuildcommands
-    {
-        ("{COPYFILE} %[%{!wks.location}bin/%{output_dir}/HellEngine/HellEngine.dll] %[%{!wks.location}bin/%{output_dir}/Sandbox/]")
-    }
+    -- postbuildcommands
+    -- {
+    --     ("{COPYFILE} %[%{!wks.location}bin/%{output_dir}/HellEngine/HellEngine.dll] %[%{!wks.location}bin/%{output_dir}/Sandbox/]")
+    -- }
 
     filter "system:windows"
         cppdialect "C++20"

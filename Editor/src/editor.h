@@ -1,6 +1,7 @@
 #pragma once
 
 #include "hellengine/hellengine.h"
+#include "panels/editor_hierarchy.h"
 
 using namespace hellengine;
 using namespace core;
@@ -14,12 +15,14 @@ constexpr auto EDITOR_SHADER_PATH = "assets/editor/shaders";
 constexpr auto EDITOR_MODEL_PATH = "assets/models";
 
 constexpr auto VIEWPORT_COLOR = "EDITOR_VIEWPORT_COLOR_ATTACHMENT";
+constexpr auto VIEWPORT_PICK = "EDITOR_VIEWPORT_PICK_ATTACHMENT";
 constexpr auto VIEWPORT_DEPTH = "EDITOR_VIEWPORT_DEPTH_ATTACHMENT";
 
 ALIGN_AS(64) struct GlobalShaderData
 {
 	glm::mat4 proj;
 	glm::mat4 view;
+	glm::vec3 camera_position;
 };
 
 ALIGN_AS(64) struct GridCameraData
@@ -62,17 +65,18 @@ public:
 
 private:
 	//Editor
-	void CreateEditorPipeline();
+	void CreateEditorPipelines();
 	void CreateEditorResources();
+	void CreateEditorUI();
 
 	void DrawGrid();
 	void DrawToSwapchain();
 
-	// Viewport
 	void InitializeViewportState();
-	void CreateViewportAttachments();
 	void CreateViewportResources();
 	void ViewportResize();
+
+	void MenuBar();
 
 	// TEMP
 	void LoadResourcesForTest();
@@ -97,6 +101,9 @@ private:
 
 	GridCameraData m_grid_data;
 
+	// UI
+	EditorHierarchy* m_hierarchy_panel;
+
 	// Viewport
 	glm::vec4 m_viewport_clear_color;
 	glm::vec2 m_viewport_clear_depth;
@@ -106,21 +113,33 @@ private:
 	DescriptorSet m_viewport_descriptor;
 
 	Texture2D m_viewport_color_texture;
+	Texture2D m_viewport_pick_texture;
 	Texture2D m_viewport_depth_texture;
 
 	DynamicRenderingAttachmentInfo m_viewport_color_attachment;
+	DynamicRenderingAttachmentInfo m_viewport_pick_attachment;
 	DynamicRenderingAttachmentInfo m_viewport_depth_attachment;
 	DynamicRenderingInfo m_viewport_dri;
 
-	ViewportPanel* m_viewport_panel;
+	Viewport* m_viewport_panel;
+	Bounds2D m_viewport_panel_bounds;
+	glm::uvec2 m_viewport_panel_size;
 
 	// PBR Pipeline
 	GlobalShaderData m_global_shader_data;
 
 	Pipeline m_pbr_pipeline;
+	DescriptorSet m_pbr_descriptor;
+
+	struct LightData
+	{
+		glm::vec3 position;
+		glm::vec3 color;
+	} m_light_data;
+
+	UniformBuffer m_light_buffer;
 
 	// TEMP
-	Model* m_sponza;
 	Pipeline m_test_pipeline;
 	DescriptorSet m_test_descriptor;
 	UniformBuffer m_test_ubo;
