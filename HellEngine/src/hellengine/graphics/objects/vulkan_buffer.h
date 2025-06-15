@@ -15,7 +15,7 @@ namespace hellengine
 			VulkanBuffer();
 			~VulkanBuffer();
 
-			void Create(const VulkanInstance& instance, const VulkanDevice& device, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, b8 shared = false, u32 queue_count = 0, u32* queue_indices = VK_NULL_HANDLE);
+			void Create(const VulkanInstance& instance, const VulkanDevice& device, VkDeviceSize size, VkBufferUsageFlags usage, b8 shared, u32 queue_count, u32* queue_indices, VkMemoryPropertyFlags properties);
 			void Destroy(const VulkanInstance& instance, const VulkanDevice& device) const;
 
 			void MapUnmap(const VulkanDevice& device, VkDeviceSize size, VkDeviceSize offset, const void* data) const;
@@ -23,8 +23,12 @@ namespace hellengine
 			void Unmap(const VulkanDevice& device) const;
 
 			VkBuffer GetHandle() const { return m_handle; }
-			VkDeviceMemory GetDeviceMemory() const { return m_memory; }
 			VkDeviceSize GetSize() const { return m_size; }
+			VkBufferUsageFlags GetUsage() const { return m_usage; }
+
+			VkDeviceMemory GetDeviceMemory() const { return m_memory; }
+			VkMemoryPropertyFlags GetMemoryFlags() const { return m_properties; }
+
 			u32 GetCount() const { return (u32)m_size / sizeof(u32); }
 
 			void SetType(BufferType type) { m_type = type; }
@@ -36,42 +40,43 @@ namespace hellengine
 			
 		protected:
 			VkBuffer m_handle;
-			VkDeviceMemory m_memory;
 			VkDeviceSize m_size;
+			VkBufferUsageFlags m_usage;
+
+			VkDeviceMemory m_memory;
+			VkMemoryPropertyFlags m_properties;
 
 			BufferType m_type;
 		};
 
-		class VulkanUniformBuffer : public VulkanBuffer
+		class VulkanMappedBuffer : public VulkanBuffer
+		{
+		public:
+			VulkanMappedBuffer();
+			~VulkanMappedBuffer();
+
+			void CreateMapped(const VulkanInstance& instance, const VulkanDevice& device, VkDeviceSize elem_size, u32 elem_count, VkBufferUsageFlags usage, b8 shared, u32 queue_count, u32* queue_indices, VkMemoryPropertyFlags properties, b8 persistent);
+
+			u32 GetStride() const { return m_stride; }
+			void*& GetMappedMemory() { return m_mapped_memory; }
+
+		protected:
+			void* m_mapped_memory;
+			u32 m_stride;
+		};
+
+		class VulkanUniformBuffer : public VulkanMappedBuffer
 		{
 		public:
 			VulkanUniformBuffer();
 			~VulkanUniformBuffer();
-
-			void SetDynamicAlignment(u32 dynamic_alignment) { m_dynamic_alignment = dynamic_alignment; }
-			u32 GetDynamicAlignment() const { return m_dynamic_alignment; }
-
-			void*& GetMappedMemory() { return m_mapped_memory; }
-
-		private:
-			u32 m_dynamic_alignment;
-			void* m_mapped_memory;
 		};
 
-		class VulkanStorageBuffer : public VulkanBuffer
+		class VulkanStorageBuffer : public VulkanMappedBuffer
 		{
 		public:
 			VulkanStorageBuffer();
 			~VulkanStorageBuffer();
-
-			void SetDynamicAlignment(u32 dynamic_alignment) { m_dynamic_alignment = dynamic_alignment; }
-			u32 GetDynamicAlignment() const { return m_dynamic_alignment; }
-
-			void*& GetMappedMemory() { return m_mapped_memory; }
-
-		private:
-			u32 m_dynamic_alignment;
-			void* m_mapped_memory;
 		};
 
 	} // namespace graphics

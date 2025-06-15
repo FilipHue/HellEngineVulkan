@@ -90,20 +90,16 @@ namespace hellengine
 			// Buffer
 			VulkanBuffer* CreateVertexBuffer(void* data, u32 size);
 			VulkanBuffer* CreateIndexBuffer(void* data, u32 size);
-			VulkanUniformBuffer * CreateUniformBufferMappedPersistent(u32 size);
-			VulkanUniformBuffer* CreateUniformBufferMappedOnce(void*& data, u32 size, u32 offset = 0);
-			VulkanUniformBuffer* CreateDynamicUniformBuffer(void*& data, u32 data_size, u32 data_count);
-			VulkanStorageBuffer* CreateStorageBuffer(void*& data, u32 data_size, u32 offset = 0);
+			VulkanUniformBuffer* CreateUniformBufferMappedPersistent(u32 elem_size, u32 elem_count);
+			VulkanUniformBuffer* CreateDynamicUniformBuffer(void*& data, u32 elem_size, u32 elem_count);
+			VulkanStorageBuffer* CreateStorageBufferMappedPersistent(u32 elem_size, u32 elem_count);
 
 			void UpdateVertexBuffer(VulkanBuffer* buffer, u32 offset, void* data, u32 size);
 			void UpdateIndexBuffer(VulkanBuffer* buffer, u32 offset, void* data, u32 size);
-			void UpdateUniformBuffer(VulkanUniformBuffer* ubo, void* data, u32 size);
-			void UpdateUniformBufferOnce(VulkanUniformBuffer* ubo, void* data, u32 size, u32 offset = 0);
-			void UpdateStorageBufferOnce(VulkanStorageBuffer* buffer, void* data, u32 size, u32 offset = 0);
+			void UpdateUniformBuffer(VulkanUniformBuffer* buffer, void* data, u32 size, u32 offset);
+			void UpdateStorageBuffer(VulkanStorageBuffer* buffer, void* data, u32 size, u32 offset);
 
 			void DestroyBuffer(VulkanBuffer* buffer) const;
-			void DestroyUniformBuffer(VulkanUniformBuffer* buffer) const;
-			void DestroyStorageBuffer(VulkanStorageBuffer* buffer) const;
 
 			void BindVertexBuffer(VulkanBuffer* buffer, VkDeviceSize offset) const;
 			void BindIndexBuffer(VulkanBuffer* buffer, VkDeviceSize offset) const;

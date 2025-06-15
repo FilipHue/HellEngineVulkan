@@ -71,20 +71,16 @@ namespace hellengine
 			template <typename T> HE_API VulkanBuffer* CreateVertexBuffer(T* vertices, u32 vertices_count);
 			HE_API VulkanBuffer* CreateIndexBufferEmpty(u32 size);
 			template <typename T> HE_API VulkanBuffer* CreateIndexBuffer(T* indices, u32 indices_count);
-			HE_API VulkanUniformBuffer* CreateUniformBufferMappedPersistent(u32 size);
-			HE_API VulkanUniformBuffer* CreateUniformBufferMappedOnce(void*& data, u32 size, u32 offset = 0);
-			HE_API VulkanUniformBuffer* CreateDynamicUniformBuffer(void*& data, u32 data_size, u32 data_count);
-			HE_API VulkanStorageBuffer* CreateStorageBuffer(void*& data, u32 size, u32 offset = 0);
+			HE_API VulkanUniformBuffer* CreateUniformBufferMappedPersistent(u32 elem_size, u32 elem_count);
+			HE_API VulkanUniformBuffer* CreateDynamicUniformBuffer(void*& data, u32 elem_size, u32 elem_count);
+			HE_API VulkanStorageBuffer* CreateStorageBufferMappedPersistent(u32 elem_size, u32 elem_count);
 
 			HE_API void UpdateVertexBuffer(VulkanBuffer* buffer, u32 offset, void* data, u32 size);
 			HE_API void UpdateIndexBuffer(VulkanBuffer* buffer, u32 offset, void* data, u32 size);
-			HE_API void UpdateUniformBuffer(VulkanUniformBuffer* ubo, void* data, u32 size);
-			HE_API void UpdateUniformBufferOnce(VulkanUniformBuffer* ubo, void* data, u32 size, u32 offset = 0);
-			HE_API void UpdateStorageBufferOnce(VulkanStorageBuffer* buffer, void* data, u32 size, u32 offset = 0);
+			HE_API void UpdateUniformBuffer(VulkanUniformBuffer* buffer, void* data, u32 size, u32 offset = 0);
+			HE_API void UpdateStorageBuffer(VulkanStorageBuffer* buffer, void* data, u32 size, u32 offset = 0);
 
 			HE_API void DestroyBuffer(VulkanBuffer* buffer) const;
-			HE_API void DestroyUniformBuffer(VulkanUniformBuffer* buffer) const;
-			HE_API void DestroyStorageBuffer(VulkanStorageBuffer* buffer) const;
 
 			HE_API void BindVertexBuffer(VulkanBuffer* buffer, VkDeviceSize offset) const;
 			HE_API void BindIndexBuffer(VulkanBuffer* buffer, VkDeviceSize offset) const;

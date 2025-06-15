@@ -41,7 +41,7 @@ namespace hellengine
 		void VulkanTexture::Update(const VulkanInstance& instance, const VulkanDevice& device, const VulkanCommandPool& command_pool, const void* data)
 		{
 			VulkanBuffer stagging_buffer;
-			stagging_buffer.Create(instance, device, m_image.GetWidth() * m_image.GetHeight() * m_image.GetDepth() * m_channels, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+			stagging_buffer.Create(instance, device, m_image.GetWidth() * m_image.GetHeight() * m_image.GetDepth() * m_channels, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, false, 0, nullptr, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 			stagging_buffer.MapUnmap(device, m_image.GetWidth() * m_image.GetHeight() * m_image.GetDepth() * m_channels, 0, data);
 
 			std::vector<VkBufferImageCopy> buffer_copy_regions;
@@ -91,7 +91,7 @@ namespace hellengine
 			VkDeviceSize size = sizeof(T);
 
 			VulkanBuffer staging_buffer;
-			staging_buffer.Create(instance, device, size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+			staging_buffer.Create(instance, device, size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT, false, 0, nullptr, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 
 			std::vector<VkBufferImageCopy> buffer_ranges = {
 				{
@@ -199,7 +199,7 @@ namespace hellengine
 			VkDeviceSize image_size = m_image.GetWidth() * m_image.GetHeight() * m_image.GetDepth() * m_channels;
 
 			VulkanBuffer stagging_buffer;
-			stagging_buffer.Create(instance, device, image_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+			stagging_buffer.Create(instance, device, image_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, false, 0, nullptr, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 			stagging_buffer.MapUnmap(device, image_size, 0, data);
 
 			std::vector<VkBufferImageCopy> buffer_copy_regions;
@@ -262,7 +262,7 @@ namespace hellengine
 			VkDeviceSize image_size = ktxTexture_GetDataSize(ktx_texture);
 
 			VulkanBuffer stagging_buffer;
-			stagging_buffer.Create(instance, device, image_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+			stagging_buffer.Create(instance, device, image_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, false, 0, nullptr, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 			stagging_buffer.MapUnmap(device, image_size, 0, ktx_data);
 
 			std::vector<VkBufferImageCopy> buffer_copy_regions;
@@ -327,7 +327,7 @@ namespace hellengine
 			VkDeviceSize image_size = width * height * m_channels;
 
 			VulkanBuffer stagging_buffer;
-			stagging_buffer.Create(instance, device, image_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+			stagging_buffer.Create(instance, device, image_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, false, 0, nullptr, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 			stagging_buffer.MapUnmap(device, image_size, 0, pixels);
 
 			stbi_image_free(pixels);
@@ -411,7 +411,7 @@ namespace hellengine
 			VkDeviceSize image_size = width * height * depth;
 
 			VulkanBuffer stagging_buffer;
-			stagging_buffer.Create(instance, device, image_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+			stagging_buffer.Create(instance, device, image_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, false, 0, nullptr, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 			stagging_buffer.MapUnmap(device, image_size, 0, data);
 
 			std::vector<VkBufferImageCopy> buffer_copy_regions;
@@ -483,7 +483,7 @@ namespace hellengine
 			VkDeviceSize image_size = ktxTexture_GetDataSize(ktx_texture);
 
 			VulkanBuffer stagging_buffer;
-			stagging_buffer.Create(instance, device, image_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+			stagging_buffer.Create(instance, device, image_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, false, 0, nullptr, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 			stagging_buffer.MapUnmap(device, image_size, 0, ktx_data);
 
 			std::vector<VkBufferImageCopy> buffer_copy_regions;
@@ -554,7 +554,7 @@ namespace hellengine
 			VkDeviceSize image_size = ktxTexture_GetDataSize(ktx_texture);
 
 			VulkanBuffer stagging_buffer;
-			stagging_buffer.Create(instance, device, image_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+			stagging_buffer.Create(instance, device, image_size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, false, 0, nullptr, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 			stagging_buffer.MapUnmap(device, image_size, 0, ktx_data);
 
 			std::vector<VkBufferImageCopy> buffer_copy_regions;

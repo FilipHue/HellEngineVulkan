@@ -20,6 +20,11 @@ namespace hellengine
 				0
 				});
 			m_current_pool_index = 0;
+
+			m_materials_buffer = m_backend->CreateStorageBufferMappedPersistent(sizeof(MaterialGPUInfo), MAX_MATERIALS);
+
+			m_materials_descriptor = nullptr;
+			m_textures_descriptor = nullptr;
 		}
 
 		void MeshManager::Shutdown()
@@ -31,19 +36,42 @@ namespace hellengine
 			}
 			m_pools.clear();
 
-			for (auto& mesh_pair : m_mesh_allocations)
+			for (auto& allocation : m_mesh_allocations)
 			{
-				delete mesh_pair.second.mesh;
+				delete allocation.mesh;
 			}
 
 			m_backend->DestroyBuffer(m_materials_buffer);
+		}
+
+		void MeshManager::CreateMeshResource(VulkanPipeline* pipeline, u32 set)
+		{
+			// Create descriptor set for materials
+			{
+				m_materials_descriptor = m_backend->CreateDescriptorSet(pipeline, set);
+
+				DescriptorSetWriteData buffer_data{};
+				buffer_data.type = DescriptorType_StorageBuffer;
+				buffer_data.binding = 0;
+				buffer_data.data.buffer.buffers = new VkBuffer(m_materials_buffer->GetHandle());
+				buffer_data.data.buffer.offsets = new VkDeviceSize(0);
+				buffer_data.data.buffer.ranges = new VkDeviceSize(MAX_MATERIALS * sizeof(MaterialGPUInfo));
+
+				std::vector<DescriptorSetWriteData> material_writes = { buffer_data };
+				m_backend->WriteDescriptor(&m_materials_descriptor, material_writes);
+			}
+
+			// Create descriptor set for textures
+			{
+				m_textures_descriptor = m_backend->CreateDescriptorSetVariable(pipeline, set + 1, { 128 });
+			}
 		}
 
 		template b8 MeshManager::CreateMesh<VertexFormatBase>(std::string name, RawVertexData vertices, std::vector<u32> indices, MaterialInfo* material);
 		template<typename VertexT>
 		b8 MeshManager::CreateMesh(std::string name, RawVertexData vertices, std::vector<u32> indices, MaterialInfo* material)
 		{
-			if (m_mesh_allocations.find(name) != m_mesh_allocations.end())
+			if (m_mesh_allocations_index_map.find(name) != m_mesh_allocations_index_map.end())
 			{
 				HE_GRAPHICS_WARN("Mesh with name {0} already exists!", name);
 				return false;
@@ -63,7 +91,7 @@ namespace hellengine
 			{
 				HE_GRAPHICS_ERROR("Exceeded maximum vertex or index capacity in the current pool!");
 
-				CreateNewPool();
+				CreatePool();
 				current_pool = &m_pools[m_current_pool_index];
 			}
 
@@ -101,6 +129,9 @@ namespace hellengine
 				final_vertices.push_back(vertex);
 			}
 
+			m_backend->UpdateVertexBuffer(current_pool->vertex_buffer, current_pool->vertex_count * sizeof(VertexT), final_vertices.data(), vertex_count * sizeof(VertexT));
+			m_backend->UpdateIndexBuffer(current_pool->index_buffer, current_pool->index_count * sizeof(u32), indices.data(), index_count * sizeof(u32));
+
 			Mesh* mesh = new Mesh();
 			mesh->SetName(name.c_str());
 			mesh->SetFirstIndex(current_pool->index_count);
@@ -109,62 +140,60 @@ namespace hellengine
 			mesh->SetRawData(vertices);
 			mesh->SetMaterialInfo(material);
 
-			m_backend->UpdateVertexBuffer(current_pool->vertex_buffer, current_pool->vertex_count * sizeof(VertexT), final_vertices.data(), vertex_count * sizeof(VertexT));
-			m_backend->UpdateIndexBuffer(current_pool->index_buffer, current_pool->index_count * sizeof(u32), indices.data(), index_count * sizeof(u32));
+			MeshAllocation allocation = { mesh, m_current_pool_index };
+			m_mesh_allocations.push_back(allocation);
+			m_mesh_allocations_index_map[name] = m_mesh_allocations.size() - 1;
 
 			current_pool->vertex_count += vertex_count;
 			current_pool->index_count += index_count;
-
-			MeshAllocation allocation = { mesh, m_current_pool_index };
-			m_mesh_allocations[name] = allocation;
 
 			current_pool->meshes.push_back(mesh);
 
 			return true;
 		}
 
-		void MeshManager::GenerateResources(VulkanPipeline* pipeline, u32 set, TextureType types)
+		void MeshManager::UploadToGpu(VulkanPipeline* pipeline, u32 set, TextureType types)
 		{
-			for (const auto& pool : m_pools)
+			if (m_materials_descriptor == nullptr || m_textures_descriptor == nullptr)
 			{
-				for (const auto& mesh : pool.meshes)
-				{
-					const auto& pair = m_mesh_allocations.find(mesh->GetName());
-					MaterialInfo* material_info = mesh->GetMaterialInfo();
-
-					MaterialGPUInfo info{};
-					info.diffuse_index = material_info->Get(TextureType_Diffuse & types);
-					info.specular_index = material_info->Get(TextureType_Specular & types);
-					info.ambient_index = material_info->Get(TextureType_Ambient & types);
-					info.emissive_index = material_info->Get(TextureType_Emissive & types);
-					info.height_index = material_info->Get(TextureType_Emissive & types);
-					info.normal_index = material_info->Get(TextureType_Normals & types);
-					info.shininess_index = material_info->Get(TextureType_Shininess & types);
-					info.opacity_index = material_info->Get(TextureType_Opacity & types);
-					info.displacement_index = material_info->Get(TextureType_Displacement & types);
-					info.lightmap_index = material_info->Get(TextureType_Lightmap & types);
-					info.reflection_index = material_info->Get(TextureType_Reflection & types);
-
-					m_mesh_gpu_info.push_back(info);
-				}
+				HE_GRAPHICS_ERROR("MeshManager::UploadToGpu called before creating descriptor sets!");
+				return;
 			}
 
-			void* data = m_mesh_gpu_info.data();
-			m_materials_buffer = m_backend->CreateStorageBuffer(data, sizeof(MaterialGPUInfo) * (u32)m_mesh_gpu_info.size());
+			if (m_mesh_allocations.size() > MAX_MATERIALS)
+			{
+				HE_GRAPHICS_ERROR("Exceeded maximum number of materials in MeshManager!");
+				return;
+			}
 
-			m_materials_descriptor = m_backend->CreateDescriptorSet(pipeline, set);
+			if (m_last_mesh_index == m_mesh_allocations.size())
+			{
+				return;
+			}
 
-			DescriptorSetWriteData buffer_data{};
-			buffer_data.type = DescriptorType_StorageBuffer;
-			buffer_data.binding = 0;
-			buffer_data.data.buffer.buffers = new VkBuffer(m_materials_buffer->GetHandle());
-			buffer_data.data.buffer.offsets = new VkDeviceSize(0);
-			buffer_data.data.buffer.ranges = new VkDeviceSize((u32)m_mesh_gpu_info.size() * sizeof(MaterialGPUInfo));
+			for (u32 i = m_last_mesh_index; i < m_mesh_allocations.size(); i++)
+			{
+				MaterialInfo* material_info = m_mesh_allocations[i].mesh->GetMaterialInfo();
 
-			std::vector<DescriptorSetWriteData> material_writes = { buffer_data };
-			m_backend->WriteDescriptor(&m_materials_descriptor, material_writes);
+				MaterialGPUInfo info{};
+				info.diffuse_index = material_info->Get(TextureType_Diffuse & types);
+				info.specular_index = material_info->Get(TextureType_Specular & types);
+				info.ambient_index = material_info->Get(TextureType_Ambient & types);
+				info.emissive_index = material_info->Get(TextureType_Emissive & types);
+				info.height_index = material_info->Get(TextureType_Height & types);
+				info.normal_index = material_info->Get(TextureType_Normals & types);
+				info.shininess_index = material_info->Get(TextureType_Shininess & types);
+				info.opacity_index = material_info->Get(TextureType_Opacity & types);
+				info.displacement_index = material_info->Get(TextureType_Displacement & types);
+				info.lightmap_index = material_info->Get(TextureType_Lightmap & types);
+				info.reflection_index = material_info->Get(TextureType_Reflection & types);
 
-			m_textures_descriptor = m_backend->CreateDescriptorSetVariable(pipeline, set + 1, { (u32)TextureManager::GetInstance()->m_textures_2d_vector.size() });
+				m_mesh_gpu_info.push_back(info);
+			}
+
+			void* data = &m_mesh_gpu_info[m_last_mesh_index];
+			m_backend->UpdateStorageBuffer(m_materials_buffer, data, sizeof(MaterialGPUInfo) * ((u32)m_mesh_gpu_info.size() - m_last_mesh_index), sizeof(MaterialGPUInfo) * m_last_mesh_index);
+			m_last_mesh_index = (u32)m_mesh_gpu_info.size();
 
 			DescriptorSetWriteData image_data;
 			image_data.type = DescriptorType_CombinedImageSampler;
@@ -190,24 +219,13 @@ namespace hellengine
 			m_backend->WriteDescriptorVariable(&m_textures_descriptor, texture_writes, (u32)TextureManager::GetInstance()->m_textures_2d_vector.size(), 0);
 		}
 
-		void MeshManager::DrawMesh(std::string name, u32 instance_count)
+		void MeshManager::DrawMeshes(VulkanPipeline* pipeline)
 		{
-			//if (m_mesh_allocations.find(name) == m_mesh_allocations.end())
-			//{
-			//	HE_GRAPHICS_ERROR("Mesh with name {0} does not exist!", name);
-			//	return;
-			//}
+			if (m_pools.empty() || m_materials_descriptor == nullptr || m_textures_descriptor == nullptr)
+			{
+				return;
+			}
 
-			//Mesh* mesh = m_mesh_allocations[name].mesh;
-
-			//m_backend->BindVertexBuffer(m_pools[m_mesh_allocations[name].pool_index].vertex_buffer, mesh->GetVertexStart() * sizeof(VertexFormatBase));
-			//m_backend->BindIndexBuffer(m_pools[m_mesh_allocations[name].pool_index].index_buffer, mesh->GetFirstIndex() * sizeof(u32));
-
-			//m_backend->DrawIndexed(mesh->GetIndexCount(), instance_count, 0, 0, 0);
-		}
-
-		void MeshManager::DrawAll(VulkanPipeline* pipeline)
-		{
 			m_backend->BindDescriptorSet(pipeline, m_materials_descriptor);
 			m_backend->BindDescriptorSet(pipeline, m_textures_descriptor);
 
@@ -237,7 +255,7 @@ namespace hellengine
 			return &instance;
 		}
 
-		void MeshManager::CreateNewPool()
+		void MeshManager::CreatePool()
 		{
 			BufferPool pool;
 

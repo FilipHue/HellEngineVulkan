@@ -31,7 +31,7 @@ namespace hellengine
 
 		void VulkanFrontend::DrawMesh(std::string name, u32 instance_count)
 		{
-			m_mesh_manager->DrawMesh(name, instance_count);
+			//m_mesh_manager->DrawMesh(name, instance_count);
 		}
 
 		VulkanTexture2D* VulkanFrontend::CreateTexture2D(std::string name, const File& file)

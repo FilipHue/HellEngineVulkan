@@ -175,7 +175,7 @@ b8 TestGBuffer::OnKeyPressed(EventContext& event)
 	{
 		CreateLightsData();
 
-		m_backend->UpdateStorageBufferOnce(m_lights_buffer, &m_lights[0], sizeof(Light) * (u32)m_lights.size());
+		m_backend->UpdateStorageBuffer(m_lights_buffer, &m_lights[0], sizeof(Light) * (u32)m_lights.size());
 	}
 
 	return false;
@@ -538,7 +538,7 @@ void TestGBuffer::CreateDescriptorSets()
 	{
 		void* data = nullptr;
 		data = static_cast<void*>(m_lights.data());
-		m_lights_buffer = m_backend->CreateStorageBuffer(data, sizeof(Light) * (u32)m_lights.size());
+		m_lights_buffer = m_backend->CreateStorageBufferMappedOnce(data, sizeof(Light) * (u32)m_lights.size());
 		m_composition_descriptor = m_backend->CreateDescriptorSet(m_composition_pipeline, 0);
 
 		DescriptorSetWriteData descriptor_data1;

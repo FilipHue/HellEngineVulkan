@@ -15,8 +15,12 @@ namespace hellengine
 		VulkanBuffer::VulkanBuffer()
 		{
 			m_handle = VK_NULL_HANDLE;
-			m_memory = VK_NULL_HANDLE;
+			m_usage = 0;
 			m_size = 0;
+
+			m_memory = VK_NULL_HANDLE;
+			m_properties = 0;
+
 			m_type = BufferType_None;
 		}
 
@@ -25,7 +29,7 @@ namespace hellengine
 			NO_OP;
 		}
 
-		void VulkanBuffer::Create(const VulkanInstance& instance, const VulkanDevice& device, VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, b8 shared, u32 queue_count, u32* queue_indices)
+		void VulkanBuffer::Create(const VulkanInstance& instance, const VulkanDevice& device, VkDeviceSize size, VkBufferUsageFlags usage, b8 shared, u32 queue_count, u32* queue_indices, VkMemoryPropertyFlags properties)
 		{
 			VkBufferCreateInfo buffer_info = {};
 			buffer_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -55,6 +59,8 @@ namespace hellengine
 			VK_CHECK(vkBindBufferMemory(device.GetLogicalDevice(), m_handle, m_memory, 0));
 
 			m_size = size;
+			m_usage = usage;
+			m_properties = properties;
 		}
 
 		void VulkanBuffer::Destroy(const VulkanInstance& instance, const VulkanDevice& device) const
@@ -124,13 +130,30 @@ namespace hellengine
 			command_buffer.Free(device, command_pool);
 		}
 
+		VulkanMappedBuffer::VulkanMappedBuffer()
+		{
+			NO_OP;
+		}
+
+		VulkanMappedBuffer::~VulkanMappedBuffer()
+		{
+			NO_OP;
+		}
+
+		void VulkanMappedBuffer::CreateMapped(const VulkanInstance& instance, const VulkanDevice& device, VkDeviceSize elem_size, u32 elem_count, VkBufferUsageFlags usage, b8 shared, u32 queue_count, u32* queue_indices, VkMemoryPropertyFlags properties, b8 persistent)
+		{
+			m_stride = ALIGN(elem_size, device.GetProperties().limits.minUniformBufferOffsetAlignment);
+			VkDeviceSize size = m_stride * elem_count;
+			Create(instance, device, size, usage, shared, queue_count, queue_indices, properties);
+
+			if (persistent && (GetMemoryFlags() & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT))
+			{
+				Map(device, size, 0, m_mapped_memory);
+			}
+		}
+
 		VulkanUniformBuffer::VulkanUniformBuffer()
 		{
-			m_handle = VK_NULL_HANDLE;
-			m_memory = VK_NULL_HANDLE;
-			m_mapped_memory = VK_NULL_HANDLE;
-			m_size = 0;
-			m_dynamic_alignment = 0;
 			m_type = BufferType_Uniform;
 		}
 
@@ -141,11 +164,6 @@ namespace hellengine
 
 		VulkanStorageBuffer::VulkanStorageBuffer()
 		{
-			m_handle = VK_NULL_HANDLE;
-			m_memory = VK_NULL_HANDLE;
-			m_mapped_memory = VK_NULL_HANDLE;
-			m_size = 0;
-			m_dynamic_alignment = 0;
 			m_type = BufferType_Storage;
 		}
 
@@ -154,6 +172,6 @@ namespace hellengine
 			NO_OP;
 		}
 
-} // namespace graphics
+	} // namespace graphics
 
 } // namespace hellengine
