@@ -215,7 +215,7 @@ namespace hellengine
 			}
 
 			HE_ASSERT(false, "Failed to find suitable memory type!");
-			return UINT32_MAX;
+			return U32MAX;
 		}
 
 		b8 IsDeviceSuitable(const VkPhysicalDevice& device, VulkanSurface& surface, VkPhysicalDeviceFeatures& features, VkPhysicalDeviceProperties& properties, VkPhysicalDeviceMemoryProperties& memory_properties, const DeviceRequirements& requirements)

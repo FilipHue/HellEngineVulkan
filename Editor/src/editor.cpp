@@ -68,7 +68,7 @@ void Editor::OnRenderUpdate()
 	m_backend->BindPipeline(m_test_pipeline);
 	m_backend->BindDescriptorSet(m_test_pipeline, m_test_descriptor);
 	
-	MeshManager::GetInstance()->DrawAll(m_test_pipeline);
+	MeshManager::GetInstance()->DrawMeshes(m_test_pipeline);
 
 	m_backend->EndDynamicRenderingWithAttachments(m_viewport_dri);
 }
@@ -440,7 +440,7 @@ void Editor::CreateViewportResources()
 		m_grid_data.view = m_editor_camera.GetView();
 		m_grid_data.pos = m_editor_camera.GetPosition();
 
-		m_grid_buffer = m_backend->CreateUniformBufferMappedPersistent(sizeof(GridCameraData));
+		m_grid_buffer = m_backend->CreateUniformBufferMappedPersistent(sizeof(GridCameraData), 1);
 		m_grid_descriptor = m_backend->CreateDescriptorSet(m_grid_pipeline, 0);
 
 		DescriptorSetWriteData data{};
@@ -522,6 +522,8 @@ void Editor::MenuBar()
 			if (ImGui::MenuItem("Load Modle File"))
 			{
 				File file = FileManager::OpenFile("Model Files (*.gltf)\0*.gltf\0Model Files (*.glb)\0*.glb\0All Files (*.*)\0*.*\0");
+				AssetManager::LoadModel(file);
+				MeshManager::GetInstance()->UploadToGpu(m_test_pipeline, 1, TextureType_Diffuse | TextureType_Ambient | TextureType_Specular);
 			}
 
 			ImGui::EndMenu();
@@ -590,7 +592,7 @@ void Editor::LoadResourcesForTest()
 	m_global_shader_data.view = m_editor_camera.GetView();
 	m_global_shader_data.camera_position = m_editor_camera.GetPosition();
 
-	m_test_ubo = m_backend->CreateUniformBufferMappedPersistent(sizeof(GlobalShaderData));
+	m_test_ubo = m_backend->CreateUniformBufferMappedPersistent(sizeof(GlobalShaderData), 1);
 
 	DescriptorSetWriteData data1{};
 	data1.type = DescriptorType_UniformBuffer;
@@ -602,6 +604,5 @@ void Editor::LoadResourcesForTest()
 	std::vector<DescriptorSetWriteData> write_data = { data1 };
 	m_backend->WriteDescriptor(&m_test_descriptor, write_data);
 
-	AssetManager::LoadModel(FileManager::ReadFile(CONCAT_PATHS(EDITOR_MODEL_PATH, "Sponza/glTF/Sponza.gltf")));
-	MeshManager::GetInstance()->GenerateResources(m_test_pipeline, 1, TextureType_Diffuse | TextureType_Ambient | TextureType_Specular);
+	MeshManager::GetInstance()->CreateMeshResource(m_test_pipeline, 1);
 }

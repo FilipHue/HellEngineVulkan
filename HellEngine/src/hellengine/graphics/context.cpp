@@ -411,7 +411,7 @@ namespace hellengine
 			std::array<u32, 2> queue_families = { m_device.GetGraphicsFamilyIndex(), m_device.GetTransferFamilyIndex() };
 
 			VulkanBuffer* vertex_buffer = new VulkanBuffer();
-			vertex_buffer->Create(m_instance, m_device, size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, true, (u32)queue_families.size(), queue_families.data());
+			vertex_buffer->Create(m_instance, m_device, size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, true, (u32)queue_families.size(), queue_families.data(), VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 			vertex_buffer->SetType(BufferType_Vertex);
 
 			if (data)
@@ -432,7 +432,7 @@ namespace hellengine
 			std::array<u32, 2> queue_families = { m_device.GetGraphicsFamilyIndex(), m_device.GetTransferFamilyIndex() };
 
 			VulkanBuffer* index_buffer = new VulkanBuffer();
-			index_buffer->Create(m_instance, m_device, size, VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, true, (u32)queue_families.size(), queue_families.data());
+			index_buffer->Create(m_instance, m_device, size, VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, true, (u32)queue_families.size(), queue_families.data(), VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 			index_buffer->SetType(BufferType_Index);
 
 			if (data)
@@ -448,74 +448,29 @@ namespace hellengine
 			return index_buffer;
 		}
 
-		VulkanUniformBuffer* VulkanContext::CreateUniformBufferMappedPersistent(u32 size)
+		VulkanUniformBuffer* VulkanContext::CreateUniformBufferMappedPersistent(u32 elem_size, u32 elem_count)
 		{
-			u32 dynamic_alignment = size;
-			u32 min_ubo_alignment = (u32)m_device.GetProperties().limits.minUniformBufferOffsetAlignment;
-			dynamic_alignment = ALIGN(dynamic_alignment, min_ubo_alignment);
-
 			VulkanUniformBuffer* uniform_buffer = new VulkanUniformBuffer();
-			uniform_buffer->Create(m_instance, m_device, dynamic_alignment, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-			uniform_buffer->SetDynamicAlignment(dynamic_alignment);
-			uniform_buffer->SetType(BufferType_Uniform);
-
-			uniform_buffer->Map(m_device, dynamic_alignment, 0, uniform_buffer->GetMappedMemory());
+			uniform_buffer->CreateMapped(m_instance, m_device, elem_size, elem_count, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, false, 0, nullptr, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, true);
 
 			return uniform_buffer;
 		}
 
-		VulkanUniformBuffer* VulkanContext::CreateUniformBufferMappedOnce(void*& data, u32 size, u32 offset)
+		VulkanUniformBuffer* VulkanContext::CreateDynamicUniformBuffer(void*& data, u32 elem_size, u32 elem_count)
 		{
-			u32 dynamic_alignment = size;
-			u32 min_ubo_alignment = (u32)m_device.GetProperties().limits.minUniformBufferOffsetAlignment;
-			dynamic_alignment = ALIGN(dynamic_alignment, min_ubo_alignment);
-
 			VulkanUniformBuffer* uniform_buffer = new VulkanUniformBuffer();
-			uniform_buffer->Create(m_instance, m_device, dynamic_alignment, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-			uniform_buffer->SetDynamicAlignment(dynamic_alignment);
-			uniform_buffer->SetType(BufferType_Uniform);
+			uniform_buffer->CreateMapped(m_instance, m_device, elem_size, elem_count, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, false, 0, nullptr, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, true);
 
-			uniform_buffer->MapUnmap(m_device, dynamic_alignment - offset, offset, data);
-			uniform_buffer->Map(m_device, dynamic_alignment, 0, uniform_buffer->GetMappedMemory());
+			uniform_buffer->SetType(BufferType_UniformDynamic);
+			uniform_buffer->MapUnmap(m_device, uniform_buffer->GetSize(), 0, data);
 
 			return uniform_buffer;
 		}
 
-		VulkanUniformBuffer* VulkanContext::CreateDynamicUniformBuffer(void*& data, u32 data_size, u32 data_count)
+		VulkanStorageBuffer* VulkanContext::CreateStorageBufferMappedPersistent(u32 elem_size, u32 elem_count)
 		{
-			u32 dynamic_alignment = data_size;
-			u32 min_ubo_alignment = (u32)m_device.GetProperties().limits.minUniformBufferOffsetAlignment;
-			if (min_ubo_alignment > 0)
-			{
-				dynamic_alignment = ALIGN(dynamic_alignment, min_ubo_alignment);
-			}
-
-			u32 size = data_count * dynamic_alignment;
-			data = AlignedAllocation(size, dynamic_alignment);
-
-			VulkanUniformBuffer* dynamic_buffer = new VulkanUniformBuffer();
-			dynamic_buffer->Create(m_instance, m_device, size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
-			dynamic_buffer->SetDynamicAlignment(dynamic_alignment);
-			dynamic_buffer->SetType(BufferType_UniformDynamic);
-
-			dynamic_buffer->Map(m_device, size, 0, dynamic_buffer->GetMappedMemory());
-
-			return dynamic_buffer;
-		}
-
-		VulkanStorageBuffer* VulkanContext::CreateStorageBuffer(void*& data, u32 data_size, u32 offset)
-		{
-			u32 dynamic_alignment = data_size;
-			u32 min_ubo_alignment = (u32)m_device.GetProperties().limits.minUniformBufferOffsetAlignment;
-			dynamic_alignment = ALIGN(dynamic_alignment, min_ubo_alignment);
-
 			VulkanStorageBuffer* storage_buffer = new VulkanStorageBuffer();
-			storage_buffer->Create(m_instance, m_device, dynamic_alignment, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-			storage_buffer->SetDynamicAlignment(dynamic_alignment);
-			storage_buffer->SetType(BufferType_Uniform);
-
-			storage_buffer->MapUnmap(m_device, dynamic_alignment - offset, offset, data);
-			storage_buffer->Map(m_device, dynamic_alignment, 0, storage_buffer->GetMappedMemory());
+			storage_buffer->CreateMapped(m_instance, m_device, elem_size, elem_count, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, false, 0, nullptr, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, true);
 
 			return storage_buffer;
 		}
@@ -546,154 +501,44 @@ namespace hellengine
 			stagging_buffer.Destroy(m_instance, m_device);
 		}
 
-		void VulkanContext::UpdateUniformBuffer(VulkanUniformBuffer* ubo, void* data, u32 size)
+		void VulkanContext::UpdateUniformBuffer(VulkanUniformBuffer* buffer, void* data, u32 size, u32 offset)
 		{
-			u32 dynamic_alignment = size;
-			u32 min_ubo_alignment = (u32)m_device.GetProperties().limits.minUniformBufferOffsetAlignment;
-			dynamic_alignment = ALIGN(dynamic_alignment, min_ubo_alignment);
+			const u32 min_alignment = m_device.GetProperties().limits.nonCoherentAtomSize;
 
-			memcpy(ubo->GetMappedMemory(), data, dynamic_alignment);
+			memcpy(static_cast<u8*>(buffer->GetMappedMemory()) + offset, data, size);
 
-			// FOR MEMORY COHERENCY
-			VkMappedMemoryRange memory_range{};
-			memory_range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-			memory_range.memory = ubo->GetDeviceMemory();
-			memory_range.offset = 0;
-			memory_range.size = dynamic_alignment;
-
-			VK_CHECK(vkFlushMappedMemoryRanges(m_device.GetLogicalDevice(), 1, &memory_range));
-
-			VkBufferMemoryBarrier bufferBarrier{};
-			bufferBarrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
-			bufferBarrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT;
-			bufferBarrier.dstAccessMask = VK_ACCESS_UNIFORM_READ_BIT;
-			bufferBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			bufferBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			bufferBarrier.buffer = ubo->GetHandle();
-			bufferBarrier.offset = 0;
-			bufferBarrier.size = VK_WHOLE_SIZE;
-
-			// Add the barrier to the command buffer
-			vkCmdPipelineBarrier(
-				m_frame_data[m_current_frame].command_buffer.GetHandle(),
-				VK_PIPELINE_STAGE_HOST_BIT,          // Source stage: Host writes
-				VK_PIPELINE_STAGE_VERTEX_SHADER_BIT, // Destination stage: Vertex shader reads
-				0,                                   // Dependency flags
-				0, nullptr,                          // No global memory barriers
-				1, &bufferBarrier,                   // Buffer memory barrier
-				0, nullptr                           // No image memory barriers
-			);
+			if (!(buffer->GetMemoryFlags() & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))
+			{
+				const u32 flush_offset = ALIGN(offset, min_alignment);
+				const u32 flush_size = ALIGN(size + (offset - flush_offset), min_alignment);
+				VkMappedMemoryRange range{ VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE };
+				range.memory = buffer->GetDeviceMemory();
+				range.offset = flush_offset;
+				range.size = flush_size;
+				vkFlushMappedMemoryRanges(m_device.GetLogicalDevice(), 1, &range);
+			}
 		}
 
-		void VulkanContext::UpdateUniformBufferOnce(VulkanUniformBuffer* ubo, void* data, u32 size, u32 offset)
+		void VulkanContext::UpdateStorageBuffer(VulkanStorageBuffer* buffer, void* data, u32 size, u32 offset)
 		{
-			VulkanCommandBuffer command_buffer;
-			command_buffer.Allocate(m_device, m_command_pool, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
+			const u32 min_alignment = m_device.GetProperties().limits.nonCoherentAtomSize;
 
-			command_buffer.BeginRecordingOneTime(m_device, m_command_pool);
+			memcpy(static_cast<u8*>(buffer->GetMappedMemory()) + offset, data, size);
 
-			u32 dynamic_alignment = size;
-			u32 min_ubo_alignment = (u32)m_device.GetProperties().limits.minUniformBufferOffsetAlignment;
-			dynamic_alignment = ALIGN(dynamic_alignment, min_ubo_alignment);
+			if (!(buffer->GetMemoryFlags() & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT))
+			{
+				const u32 flushOffset = ALIGN(offset, min_alignment);
+				const u32 flushSize = ALIGN(size + (offset - flushOffset), min_alignment);
 
-			memcpy(ubo->GetMappedMemory(), data, dynamic_alignment);
-
-			// FOR MEMORY COHERENCY
-			VkMappedMemoryRange memory_range{};
-			memory_range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-			memory_range.memory = ubo->GetDeviceMemory();
-			memory_range.offset = offset;
-			memory_range.size = dynamic_alignment;
-
-			VK_CHECK(vkFlushMappedMemoryRanges(m_device.GetLogicalDevice(), 1, &memory_range));
-
-			VkBufferMemoryBarrier bufferBarrier{};
-			bufferBarrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
-			bufferBarrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT;
-			bufferBarrier.dstAccessMask = VK_ACCESS_UNIFORM_READ_BIT;
-			bufferBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			bufferBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			bufferBarrier.buffer = ubo->GetHandle();
-			bufferBarrier.offset = offset;
-			bufferBarrier.size = VK_WHOLE_SIZE;
-
-			// Add the barrier to the command buffer
-			vkCmdPipelineBarrier(
-				command_buffer.GetHandle(),
-				VK_PIPELINE_STAGE_HOST_BIT,          // Source stage: Host writes
-				VK_PIPELINE_STAGE_VERTEX_SHADER_BIT, // Destination stage: Vertex shader reads
-				0,                                   // Dependency flags
-				0, nullptr,                          // No global memory barriers
-				1, &bufferBarrier,                   // Buffer memory barrier
-				0, nullptr                           // No image memory barriers
-			);
-
-			command_buffer.EndRecordingOneTime(m_device, m_command_pool);
-
-			command_buffer.Free(m_device, m_command_pool);
-		}
-
-		void VulkanContext::UpdateStorageBufferOnce(VulkanStorageBuffer* buffer, void* data, u32 size, u32 offset)
-		{
-			VulkanCommandBuffer command_buffer;
-			command_buffer.Allocate(m_device, m_command_pool, VK_COMMAND_BUFFER_LEVEL_PRIMARY);
-
-			command_buffer.BeginRecordingOneTime(m_device, m_command_pool);
-
-			u32 dynamic_alignment = size;
-			u32 min_ubo_alignment = (u32)m_device.GetProperties().limits.minUniformBufferOffsetAlignment;
-			dynamic_alignment = ALIGN(dynamic_alignment, min_ubo_alignment);
-			memcpy(buffer->GetMappedMemory(), data, dynamic_alignment);
-
-			// FOR MEMORY COHERENCY
-			VkMappedMemoryRange memory_range{};
-			memory_range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-			memory_range.memory = buffer->GetDeviceMemory();
-			memory_range.offset = offset;
-			memory_range.size = dynamic_alignment;
-			VK_CHECK(vkFlushMappedMemoryRanges(m_device.GetLogicalDevice(), 1, &memory_range));
-
-			VkBufferMemoryBarrier bufferBarrier{};
-			bufferBarrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
-			bufferBarrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT;
-			bufferBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-			bufferBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			bufferBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-			bufferBarrier.buffer = buffer->GetHandle();
-			bufferBarrier.offset = offset;
-			bufferBarrier.size = VK_WHOLE_SIZE;
-
-			// Add the barrier to the command buffer
-			vkCmdPipelineBarrier(
-				command_buffer.GetHandle(),
-				VK_PIPELINE_STAGE_HOST_BIT,          // Source stage: Host writes
-				VK_PIPELINE_STAGE_VERTEX_SHADER_BIT, // Destination stage: Vertex shader reads
-				0,                                   // Dependency flags
-				0, nullptr,                          // No global memory barriers
-				1, &bufferBarrier,                   // Buffer memory barrier
-				0, nullptr                           // No image memory barriers
-			);
-
-			command_buffer.EndRecordingOneTime(m_device, m_command_pool);
-
-			command_buffer.Free(m_device, m_command_pool);
+				VkMappedMemoryRange range{ VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE };
+				range.memory = buffer->GetDeviceMemory();
+				range.offset = flushOffset;
+				range.size = flushSize;
+				vkFlushMappedMemoryRanges(m_device.GetLogicalDevice(), 1, &range);
+			}
 		}
 
 		void VulkanContext::DestroyBuffer(VulkanBuffer* buffer) const
-		{
-			m_device.WaitForIdle();
-
-			buffer->Destroy(m_instance, m_device);
-		}
-
-		void VulkanContext::DestroyUniformBuffer(VulkanUniformBuffer* buffer) const
-		{
-			m_device.WaitForIdle();
-
-			buffer->Destroy(m_instance, m_device);
-		}
-
-		void VulkanContext::DestroyStorageBuffer(VulkanStorageBuffer* buffer) const
 		{
 			m_device.WaitForIdle();
 
@@ -873,7 +718,7 @@ namespace hellengine
 			std::array<u32, 2> queue_families = { m_device.GetGraphicsFamilyIndex(), m_device.GetTransferFamilyIndex() };
 
 			VulkanBuffer staging_buffer = VulkanBuffer();
-			staging_buffer.Create(m_instance, m_device, size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, true, 2, queue_families.data());
+			staging_buffer.Create(m_instance, m_device, size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, true, 2, queue_families.data(), VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
 			staging_buffer.MapUnmap(m_device, size, 0, data);
 
 			return staging_buffer;

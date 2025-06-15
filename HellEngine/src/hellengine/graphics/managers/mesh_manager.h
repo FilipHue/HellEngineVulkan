@@ -12,6 +12,7 @@ namespace hellengine
 	namespace graphics
 	{
 
+		constexpr u32 MAX_MATERIALS = 500000;
 		constexpr u32 MAX_VERTICES = 1000000;
 		constexpr u32 MAX_INDICES = MAX_VERTICES * 6;
 		constexpr u64 MIN_MEMORY_ALIGNMENT = lcm_array<2>({ sizeof(VertexFormatBase), sizeof(VertexFormatTangent) });
@@ -36,19 +37,20 @@ namespace hellengine
 			void Init(VulkanBackend* backend);
 			void Shutdown();
 
+			void CreateMeshResource(VulkanPipeline* pipeline, u32 set);
+
 			template<typename VertexT>
 			b8 CreateMesh(std::string name, RawVertexData vertices, std::vector<u32> indices, MaterialInfo* material);
 
-			void GenerateResources(VulkanPipeline* pipeline, u32 set, TextureType types);
+			void UploadToGpu(VulkanPipeline* pipeline, u32 set, TextureType types);
 
-			void DrawMesh(std::string name, u32 instance_count = 1);
-			void DrawAll(VulkanPipeline* pipeline);
+			void DrawMeshes(VulkanPipeline* pipeline);
 
 			VulkanBackend* GetBackend() { return m_backend; }
 			static MeshManager* GetInstance();
 
 		private:
-			void CreateNewPool();
+			void CreatePool();
 
 		private:
 			struct MeshAllocation
@@ -56,7 +58,9 @@ namespace hellengine
 				Mesh* mesh;
 				u32 pool_index;
 			};
-			std::unordered_map<std::string, MeshAllocation> m_mesh_allocations;
+			std::vector<MeshAllocation> m_mesh_allocations;
+			std::unordered_map<std::string, u32> m_mesh_allocations_index_map;
+			u32 m_last_mesh_index = 0;
 
 			std::vector<BufferPool> m_pools;
 			u32 m_current_pool_index = 0;

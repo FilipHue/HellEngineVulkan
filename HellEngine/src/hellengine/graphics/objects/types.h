@@ -469,6 +469,14 @@ namespace hellengine
 			BufferType_Count
 		};
 
+		enum BufferMemoryProperty
+		{
+			BufferMemoryProperty_None			= 0,
+			BufferMemoryProperty_HostCoherent	= 1 << 0,	// VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+			BufferMemoryProperty_HostCached		= 1 << 1,	// VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT
+			BufferMemoryProperty_DeviceLocal	= 1 << 2,	// VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+		};
+
 		/*******\
 		| IMAGE |
 		\*******/

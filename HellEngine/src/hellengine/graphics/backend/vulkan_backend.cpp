@@ -184,14 +184,9 @@ namespace hellengine
 			return m_context->CreateIndexBuffer(static_cast<void*>(indices), indices_count * sizeof(T));
 		}
 
-		VulkanUniformBuffer* hellengine::graphics::VulkanBackend::CreateUniformBufferMappedPersistent(u32 size)
+		VulkanUniformBuffer* VulkanBackend::CreateUniformBufferMappedPersistent(u32 elem_size, u32 elem_count)
 		{
-			return m_context->CreateUniformBufferMappedPersistent(size);
-		}
-
-		VulkanUniformBuffer* VulkanBackend::CreateUniformBufferMappedOnce(void*& data, u32 size, u32 offset)
-		{
-			return m_context->CreateUniformBufferMappedOnce(data, size, offset);
+			return m_context->CreateUniformBufferMappedPersistent(elem_size, elem_count);
 		}
 
 		VulkanUniformBuffer* VulkanBackend::CreateDynamicUniformBuffer(void*& data, u32 data_size, u32 data_count)
@@ -199,9 +194,9 @@ namespace hellengine
 			return m_context->CreateDynamicUniformBuffer(data, data_size, data_count);
 		}
 
-		VulkanStorageBuffer* VulkanBackend::CreateStorageBuffer(void*& data, u32 size, u32 offset)
+		VulkanStorageBuffer* VulkanBackend::CreateStorageBufferMappedPersistent(u32 elem_size, u32 elem_count)
 		{
-			return m_context->CreateStorageBuffer(data, size, offset);
+			return m_context->CreateStorageBufferMappedPersistent(elem_size, elem_count);
 		}
 
 		void VulkanBackend::UpdateVertexBuffer(VulkanBuffer* buffer, u32 offset, void* data, u32 size)
@@ -214,34 +209,19 @@ namespace hellengine
 			return m_context->UpdateIndexBuffer(buffer, offset, data, size);
 		}
 
-		void VulkanBackend::UpdateUniformBuffer(VulkanUniformBuffer* ubo, void* data, u32 size)
+		void VulkanBackend::UpdateUniformBuffer(VulkanUniformBuffer* buffer, void* data, u32 size, u32 offset)
 		{
-			m_context->UpdateUniformBuffer(ubo, data, size);
+			m_context->UpdateUniformBuffer(buffer, data, size, offset);
 		}
 
-		void VulkanBackend::UpdateUniformBufferOnce(VulkanUniformBuffer* ubo, void* data, u32 size, u32 offset)
+		void VulkanBackend::UpdateStorageBuffer(VulkanStorageBuffer* buffer, void* data, u32 size, u32 offset)
 		{
-			return m_context->UpdateUniformBufferOnce(ubo, data, size, offset);
-		}
-
-		void VulkanBackend::UpdateStorageBufferOnce(VulkanStorageBuffer* buffer, void* data, u32 size, u32 offset)
-		{
-			m_context->UpdateStorageBufferOnce(buffer, data, size, offset);
+			m_context->UpdateStorageBuffer(buffer, data, size, offset);
 		}
 
 		void VulkanBackend::DestroyBuffer(VulkanBuffer* buffer) const
 		{
 			m_context->DestroyBuffer(buffer);
-		}
-
-		void VulkanBackend::DestroyUniformBuffer(VulkanUniformBuffer* buffer) const
-		{
-			m_context->DestroyUniformBuffer(buffer);
-		}
-
-		void VulkanBackend::DestroyStorageBuffer(VulkanStorageBuffer* buffer) const
-		{
-			m_context->DestroyStorageBuffer(buffer);
 		}
 
 		void VulkanBackend::BindVertexBuffer(VulkanBuffer* buffer, VkDeviceSize offset) const
