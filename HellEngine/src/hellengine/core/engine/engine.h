@@ -19,11 +19,11 @@ namespace hellengine
 
 			HE_API void Run(Application& application);
 
-			HE_API const Application& GetApplication() const { return *m_application; }
-			HE_API f32 GetFrameTime() const;
-			HE_API f32 GetTimeElapsed();
+			const Application& GetApplication() const;
+			f32 GetFrameTime() const;
+			f32 GetTimeElapsed();
 
-			HE_API static Engine& GetInstance();
+			static Engine& GetInstance();
 
 		private:
 			Engine() = default;

@@ -25,9 +25,9 @@ namespace hellengine
 			GlfwWindow(const WindowConfiguration& config);
 			~GlfwWindow();
 
-			void* GetHandle() override { return m_handle; }
+			void* GetHandle() override;
 
-			INLINE void PollEvents() override;
+			void PollEvents() override;
 			void UpdateInternalState() override;
 
 			void SetCursorMode(u32 mode) override;

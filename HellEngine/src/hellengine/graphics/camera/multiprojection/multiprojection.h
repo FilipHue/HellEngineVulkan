@@ -31,20 +31,20 @@ namespace hellengine
 			HE_API void CreateOrthographic(f32 left, f32 right, f32 bottom, f32 up, f32 near_z, f32 far_z);
 
 			// Global
-			HE_API const glm::mat4& GetView() const { return m_view; }
-			HE_API glm::mat4& GetView() { return m_view; }
-			HE_API void SetView(const glm::mat4& view) { m_view = view; }
+			HE_API const glm::mat4& GetView() const;
+			HE_API glm::mat4& GetView();
+			HE_API void SetView(const glm::mat4& view);
 
-			HE_API glm::vec3& GetPosition() { return m_position; }
-			HE_API const glm::vec3& GetPosition() const { return m_position; }
+			HE_API glm::vec3& GetPosition();
+			HE_API const glm::vec3& GetPosition() const;
 			HE_API void SetPosition(glm::vec3 position);
 
 			HE_API void SetNear(f32 near_z);
 			HE_API void SetFar(f32 far_z);
 
-			HE_API ProjectionType GetType() const { return m_type; }
+			HE_API ProjectionType GetType() const;
 
-			// Controlls perspective
+			// Controls perspective
 			HE_API void TranslateX(f32 amount);
 			HE_API void TranslateY(f32 amount);
 			HE_API void TranslateZ(f32 amount);
@@ -55,7 +55,7 @@ namespace hellengine
 
 			HE_API void Rotate(f32 yaw, f32 pitch, f32 roll);
 
-			// Controlls orthographic
+			// Controls orthographic
 			HE_API void TranslateLeft(f32 amount);
 			HE_API void TranslateRight(f32 amount);
 			HE_API void TranslateBottom(f32 amount);

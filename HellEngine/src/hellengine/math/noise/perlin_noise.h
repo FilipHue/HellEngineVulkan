@@ -1,5 +1,8 @@
 #pragma once
 
+// Internal
+#include <hellengine/core/typedefs.h>
+
 // STL
 #include <numeric>
 #include <random>
@@ -17,13 +20,13 @@ namespace hellengine
 			PerlinNoise(bool applyRandomSeed)
 			{
 				// Generate random lookup for permutations containing all numbers from 0..255
-				std::vector<uint8_t> plookup;
+				std::vector<u8> plookup;
 				plookup.resize(256);
 				std::iota(plookup.begin(), plookup.end(), 0);
 				std::default_random_engine rndEngine(applyRandomSeed ? std::random_device{}() : 0);
 				std::shuffle(plookup.begin(), plookup.end(), rndEngine);
 
-				for (uint32_t i = 0; i < 256; i++)
+				for (u32 i = 0; i < 256; i++)
 				{
 					permutations[i] = permutations[256 + i] = plookup[i];
 				}
@@ -32,9 +35,9 @@ namespace hellengine
 
 			T noise(T x, T y, T z)
 			{
-				int32_t X = (int32_t)floor(x) & 255;
-				int32_t Y = (int32_t)floor(y) & 255;
-				int32_t Z = (int32_t)floor(z) & 255;
+				i32 X = (i32)floor(x) & 255;
+				i32 Y = (i32)floor(y) & 255;
+				i32 Z = (i32)floor(z) & 255;
 
 				x -= floor(x);
 				y -= floor(y);
@@ -44,12 +47,12 @@ namespace hellengine
 				T v = fade(y);
 				T w = fade(z);
 
-				uint32_t A = permutations[X] + Y;
-				uint32_t AA = permutations[A] + Z;
-				uint32_t AB = permutations[A + 1] + Z;
-				uint32_t B = permutations[X + 1] + Y;
-				uint32_t BA = permutations[B] + Z;
-				uint32_t BB = permutations[B + 1] + Z;
+				u32 A = permutations[X] + Y;
+				u32 AA = permutations[A] + Z;
+				u32 AB = permutations[A + 1] + Z;
+				u32 B = permutations[X + 1] + Y;
+				u32 BA = permutations[B] + Z;
+				u32 BB = permutations[B + 1] + Z;
 
 				T res = lerp(w, lerp(v,
 					lerp(u, grad(permutations[AA], x, y, z), grad(permutations[BA], x - 1, y, z)), lerp(u, grad(permutations[AB], x, y - 1, z), grad(permutations[BB], x - 1, y - 1, z))),
@@ -75,7 +78,7 @@ namespace hellengine
 			}
 
 		private:
-			uint32_t permutations[512];
+			u32 permutations[512];
 		};
 
 	} // namespace math

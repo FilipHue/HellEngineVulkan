@@ -1,9 +1,6 @@
 #include <hepch.h>
 #include "event.h"
 
-// External
-#include <imgui.h>
-
 namespace hellengine
 {
 

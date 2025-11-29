@@ -21,12 +21,12 @@ namespace hellengine
 			HE_API void Stop();
 			HE_API void Reset();
 			HE_API f32 GetElapsedTime();
-			HE_API b8 IsStopped() const { return m_stopped; }	
+			HE_API b8 IsStopped() const;
 
 		private:
-			std::chrono::time_point<std::chrono::high_resolution_clock> m_start_time_point{ std::chrono::high_resolution_clock::now() };
-			f32 m_elapsed_time{ 0.0f };
-			b8 m_stopped{ false };
+			std::chrono::time_point<std::chrono::high_resolution_clock> m_start_time_point;
+			f32 m_elapsed_time;
+			b8 m_stopped;
 		};
 	}
 }

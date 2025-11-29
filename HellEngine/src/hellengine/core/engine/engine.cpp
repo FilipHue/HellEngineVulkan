@@ -59,6 +59,11 @@ namespace hellengine
 			application.Cleanup();
 		}
 
+		const Application& Engine::GetApplication() const
+		{
+			return *m_application;
+		}
+
 		f32 Engine::GetFrameTime() const
 		{
 			return m_frame_time;

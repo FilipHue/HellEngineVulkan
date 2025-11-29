@@ -30,6 +30,7 @@ namespace hellengine
 			HE_API static Tuple<f32, f32> GetMouseScroll();
 
 			static void ProcessKey(keys key, b8 pressed);
+
 			static void ProcessMouseButton(mouse_buttons button, b8 pressed);
 			static void ProcessMousePosition(f32 x, f32 y);
 			static void ProcessMouseScroll(f32 x, f32 y);

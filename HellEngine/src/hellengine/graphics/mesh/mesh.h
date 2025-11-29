@@ -27,8 +27,9 @@ namespace hellengine
 			Mesh() = default;
 			~Mesh();
 
-			void SetName(const char* name) { m_name = name; }
-			const char* GetName() const { return m_name; }
+			void SetName(std::string name) { m_name = name; }
+			std::string& GetName() { return m_name; }
+			const std::string& GetName() const { return m_name; }
 
 			void SetRawData(RawVertexData data) { m_vertices_raw_data = data; }
 			RawVertexData& GetRawData() { return m_vertices_raw_data; }
@@ -46,18 +47,12 @@ namespace hellengine
 			void SetMaterialInfo(MaterialInfo* info) { m_material_info = info; }
 			MaterialInfo* GetMaterialInfo() { return m_material_info; }
 
-			void SetModelMatrix(glm::mat4 model_matrix) { m_model_matrix = model_matrix; }
-			glm::mat4 GetModelMatrix() const { return m_model_matrix; }
-			glm::mat4& GetModelMatrixRef() { return m_model_matrix; }
-
 		private:
-			const char* m_name;
+			std::string m_name;
 			
 			RawVertexData m_vertices_raw_data;
 
 			BufferAllocation m_allocation;
-
-			glm::mat4 m_model_matrix;
 
 			MaterialInfo* m_material_info;
 		};

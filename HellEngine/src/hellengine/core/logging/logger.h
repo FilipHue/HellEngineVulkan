@@ -28,10 +28,10 @@ namespace hellengine
 			HE_API static void Init();
 			HE_API static void Shutdown();
 
-			HE_API FORCE_INLINE static Shared<spdlog::logger>& GetCoreLogger() { return s_core_logger; }
-			HE_API FORCE_INLINE static Shared<spdlog::logger>& GetGraphicsLogger() { return s_graphics_logger; }
-			HE_API FORCE_INLINE static Shared<spdlog::logger>& GetEcsLogger() { return s_ecs_logger; }
-			HE_API FORCE_INLINE static Shared<spdlog::logger>& GetClientLogger() { return s_client_logger; }
+			HE_API static Shared<spdlog::logger>& GetCoreLogger();
+			HE_API static Shared<spdlog::logger>& GetGraphicsLogger();
+			HE_API static Shared<spdlog::logger>& GetEcsLogger();
+			HE_API static Shared<spdlog::logger>& GetClientLogger();
 
 		private:
 			HE_API static Shared<spdlog::logger> s_core_logger;
@@ -72,6 +72,7 @@ namespace hellengine
 #else
 #define HE_CORE_DEBUG(...)
 #define HE_GRAPHICS_DEBUG(...)
+#define HE_ECS_DEBUG(...)
 #define HE_CLIENT_DEBUG(...)
 #endif
 

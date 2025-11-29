@@ -36,12 +36,12 @@ namespace hellengine
 			virtual void OnUIRender() = 0;
 			virtual void Shutdown() = 0;
 
-			INLINE void OnPollEvents() const { m_window->PollEvents(); }
+			void OnPollEvents() const;
 
-			INLINE b8 IsRunning() const { return m_running; }
-			INLINE b8 IsSuspended() const { return m_suspended; }
+			b8 IsRunning() const;
+			b8 IsSuspended() const;
 
-			HE_API Window* GetWindow() const { return m_window; }
+			HE_API Window* GetWindow() const;
 
 		private:
 			void Setup(ApplicationConfiguration* configuration);

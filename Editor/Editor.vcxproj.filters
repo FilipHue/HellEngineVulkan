@@ -4,24 +4,40 @@
     <Filter Include="src">
       <UniqueIdentifier>{2DAB880B-99B4-887C-2230-9F7C8E38947C}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\bars">
+      <UniqueIdentifier>{E4972DCF-D064-88DA-F97D-7682E5A9BD68}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\panels">
       <UniqueIdentifier>{FFFA9871-EBB2-DABE-54BA-B31A409175AF}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\bars\editor_menu_bar.h">
+      <Filter>src\bars</Filter>
+    </ClInclude>
     <ClInclude Include="src\editor.h">
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\panels\editor_hierarchy.h">
       <Filter>src\panels</Filter>
     </ClInclude>
+    <ClInclude Include="src\panels\editor_inspector.h">
+      <Filter>src\panels</Filter>
+    </ClInclude>
+    <ClInclude Include="src\shared.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="src\bars\editor_menu_bar.cpp">
+      <Filter>src\bars</Filter>
+    </ClCompile>
     <ClCompile Include="src\editor.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\panels\editor_hierarchy.cpp">
+      <Filter>src\panels</Filter>
+    </ClCompile>
+    <ClCompile Include="src\panels\editor_inspector.cpp">
       <Filter>src\panels</Filter>
     </ClCompile>
   </ItemGroup>

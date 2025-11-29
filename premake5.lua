@@ -45,6 +45,7 @@ project "HellEngine"
         "%{IncludeDirs.ASSIMP}",
         "%{IncludeDirs.KTX}",
         "%{IncludeDirs.IMGUI}",
+        "%{IncludeDirs.IMGUIZMO}",
         "%{IncludeDirs.ENTT}",
 
         "%{IncludeDirs.VULKAN}"
@@ -74,7 +75,7 @@ project "HellEngine"
         "%{LibraryDirectories.VulkanSDK}"
     }
 
-    -- If it is a fresh build, comment out the post build command
+    -- If it is a fresh build or you build for static, comment out the post build command
     -- It will give an error since the folder does not exist
     -- postbuildcommands
     -- {
@@ -94,6 +95,9 @@ project "HellEngine"
         flags { "NoPCH" }
 
     filter "files:HellEngine/dependencies/IMGUI/**.c*"
+        flags { "NoPCH" }
+
+    filter "files:HellEngine/dependencies/IMGUIZMO/**.c*"
         flags { "NoPCH" }
 
     filter "system:windows"
@@ -153,6 +157,7 @@ project "Editor"
         "HellEngine/dependencies/ASSIMP/include",
         "HellEngine/dependencies/KTX/include",
         "HellEngine/dependencies/IMGUI",
+        "HellEngine/dependencies/IMGUIZMO/include",
         "HellEngine/dependencies/ENTT/include",
 
         "%{IncludeDirs.VULKAN}"
@@ -224,6 +229,7 @@ project "Sandbox"
         "HellEngine/dependencies/ASSIMP/include",
         "HellEngine/dependencies/KTX/include",
         "HellEngine/dependencies/IMGUI",
+        "HellEngine/dependencies/IMGUIZMO/include",
         "HellEngine/dependencies/ENTT/include",
 
         "%{IncludeDirs.VULKAN}"

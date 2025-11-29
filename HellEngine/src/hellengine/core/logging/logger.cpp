@@ -49,6 +49,26 @@ namespace hellengine
 			spdlog::shutdown();
 		}
 
+		Shared<spdlog::logger>& Logger::GetCoreLogger()
+		{
+			return s_core_logger;
+		}
+
+		Shared<spdlog::logger>& Logger::GetGraphicsLogger()
+		{
+			return s_graphics_logger;
+		}
+
+		Shared<spdlog::logger>& Logger::GetEcsLogger()
+		{
+			return s_ecs_logger;
+		}
+
+		Shared<spdlog::logger>& Logger::GetClientLogger()
+		{
+			return s_client_logger;
+		}
+
 	} // namespace core
 
 } // namespace hellengine

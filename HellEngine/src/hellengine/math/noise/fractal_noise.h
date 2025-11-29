@@ -25,7 +25,7 @@ namespace hellengine
 				T frequency = (T)1;
 				T amplitude = (T)1;
 				T max = (T)0;
-				for (uint32_t i = 0; i < octaves; i++)
+				for (u32 i = 0; i < octaves; i++)
 				{
 					sum += perlinNoise.noise(x * frequency, y * frequency, z * frequency) * amplitude;
 					max += amplitude;
@@ -39,7 +39,7 @@ namespace hellengine
 
 		private:
 			PerlinNoise<T> perlinNoise;
-			uint32_t octaves;
+			u32 octaves;
 			T frequency;
 			T amplitude;
 			T persistence;

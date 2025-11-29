@@ -57,7 +57,7 @@
       <PrecompiledHeaderFile>hepch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>HE_PLATFORM_WINDOWS;HE_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;dependencies\SPDLOG\include;..;dependencies\GLFW\include;dependencies\GLM\include;dependencies\STB\include;dependencies\ASSIMP\include;dependencies\KTX\include;dependencies\IMGUI;dependencies\ENTT\include;C:\VulkanSDK\1.3.290.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;dependencies\SPDLOG\include;..;dependencies\GLFW\include;dependencies\GLM\include;dependencies\STB\include;dependencies\ASSIMP\include;dependencies\KTX\include;dependencies\IMGUI;dependencies\IMGUIZMO\include;dependencies\ENTT\include;C:\VulkanSDK\1.3.290.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -82,7 +82,7 @@
       <PrecompiledHeaderFile>hepch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>HE_PLATFORM_WINDOWS;HE_RELEASE;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;dependencies\SPDLOG\include;..;dependencies\GLFW\include;dependencies\GLM\include;dependencies\STB\include;dependencies\ASSIMP\include;dependencies\KTX\include;dependencies\IMGUI;dependencies\ENTT\include;C:\VulkanSDK\1.3.290.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;dependencies\SPDLOG\include;..;dependencies\GLFW\include;dependencies\GLM\include;dependencies\STB\include;dependencies\ASSIMP\include;dependencies\KTX\include;dependencies\IMGUI;dependencies\IMGUIZMO\include;dependencies\ENTT\include;C:\VulkanSDK\1.3.290.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -488,6 +488,12 @@
     <ClInclude Include="dependencies\IMGUI\imstb_rectpack.h" />
     <ClInclude Include="dependencies\IMGUI\imstb_textedit.h" />
     <ClInclude Include="dependencies\IMGUI\imstb_truetype.h" />
+    <ClInclude Include="dependencies\IMGUIZMO\include\imguizmo\GraphEditor.h" />
+    <ClInclude Include="dependencies\IMGUIZMO\include\imguizmo\ImCurveEdit.h" />
+    <ClInclude Include="dependencies\IMGUIZMO\include\imguizmo\ImGradient.h" />
+    <ClInclude Include="dependencies\IMGUIZMO\include\imguizmo\ImGuizmo.h" />
+    <ClInclude Include="dependencies\IMGUIZMO\include\imguizmo\ImSequencer.h" />
+    <ClInclude Include="dependencies\IMGUIZMO\include\imguizmo\ImZoomSlider.h" />
     <ClInclude Include="dependencies\KTX\include\KHR\khr_df.h" />
     <ClInclude Include="dependencies\KTX\include\ktx.h" />
     <ClInclude Include="dependencies\KTX\include\ktxvulkan.h" />
@@ -615,6 +621,7 @@
     <ClInclude Include="dependencies\STB\include\stb\stb_tilemap_editor.h" />
     <ClInclude Include="dependencies\STB\include\stb\stb_truetype.h" />
     <ClInclude Include="dependencies\STB\include\stb\stb_voxel_render.h" />
+    <ClInclude Include="src\hellengine\containers\recycling_vector.h" />
     <ClInclude Include="src\hellengine\containers\tuple.h" />
     <ClInclude Include="src\hellengine\core\api.h" />
     <ClInclude Include="src\hellengine\core\application\application.h" />
@@ -639,10 +646,13 @@
     <ClInclude Include="src\hellengine\core\window\window.h" />
     <ClInclude Include="src\hellengine\ecs\component\components.h" />
     <ClInclude Include="src\hellengine\ecs\component\components\id.h" />
+    <ClInclude Include="src\hellengine\ecs\component\components\mesh_filter.h" />
+    <ClInclude Include="src\hellengine\ecs\component\components\relationship.h" />
     <ClInclude Include="src\hellengine\ecs\component\components\tag.h" />
     <ClInclude Include="src\hellengine\ecs\component\components\transform.h" />
     <ClInclude Include="src\hellengine\ecs\entity\entity.h" />
     <ClInclude Include="src\hellengine\ecs\scene\scene.h" />
+    <ClInclude Include="src\hellengine\ecs\scene\scene_manager.h" />
     <ClInclude Include="src\hellengine\ecs\shared.h" />
     <ClInclude Include="src\hellengine\graphics\backend\vulkan_backend.h" />
     <ClInclude Include="src\hellengine\graphics\camera\camera.h" />
@@ -725,6 +735,21 @@
     <ClCompile Include="dependencies\IMGUI\imgui_widgets.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="dependencies\IMGUIZMO\include\imguizmo\GraphEditor.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="dependencies\IMGUIZMO\include\imguizmo\ImCurveEdit.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="dependencies\IMGUIZMO\include\imguizmo\ImGradient.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="dependencies\IMGUIZMO\include\imguizmo\ImGuizmo.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="dependencies\IMGUIZMO\include\imguizmo\ImSequencer.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="dependencies\STB\include\stb\stb_vorbis.c">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
@@ -737,6 +762,7 @@
     <ClCompile Include="src\hellengine\core\window\window.cpp" />
     <ClCompile Include="src\hellengine\ecs\entity\entity.cpp" />
     <ClCompile Include="src\hellengine\ecs\scene\scene.cpp" />
+    <ClCompile Include="src\hellengine\ecs\scene\scene_manager.cpp" />
     <ClCompile Include="src\hellengine\graphics\backend\vulkan_backend.cpp" />
     <ClCompile Include="src\hellengine\graphics\camera\multiprojection\multiprojection.cpp" />
     <ClCompile Include="src\hellengine\graphics\camera\multiprojection\multiprojection_controller.cpp" />

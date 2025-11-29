@@ -2,7 +2,6 @@
 
 // Internal
 #include <hellengine/graphics/graphics_core.h>
-#include <optional>
 
 // External
 #include <glm/glm.hpp>

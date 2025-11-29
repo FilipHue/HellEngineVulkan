@@ -3,6 +3,7 @@
 
 namespace hellengine
 {
+
 	namespace math
 	{
 
@@ -30,6 +31,7 @@ namespace hellengine
 		template HE_API i32 Random::GetInRange(i32 min, i32 max);
 		template HE_API i64 Random::GetInRange(i64 min, i64 max);
 		template HE_API u32 Random::GetInRange(u32 min, u32 max);
+		template HE_API u64 Random::GetInRange(u64 min, u64 max);
 
 		template<typename T>
 		T Random::GetInRange(T min, T max)
@@ -39,15 +41,11 @@ namespace hellengine
 				std::uniform_real_distribution<T> distribution(min, max);
 				return distribution(s_engine);
 			}
-			else if constexpr (std::is_integral<T>::value)
+
+			if constexpr (std::is_integral<T>::value)
 			{
 				std::uniform_int_distribution<T> distribution(min, max);
 				return distribution(s_engine);
-			}
-			else
-			{
-				HE_ASSERT(false, "Random::GetInRange: Unsupported type");
-				return T();
 			}
 		}
 

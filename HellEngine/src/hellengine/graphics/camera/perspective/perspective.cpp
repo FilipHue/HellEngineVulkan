@@ -37,10 +37,40 @@ namespace hellengine
 			RecalculateProjectionMatrix();
 		}
 
+		glm::vec3& PerspectiveCamera::GetPosition()
+		{
+			return m_position;
+		}
+
+		const glm::vec3& PerspectiveCamera::GetPosition() const
+		{
+			return m_position;
+		}
+
 		void PerspectiveCamera::SetPosition(glm::vec3 position)
 		{
 			m_position = position;
 			RecalculateViewMatrix();
+		}
+
+		void PerspectiveCamera::SetProjection(glm::mat4& projection)
+		{
+			m_projection = projection;
+		}
+
+		const glm::mat4& PerspectiveCamera::GetView() const
+		{
+			return m_view;
+		}
+
+		glm::mat4& PerspectiveCamera::GetView()
+		{
+			return m_view;
+		}
+
+		void PerspectiveCamera::SetView(const glm::mat4& view)
+		{
+			m_view = view;
 		}
 
 		void PerspectiveCamera::MoveForward(f32 amount)

@@ -199,6 +199,11 @@ namespace hellengine
 			return m_context->CreateStorageBufferMappedPersistent(elem_size, elem_count);
 		}
 
+		VulkanBuffer* VulkanBackend::CreateDrawIndirectBuffer(u32 elem_size, u32 elem_count)
+		{
+			return m_context->CreateDrawIndirectBuffer(elem_size, elem_count);
+		}
+
 		void VulkanBackend::UpdateVertexBuffer(VulkanBuffer* buffer, u32 offset, void* data, u32 size)
 		{
 			m_context->UpdateVertexBuffer(buffer, offset, data, size);
@@ -217,6 +222,11 @@ namespace hellengine
 		void VulkanBackend::UpdateStorageBuffer(VulkanStorageBuffer* buffer, void* data, u32 size, u32 offset)
 		{
 			m_context->UpdateStorageBuffer(buffer, data, size, offset);
+		}
+
+		void VulkanBackend::UpdateDrawIndirectBuffer(VulkanBuffer* buffer, void* data, u32 size, u32 offset)
+		{
+			m_context->UpdateDrawIndirectBuffer(buffer, data, size, offset);
 		}
 
 		void VulkanBackend::DestroyBuffer(VulkanBuffer* buffer) const
@@ -301,6 +311,7 @@ namespace hellengine
 			m_context->UpdateTexture(texture, data);
 		}
 
+		template i32 VulkanBackend::ReadPixel<i32>(VulkanTexture* texture, u32 x, u32 y, u32 layer, u32 face);
 		template u32 VulkanBackend::ReadPixel<u32>(VulkanTexture* texture, u32 x, u32 y, u32 layer, u32 face);
 		template <typename T>
 		T VulkanBackend::ReadPixel(VulkanTexture* texture, u32 x, u32 y, u32 layer, u32 face)
@@ -322,6 +333,11 @@ namespace hellengine
 		void VulkanBackend::DrawIndexed(u32 index_count, u32 instance_count, u32 first_index, u32 vertex_offset, u32 first_instance) const
 		{
 			m_context->DrawIndexed(index_count, instance_count, first_index, vertex_offset, first_instance);
+		}
+
+		void VulkanBackend::DrawIndexedIndirect(VulkanBuffer* buffer, u32 offset, u32 draw_count, u32 stride) const
+		{
+			m_context->DrawIndexedIndirect(buffer, offset, draw_count, stride);
 		}
 
 	} // namespace graphics

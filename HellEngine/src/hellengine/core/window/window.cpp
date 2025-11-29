@@ -10,9 +10,15 @@
 
 namespace hellengine
 {
+
 	using namespace platform;
 	namespace core
 	{
+
+		Window::Window(WindowConfiguration configuration) : m_configuration(configuration)
+		{
+			NO_OP;
+		}
 
 		Window* Window::Create(WindowConfiguration configuration)
 		{

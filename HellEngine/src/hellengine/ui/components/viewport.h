@@ -13,15 +13,17 @@ namespace hellengine
 		class Viewport : public Panel
 		{
 		public:
-			HE_API Viewport(const std::string& name);
-			HE_API virtual ~Viewport() = default;
+			Viewport(const std::string& name);
+			virtual ~Viewport() = default;
 
-			HE_API void* GetHandle() const { return m_handle; }
-			HE_API void SetHandle(void* handle) { m_handle = handle; }
+			void* GetHandle() const { return m_handle; }
+			void SetHandle(void* handle) { m_handle = handle; }
 
-			HE_API void Draw() override;
+			virtual b8 Begin() override;
+			virtual void Draw() override;
+			virtual void End() override;
 
-		private:
+		protected:
 			void* m_handle;
 		};
 

@@ -12,9 +12,9 @@ namespace hellengine
 		struct TagComponent
 		{
 			DEFAULT_ALL(TagComponent);
-			TagComponent(std::string tag) { m_tag = tag; }
+			TagComponent(std::string tag) { tag = tag; }
 
-			std::string m_tag;
+			std::string tag;
 		};
 
 	} // namespace ecs

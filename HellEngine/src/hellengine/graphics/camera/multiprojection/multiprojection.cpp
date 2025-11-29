@@ -71,6 +71,31 @@ namespace hellengine
 			RecalculateViewMatrix();
 		}
 
+		const glm::mat4& MultiProjectionCamera::GetView() const
+		{
+			return m_view;
+		}
+
+		glm::mat4& MultiProjectionCamera::GetView()
+		{
+			return m_view;
+		}
+
+		void MultiProjectionCamera::SetView(const glm::mat4& view)
+		{
+			m_view = view;
+		}
+
+		glm::vec3& MultiProjectionCamera::GetPosition()
+		{
+			return m_position;
+		}
+
+		const glm::vec3& MultiProjectionCamera::GetPosition() const
+		{
+			return m_position;
+		}
+
 		void MultiProjectionCamera::SetPosition(glm::vec3 position)
 		{
 			m_position = position;
@@ -87,6 +112,11 @@ namespace hellengine
 		{
 			m_far = far_z;
 			RecalculateProjectionMatrix();
+		}
+
+		ProjectionType MultiProjectionCamera::GetType() const
+		{
+			return m_type;
 		}
 
 		void MultiProjectionCamera::TranslateX(f32 amount)

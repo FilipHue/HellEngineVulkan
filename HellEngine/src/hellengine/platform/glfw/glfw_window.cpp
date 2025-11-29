@@ -75,6 +75,11 @@ namespace hellengine
 			glfwTerminate();
 		}
 
+		void* GlfwWindow::GetHandle()
+		{
+			return m_handle;
+		}
+
 		void GlfwWindow::PollEvents()
 		{
 			glfwPollEvents();
@@ -82,6 +87,7 @@ namespace hellengine
 
 		void GlfwWindow::UpdateInternalState()
 		{
+			NO_OP;
 		}
 
 		void GlfwWindow::SetCursorMode(u32 mode)

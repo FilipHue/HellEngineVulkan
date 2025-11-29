@@ -129,10 +129,7 @@ namespace hellengine
 
 			std::map<TextureType, i32>& GetTextureInfo() { return texture_indices; }
 
-			b8 Uses(TextureType type) const
-			{
-				return (used_textures_flag_bit & type) == type;
-			}
+			b8 Uses(TextureType type) const { return (used_textures_flag_bit & type) == type; }
 		};
 
 		ALIGN_AS(16) struct MaterialGPUInfo

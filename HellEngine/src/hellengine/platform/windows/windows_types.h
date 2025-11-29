@@ -16,6 +16,6 @@ namespace hellengine
 			HWND window_handle;
 		};
 
-	} // namespace core
+	} // namespace platform
 
 } // namespace hellengine

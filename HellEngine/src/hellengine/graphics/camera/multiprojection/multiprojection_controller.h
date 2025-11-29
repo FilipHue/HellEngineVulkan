@@ -20,11 +20,11 @@ namespace hellengine
 
 			HE_API void Init();
 
-			HE_API void SetCamera(MultiProjectionCamera* camera) { m_camera = camera; }
-			HE_API MultiProjectionCamera* GetCamera() { return m_camera; }
+			HE_API void SetCamera(MultiProjectionCamera* camera);
+			HE_API MultiProjectionCamera* GetCamera();
 
-			HE_API void SetActive(b8 active) { m_is_active = active; }
-			HE_API b8 IsActive() { return m_is_active; }
+			HE_API void SetActive(b8 active);
+			HE_API b8 IsActive();
 
 			HE_API void OnProcessUpdate(f32 delta_time);
 

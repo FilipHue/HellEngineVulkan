@@ -20,9 +20,10 @@ namespace hellengine
 
 		void TextureManager::Shutdown()
 		{
-			for (auto& texture : m_textures_2d_vector)
-			{
-				m_backend->DestroyTexture(texture);
+			for (auto& texture_opt : m_textures_2d_vector) {
+				if (texture_opt.has_value()) {
+					m_backend->DestroyTexture(*texture_opt);
+				}
 			}
 
 			for (auto& texture : m_textures_cubemap_map)
@@ -41,20 +42,8 @@ namespace hellengine
 			}
 
 			VulkanTexture2D* texture = m_backend->CreateTexture2D(file);
-			
-			u32 index = 0;
-			if (!m_textures_2d_free_indices.empty())
-			{
-				index = m_textures_2d_free_indices.front();
-				m_textures_2d_free_indices.pop();
-				m_textures_2d_vector[index] = texture;
-			}
-			else
-			{
-				index = (u32)m_textures_2d_vector.size();
-				m_textures_2d_vector.push_back(texture);
-			}
 
+			u32 index = m_textures_2d_vector.insert(texture);
 			m_textures_2d_index_map[name] = index;
 
 			return texture;
@@ -71,19 +60,7 @@ namespace hellengine
 
 			VulkanTexture2D* texture = m_backend->CreateTexture2D(format, width, height);
 
-			u32 index = 0;
-			if (!m_textures_2d_free_indices.empty())
-			{
-				index = m_textures_2d_free_indices.front();
-				m_textures_2d_free_indices.pop();
-				m_textures_2d_vector[index] = texture;
-			}
-			else
-			{
-				index = (u32)m_textures_2d_vector.size();
-				m_textures_2d_vector.push_back(texture);
-			}
-
+			u32 index = m_textures_2d_vector.insert(texture);
 			m_textures_2d_index_map[name] = index;
 
 			return texture;
@@ -100,19 +77,7 @@ namespace hellengine
 
 			VulkanTexture2D* texture = m_backend->CreateTexture2D(format, data, width, height);
 
-			u32 index = 0;
-			if (!m_textures_2d_free_indices.empty())
-			{
-				index = m_textures_2d_free_indices.front();
-				m_textures_2d_free_indices.pop();
-				m_textures_2d_vector[index] = texture;
-			}
-			else
-			{
-				index = (u32)m_textures_2d_vector.size();
-				m_textures_2d_vector.push_back(texture);
-			}
-
+			u32 index = m_textures_2d_vector.insert(texture);
 			m_textures_2d_index_map[name] = index;
 
 			return texture;
@@ -173,9 +138,9 @@ namespace hellengine
 		{
 			if (m_textures_2d_index_map.find(name) != m_textures_2d_index_map.end())
 			{
-				m_backend->DestroyTexture(m_textures_2d_vector[m_textures_2d_index_map[name]]);
-				m_textures_2d_free_indices.push(m_textures_2d_index_map[name]);
-				m_textures_2d_vector[m_textures_2d_index_map[name]] = nullptr;
+				u32 index = m_textures_2d_index_map[name];
+				m_backend->DestroyTexture(*m_textures_2d_vector.at(index));
+				m_textures_2d_vector.erase(index);
 				m_textures_2d_index_map.erase(name);
 			}
 		}
