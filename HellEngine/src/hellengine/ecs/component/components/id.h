@@ -14,9 +14,9 @@ namespace hellengine
 		struct IDComponent
 		{
 			DEFAULT_ALL(IDComponent);
-			IDComponent(UUID id) { m_id = id; }
+			IDComponent(UUID id) { id = id; }
 
-			UUID m_id;
+			UUID id;
 		};
 
  	} // namespace ecs

@@ -19,7 +19,7 @@ namespace hellengine
 			HE_API ~PerspectiveController();
 
 			HE_API void Init();
-			HE_API void SetCamera(PerspectiveCamera* camera) { m_camera = camera; }
+			HE_API void SetCamera(PerspectiveCamera* camera);
 
 			HE_API void OnProcessUpdate(f32 delta_time);
 

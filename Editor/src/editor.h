@@ -1,22 +1,18 @@
 #pragma once
 
 #include "hellengine/hellengine.h"
+#include "shared.h"
 #include "panels/editor_hierarchy.h"
+#include "panels/editor_inspector.h"
 
 using namespace hellengine;
 using namespace core;
+using namespace ecs;
 using namespace graphics;
 using namespace ui;
 using namespace math;
 using namespace resources;
 using namespace tools;
-
-constexpr auto EDITOR_SHADER_PATH = "assets/editor/shaders";
-constexpr auto EDITOR_MODEL_PATH = "assets/models";
-
-constexpr auto VIEWPORT_COLOR = "EDITOR_VIEWPORT_COLOR_ATTACHMENT";
-constexpr auto VIEWPORT_PICK = "EDITOR_VIEWPORT_PICK_ATTACHMENT";
-constexpr auto VIEWPORT_DEPTH = "EDITOR_VIEWPORT_DEPTH_ATTACHMENT";
 
 ALIGN_AS(64) struct GlobalShaderData
 {
@@ -25,7 +21,7 @@ ALIGN_AS(64) struct GlobalShaderData
 	glm::vec3 camera_position;
 };
 
-ALIGN_AS(64) struct GridCameraData
+struct GridCameraData
 {
 	glm::mat4 proj;
 	glm::mat4 view;
@@ -64,19 +60,21 @@ public:
 	b8 OnEventMouseScrolled(EventContext& event);
 
 private:
-	//Editor
-	void CreateEditorPipelines();
-	void CreateEditorResources();
-	void CreateEditorUI();
+	void CreateResources();
+	void CreatePipelines();
+	void CreateAttachments();
+	void CreateDescriptors();
+
+	void CreateEditorPanels();
+
+	void OnViewportResize();
 
 	void DrawGrid();
 	void DrawToSwapchain();
 
-	void InitializeViewportState();
-	void CreateViewportResources();
-	void ViewportResize();
-
 	void MenuBar();
+
+	void ShowGuizmo();
 
 	// TEMP
 	void LoadResourcesForTest();
@@ -87,6 +85,22 @@ private:
 	MultiProjectionController m_editor_camera_controller;
 
 	Pipeline m_editor_pipeline;
+
+	// Viewport
+	glm::vec4 m_viewport_clear_color;
+	glm::vec2 m_viewport_clear_depth;
+	glm::uvec2 m_viewport_size;
+
+	DescriptorSet m_viewport_descriptor;
+
+	Texture2D m_viewport_color_texture;
+	Texture2D m_viewport_pick_texture;
+	Texture2D m_viewport_depth_texture;
+
+	DynamicRenderingAttachmentInfo m_viewport_color_attachment;
+	DynamicRenderingAttachmentInfo m_viewport_pick_attachment;
+	DynamicRenderingAttachmentInfo m_viewport_depth_attachment;
+	DynamicRenderingInfo m_viewport_dri;
 
 	Pipeline m_grid_pipeline;
 	DescriptorSet m_grid_descriptor;
@@ -101,25 +115,9 @@ private:
 
 	GridCameraData m_grid_data;
 
-	// UI
+	// Editor UI
 	EditorHierarchy* m_hierarchy_panel;
-
-	// Viewport
-	glm::vec4 m_viewport_clear_color;
-	glm::vec2 m_viewport_clear_depth;
-	glm::uvec2 m_viewport_size;
-
-	Pipeline m_viewport_pipeline;
-	DescriptorSet m_viewport_descriptor;
-
-	Texture2D m_viewport_color_texture;
-	Texture2D m_viewport_pick_texture;
-	Texture2D m_viewport_depth_texture;
-
-	DynamicRenderingAttachmentInfo m_viewport_color_attachment;
-	DynamicRenderingAttachmentInfo m_viewport_pick_attachment;
-	DynamicRenderingAttachmentInfo m_viewport_depth_attachment;
-	DynamicRenderingInfo m_viewport_dri;
+	EditorInspector* m_inspector_panel;
 
 	Viewport* m_viewport_panel;
 	Bounds2D m_viewport_panel_bounds;
@@ -127,17 +125,6 @@ private:
 
 	// PBR Pipeline
 	GlobalShaderData m_global_shader_data;
-
-	Pipeline m_pbr_pipeline;
-	DescriptorSet m_pbr_descriptor;
-
-	struct LightData
-	{
-		glm::vec3 position;
-		glm::vec3 color;
-	} m_light_data;
-
-	UniformBuffer m_light_buffer;
 
 	// TEMP
 	Pipeline m_test_pipeline;

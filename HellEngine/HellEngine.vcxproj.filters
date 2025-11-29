@@ -67,6 +67,15 @@
     <Filter Include="dependencies\IMGUI">
       <UniqueIdentifier>{568BBDBA-426F-7E10-ABCF-786397D26892}</UniqueIdentifier>
     </Filter>
+    <Filter Include="dependencies\IMGUIZMO">
+      <UniqueIdentifier>{AC5C066A-18C9-C164-E1BC-59C24DE8E3CC}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dependencies\IMGUIZMO\include">
+      <UniqueIdentifier>{1F70CB06-8B88-B230-5435-42CAC00C47CA}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dependencies\IMGUIZMO\include\imguizmo">
+      <UniqueIdentifier>{9F251A01-8B77-F1F0-7496-2E0160870ADA}</UniqueIdentifier>
+    </Filter>
     <Filter Include="dependencies\KTX">
       <UniqueIdentifier>{92A3AED4-7E9C-CD26-A7CE-B2AB9326AD32}</UniqueIdentifier>
     </Filter>
@@ -1377,6 +1386,24 @@
     <ClInclude Include="dependencies\IMGUI\imstb_truetype.h">
       <Filter>dependencies\IMGUI</Filter>
     </ClInclude>
+    <ClInclude Include="dependencies\IMGUIZMO\include\imguizmo\GraphEditor.h">
+      <Filter>dependencies\IMGUIZMO\include\imguizmo</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\IMGUIZMO\include\imguizmo\ImCurveEdit.h">
+      <Filter>dependencies\IMGUIZMO\include\imguizmo</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\IMGUIZMO\include\imguizmo\ImGradient.h">
+      <Filter>dependencies\IMGUIZMO\include\imguizmo</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\IMGUIZMO\include\imguizmo\ImGuizmo.h">
+      <Filter>dependencies\IMGUIZMO\include\imguizmo</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\IMGUIZMO\include\imguizmo\ImSequencer.h">
+      <Filter>dependencies\IMGUIZMO\include\imguizmo</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\IMGUIZMO\include\imguizmo\ImZoomSlider.h">
+      <Filter>dependencies\IMGUIZMO\include\imguizmo</Filter>
+    </ClInclude>
     <ClInclude Include="dependencies\KTX\include\KHR\khr_df.h">
       <Filter>dependencies\KTX\include\KHR</Filter>
     </ClInclude>
@@ -1830,6 +1857,9 @@
     <ClInclude Include="src\hellengine\ecs\component\components\id.h">
       <Filter>src\hellengine\ecs\component\components</Filter>
     </ClInclude>
+    <ClInclude Include="src\hellengine\ecs\component\components\relationship.h">
+      <Filter>src\hellengine\ecs\component\components</Filter>
+    </ClInclude>
     <ClInclude Include="src\hellengine\ecs\component\components\tag.h">
       <Filter>src\hellengine\ecs\component\components</Filter>
     </ClInclude>
@@ -1840,6 +1870,9 @@
       <Filter>src\hellengine\ecs\entity</Filter>
     </ClInclude>
     <ClInclude Include="src\hellengine\ecs\scene\scene.h">
+      <Filter>src\hellengine\ecs\scene</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\ecs\scene\scene_manager.h">
       <Filter>src\hellengine\ecs\scene</Filter>
     </ClInclude>
     <ClInclude Include="src\hellengine\ecs\shared.h">
@@ -1968,9 +2001,6 @@
     <ClInclude Include="src\hellengine\math\vertex\vertex.h">
       <Filter>src\hellengine\math\vertex</Filter>
     </ClInclude>
-    <ClInclude Include="src\hellengine\platform\glfw\glfw_types.h">
-      <Filter>src\hellengine\platform\glfw</Filter>
-    </ClInclude>
     <ClInclude Include="src\hellengine\platform\glfw\glfw_window.h">
       <Filter>src\hellengine\platform\glfw</Filter>
     </ClInclude>
@@ -2010,6 +2040,9 @@
     <ClInclude Include="src\hepch.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="src\hellengine\ecs\component\components\mesh_filter.h" />
+    <ClInclude Include="src\hellengine\platform\glfw\glfw_types.h" />
+    <ClInclude Include="src\hellengine\containers\recycling_vector.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dependencies\GLM\include\glm\detail\glm.cpp">
@@ -2035,6 +2068,21 @@
     </ClCompile>
     <ClCompile Include="dependencies\IMGUI\imgui_widgets.cpp">
       <Filter>dependencies\IMGUI</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\IMGUIZMO\include\imguizmo\GraphEditor.cpp">
+      <Filter>dependencies\IMGUIZMO\include\imguizmo</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\IMGUIZMO\include\imguizmo\ImCurveEdit.cpp">
+      <Filter>dependencies\IMGUIZMO\include\imguizmo</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\IMGUIZMO\include\imguizmo\ImGradient.cpp">
+      <Filter>dependencies\IMGUIZMO\include\imguizmo</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\IMGUIZMO\include\imguizmo\ImGuizmo.cpp">
+      <Filter>dependencies\IMGUIZMO\include\imguizmo</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\IMGUIZMO\include\imguizmo\ImSequencer.cpp">
+      <Filter>dependencies\IMGUIZMO\include\imguizmo</Filter>
     </ClCompile>
     <ClCompile Include="dependencies\STB\include\stb\stb_vorbis.c">
       <Filter>dependencies\STB\include\stb</Filter>
@@ -2064,6 +2112,9 @@
       <Filter>src\hellengine\ecs\entity</Filter>
     </ClCompile>
     <ClCompile Include="src\hellengine\ecs\scene\scene.cpp">
+      <Filter>src\hellengine\ecs\scene</Filter>
+    </ClCompile>
+    <ClCompile Include="src\hellengine\ecs\scene\scene_manager.cpp">
       <Filter>src\hellengine\ecs\scene</Filter>
     </ClCompile>
     <ClCompile Include="src\hellengine\graphics\backend\vulkan_backend.cpp">

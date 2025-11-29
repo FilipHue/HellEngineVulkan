@@ -475,6 +475,15 @@ namespace hellengine
 			return storage_buffer;
 		}
 
+		VulkanBuffer* VulkanContext::CreateDrawIndirectBuffer(u32 elem_size, u32 elem_count)
+		{
+			std::array<u32, 2> queue_families = { m_device.GetGraphicsFamilyIndex(), m_device.GetTransferFamilyIndex() };
+			VulkanBuffer* draw_indirect_buffer = new VulkanBuffer();
+			draw_indirect_buffer->Create(m_instance, m_device, elem_size * elem_count, VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, true, (u32)queue_families.size(), queue_families.data(), VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+			draw_indirect_buffer->SetType(BufferType_DrawIndirect);
+			return draw_indirect_buffer;
+		}
+
 		void VulkanContext::UpdateVertexBuffer(VulkanBuffer* buffer, u32 offset, void* data, u32 size)
 		{
 			if (size && size > buffer->GetSize())
@@ -517,6 +526,27 @@ namespace hellengine
 				range.size = flush_size;
 				vkFlushMappedMemoryRanges(m_device.GetLogicalDevice(), 1, &range);
 			}
+
+			VkBufferMemoryBarrier barrier = {};
+			barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+			barrier.pNext = VK_NULL_HANDLE;
+			barrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT;
+			barrier.dstAccessMask = VK_ACCESS_UNIFORM_READ_BIT;
+			barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			barrier.buffer = buffer->GetHandle();
+			barrier.offset = offset;
+			barrier.size = size;
+
+			vkCmdPipelineBarrier(
+				m_frame_data[m_current_frame].command_buffer.GetHandle(),
+				VK_PIPELINE_STAGE_HOST_BIT,
+				VK_PIPELINE_STAGE_VERTEX_SHADER_BIT | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+				0, 
+				0, nullptr,
+				1, &barrier,
+				0, nullptr
+			);
 		}
 
 		void VulkanContext::UpdateStorageBuffer(VulkanStorageBuffer* buffer, void* data, u32 size, u32 offset)
@@ -536,6 +566,39 @@ namespace hellengine
 				range.size = flushSize;
 				vkFlushMappedMemoryRanges(m_device.GetLogicalDevice(), 1, &range);
 			}
+
+			VkBufferMemoryBarrier barrier = {};
+			barrier.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER;
+			barrier.pNext = VK_NULL_HANDLE;
+			barrier.srcAccessMask = VK_ACCESS_HOST_WRITE_BIT;
+			barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT;
+			barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+			barrier.buffer = buffer->GetHandle();
+			barrier.offset = offset;
+			barrier.size = size;
+
+			vkCmdPipelineBarrier(
+				m_frame_data[m_current_frame].command_buffer.GetHandle(),
+				VK_PIPELINE_STAGE_HOST_BIT,
+				VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+				0,
+				0, nullptr,
+				1, &barrier,
+				0, nullptr
+			);
+		}
+
+		void VulkanContext::UpdateDrawIndirectBuffer(VulkanBuffer* buffer, void* data, u32 size, u32 offset)
+		{
+			if (size && size > buffer->GetSize())
+			{
+				HE_CORE_ERROR("Buffer size is too small for data");
+				return;
+			}
+			VulkanBuffer stagging_buffer = CreateStagingBuffer(size, data);
+			buffer->CopyFromBuffer(m_device, m_command_pool, stagging_buffer.GetHandle(), size, offset);
+			stagging_buffer.Destroy(m_instance, m_device);
 		}
 
 		void VulkanContext::DestroyBuffer(VulkanBuffer* buffer) const
@@ -674,6 +737,7 @@ namespace hellengine
 			texture->Update(m_instance, m_device, m_command_pool, data);
 		}
 
+		template i32 VulkanContext::ReadPixel<i32>(VulkanTexture* texture, u32 x, u32 y, u32 layer, u32 face);
 		template u32 VulkanContext::ReadPixel<u32>(VulkanTexture* texture, u32 x, u32 y, u32 layer, u32 face);
 		template<typename T>
 		T VulkanContext::ReadPixel(VulkanTexture* texture, u32 x, u32 y, u32 layer, u32 face)
@@ -701,6 +765,12 @@ namespace hellengine
 		void VulkanContext::DrawIndexed(u32 index_count, u32 instance_count, u32 first_index, u32 vertex_offset, u32 first_instance) const
 		{
 			vkCmdDrawIndexed(m_frame_data[m_current_frame].command_buffer.GetHandle(), index_count, instance_count, first_index, vertex_offset, first_instance);
+		}
+
+		void VulkanContext::DrawIndexedIndirect(VulkanBuffer* buffer, u32 offset, u32 draw_count, u32 stride) const
+		{
+			VkBuffer buffer_handle = buffer->GetHandle();
+			vkCmdDrawIndexedIndirect(m_frame_data[m_current_frame].command_buffer.GetHandle(), buffer_handle, offset, draw_count, stride);
 		}
 
 		void VulkanContext::InitDescriptorPoolGrowable(const std::vector<DescriptorPoolSizeInfo>& pool_sizes, u32 max_sets)

@@ -14,7 +14,7 @@ namespace hellengine
 		{
 		public:
 			Window() = default;
-			Window(WindowConfiguration configuration) : m_configuration(configuration) {}
+			Window(WindowConfiguration configuration);
 			virtual ~Window() = default;
 
 			virtual void* GetHandle() = 0;

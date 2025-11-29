@@ -9,6 +9,7 @@ namespace hellengine
 
 		Timer::Timer() : m_start_time_point(std::chrono::high_resolution_clock::now()), m_elapsed_time(0.0f), m_stopped(false)
 		{
+			NO_OP;
 		}
 
 		void Timer::Start()
@@ -48,6 +49,11 @@ namespace hellengine
 			m_elapsed_time = std::chrono::duration<float>(end_time_point - m_start_time_point).count();
 
 			return m_elapsed_time;
+		}
+
+		b8 Timer::IsStopped() const
+		{
+			return m_stopped;
 		}
 
 	} // namespace core

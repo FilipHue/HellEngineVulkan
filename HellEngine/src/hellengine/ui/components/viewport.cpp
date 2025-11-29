@@ -12,11 +12,21 @@ namespace hellengine
 			m_handle = nullptr;
 		}
 
-		void Viewport::Draw()
+		b8 Viewport::Begin()
 		{
 			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
-			ImGui::Begin(m_name.c_str());
+			if (!ImGui::Begin(m_name.c_str(), nullptr, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse))
+			{
+				ImGui::PopStyleVar();
+				ImGui::End();
+				return false;
+			}
 
+			return true;
+		}
+
+		void Viewport::Draw()
+		{
 			ImVec2 avail_size = ImGui::GetContentRegionAvail();
 			glm::uvec2 new_size = { (uint32_t)avail_size.x, (uint32_t)avail_size.y };
 
@@ -43,9 +53,12 @@ namespace hellengine
 			m_is_focused = ImGui::IsWindowFocused();
 
 			ImGui::Image((ImTextureID)m_handle, ImVec2((f32)m_size.x, (f32)m_size.y));
+		}
 
-			ImGui::End();
+		void Viewport::End()
+		{
 			ImGui::PopStyleVar();
+			ImGui::End();
 		}
 
 	} // namespace ui

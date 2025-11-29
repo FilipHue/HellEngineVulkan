@@ -1,8 +1,7 @@
 #pragma once
 
 // Internal
-#include <hellengine/core/uuid/uuid.h>
-#include <hellengine/ecs/entity/entity.h>
+#include <hellengine/ecs/shared.h>
 
 namespace hellengine
 {
@@ -11,25 +10,42 @@ namespace hellengine
 	namespace ecs
 	{
 
+		class Entity;
 		class Scene
 		{
 		public:
-			HE_API Scene();
-			HE_API virtual ~Scene();
+			Scene();
+			virtual ~Scene();
 
-			HE_API void Create(std::string& name);
-			HE_API void Destroy();
+			void Create(std::string& name);
+			void Destroy();
 
-			/*HE_API Entity CreateEntity(const std::string& name = std::string());
-			HE_API Entity CreateEntityWithUUID(UUID id, const std::string& name = std::string());
-			HE_API void DestroyEntity(Entity& entity);*/
+			Entity CreateEntity(const std::string& name = std::string());
+			Entity CreateEntityWithUUID(UUID id, const std::string& name = std::string());
+			void DestroyEntity(Entity entity);
+
+			Entity CreateGameObject(const std::string& name, Entity parent);
+			void DestroyGameObject(Entity entity);
+			void ReparentGameObject(Entity child, Entity parent);
+
+			b8 IsValid(Entity entity) const;
+
+			void UpdateTransforms();
+
+			Entity GetEntity(std::string name);
+			SceneRegistry& GetRegistry() { return m_registry; }
+
+			std::string& GetName() { return m_name; }
+			const std::string& GetName() const { return m_name; }
+			void SetName(const std::string& name) { m_name = name; }
+
+			UUID GetUUID() const { return m_uuid; }
 
 		private:
-			//entt::registry m_registry;
+			SceneRegistry m_registry;
 
 			std::string m_name;
-
-			//friend class Entity;
+			UUID m_uuid;
 		};
 
 	} // namespace ecs

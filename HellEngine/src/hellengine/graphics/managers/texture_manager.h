@@ -1,6 +1,7 @@
 #pragma once
 
 // Internal
+#include <hellengine/containers/recycling_vector.h>
 #include <hellengine/core/core.h>
 #include <hellengine/graphics/backend/vulkan_backend.h>
 #include <hellengine/resources/file_manager.h>
@@ -14,6 +15,7 @@ constexpr auto DEFAULT_ERROR_TEXTURE = "DEFAULT_ERROR_TEXTURE";
 namespace hellengine
 {
 
+	using namespace containers;
 	using namespace core;
 	using namespace resources;
 	namespace graphics
@@ -46,9 +48,8 @@ namespace hellengine
 		private:
 			friend class MeshManager;
 
-			std::vector<VulkanTexture2D*> m_textures_2d_vector;
+			RecyclingVector<VulkanTexture2D*> m_textures_2d_vector;
 			std::unordered_map<std::string, u32> m_textures_2d_index_map;
-			std::queue<u32> m_textures_2d_free_indices;
 
 			std::unordered_map<std::string, VulkanTextureCubemap*> m_textures_cubemap_map;
 

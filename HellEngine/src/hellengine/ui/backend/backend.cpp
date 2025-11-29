@@ -18,6 +18,7 @@ namespace hellengine
 			ImGuiIO& io = ImGui::GetIO();
 			io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 			io.ConfigDockingWithShift = true;
+			io.ConfigDragClickToInputText = true;
 
 			SetDarkTheme();
 

@@ -173,10 +173,15 @@ namespace hellengine
 			indexing_features.descriptorBindingVariableDescriptorCount = VK_TRUE;
 			indexing_features.runtimeDescriptorArray = VK_TRUE;
 
+			VkPhysicalDeviceVulkan11Features vulkan11_features = {};
+			vulkan11_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
+			vulkan11_features.pNext = &indexing_features;
+			vulkan11_features.shaderDrawParameters = VK_TRUE;
+
 			VkDeviceCreateInfo device_create_info = {};
 			device_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 			device_create_info.flags = 0;
-			device_create_info.pNext = &indexing_features;
+			device_create_info.pNext = &vulkan11_features;
 			device_create_info.queueCreateInfoCount = static_cast<u32>(queue_create_infos.size());
 			device_create_info.pQueueCreateInfos = queue_create_infos.data();
 			device_create_info.enabledLayerCount = 0;

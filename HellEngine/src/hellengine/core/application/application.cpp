@@ -89,6 +89,26 @@ namespace hellengine
 			HE_CORE_TRACE("========== Application shut down ==========");
 		}
 
+		void Application::OnPollEvents() const
+		{
+			m_window->PollEvents();
+		}
+
+		b8 Application::IsRunning() const
+		{
+			return m_running;
+		}
+
+		b8 Application::IsSuspended() const
+		{
+			return m_suspended;
+		}
+
+		Window* Application::GetWindow() const
+		{
+			return m_window;
+		}
+
 	} // namespace core
 
 } // namespace hellengine

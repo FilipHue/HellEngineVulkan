@@ -27,7 +27,7 @@
 #include "hellengine/core/input/input.h"
 
 // Ecs
-#include "hellengine/ecs/scene/scene.h"
+#include "hellengine/ecs/scene/scene_manager.h"
 
 // Graphics
 #include "hellengine/graphics/backend/vulkan_backend.h"

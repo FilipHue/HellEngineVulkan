@@ -29,6 +29,6 @@ namespace hellengine
 			return str;
 		}
 
-	} // namespace core
+	} // namespace platform
 
 } // namespace hellengine

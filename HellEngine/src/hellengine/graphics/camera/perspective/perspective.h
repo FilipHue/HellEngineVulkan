@@ -20,15 +20,15 @@ namespace hellengine
 			HE_API void SetAspect(f32 width, f32 height);
 			HE_API void SetFov(f32 fov);
 
-			HE_API glm::vec3& GetPosition() { return m_position; }
-			HE_API const glm::vec3& GetPosition() const { return m_position; }
+			HE_API glm::vec3& GetPosition();
+			HE_API const glm::vec3& GetPosition() const;
 			HE_API void SetPosition(glm::vec3 position);
 
-			HE_API void SetProjection(glm::mat4& projection) { m_projection = projection; }
+			HE_API void SetProjection(glm::mat4& projection);
 
-			HE_API const glm::mat4& GetView() const { return m_view; }
-			HE_API glm::mat4& GetView() { return m_view; }
-			HE_API void SetView(const glm::mat4& view) { m_view = view; }
+			HE_API const glm::mat4& GetView() const;
+			HE_API glm::mat4& GetView();
+			HE_API void SetView(const glm::mat4& view);
 
 			// Controlls
 			HE_API void MoveForward(f32 amount);

@@ -30,7 +30,9 @@ namespace hellengine
 			HE_API b8 IsHovered() const { return m_is_hovered; }
 			HE_API b8 IsFocused() const { return m_is_focused; }
 
+			HE_API virtual b8 Begin() = 0;
 			HE_API virtual void Draw() = 0;
+			HE_API virtual void End() = 0;
 
 		protected:
 			std::string m_name;

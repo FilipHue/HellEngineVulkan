@@ -25,6 +25,11 @@ namespace hellengine
 			EventDispatcher::AddListener(EventType_MouseButtonPressed, HE_BIND_EVENTCALLBACK(PerspectiveController::OnMouseButtonPressed));
 		}
 
+		void PerspectiveController::SetCamera(PerspectiveCamera* camera)
+		{
+			m_camera = camera;
+		}
+
 		void PerspectiveController::OnProcessUpdate(f32 delta_time)
 		{
 			if (!Input::IsMouseButtonPressed(MOUSE_BUTTON_RIGHT))

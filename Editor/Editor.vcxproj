@@ -58,7 +58,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>HE_PLATFORM_WINDOWS;HE_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\HellEngine\src;..\HellEngine\dependencies\SPDLOG\include;..\HellEngine\dependencies\GLFW\include;..\HellEngine\dependencies\GLM\include;..\HellEngine\dependencies\STB;..\HellEngine\dependencies\ASSIMP\include;..\HellEngine\dependencies\KTX\include;..\HellEngine\dependencies\IMGUI;..\HellEngine\dependencies\ENTT\include;C:\VulkanSDK\1.3.290.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\HellEngine\src;..\HellEngine\dependencies\SPDLOG\include;..\HellEngine\dependencies\GLFW\include;..\HellEngine\dependencies\GLM\include;..\HellEngine\dependencies\STB;..\HellEngine\dependencies\ASSIMP\include;..\HellEngine\dependencies\KTX\include;..\HellEngine\dependencies\IMGUI;..\HellEngine\dependencies\IMGUIZMO\include;..\HellEngine\dependencies\ENTT\include;C:\VulkanSDK\1.3.290.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -78,7 +78,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>HE_PLATFORM_WINDOWS;HE_RELEASE;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\HellEngine\src;..\HellEngine\dependencies\SPDLOG\include;..\HellEngine\dependencies\GLFW\include;..\HellEngine\dependencies\GLM\include;..\HellEngine\dependencies\STB;..\HellEngine\dependencies\ASSIMP\include;..\HellEngine\dependencies\KTX\include;..\HellEngine\dependencies\IMGUI;..\HellEngine\dependencies\ENTT\include;C:\VulkanSDK\1.3.290.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\HellEngine\src;..\HellEngine\dependencies\SPDLOG\include;..\HellEngine\dependencies\GLFW\include;..\HellEngine\dependencies\GLM\include;..\HellEngine\dependencies\STB;..\HellEngine\dependencies\ASSIMP\include;..\HellEngine\dependencies\KTX\include;..\HellEngine\dependencies\IMGUI;..\HellEngine\dependencies\IMGUIZMO\include;..\HellEngine\dependencies\ENTT\include;C:\VulkanSDK\1.3.290.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -97,13 +97,18 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="src\bars\editor_menu_bar.h" />
     <ClInclude Include="src\editor.h" />
     <ClInclude Include="src\panels\editor_hierarchy.h" />
+    <ClInclude Include="src\panels\editor_inspector.h" />
+    <ClInclude Include="src\shared.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="src\bars\editor_menu_bar.cpp" />
     <ClCompile Include="src\editor.cpp" />
     <ClCompile Include="src\panels\editor_hierarchy.cpp" />
+    <ClCompile Include="src\panels\editor_inspector.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\HellEngine\HellEngine.vcxproj">

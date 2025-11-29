@@ -78,6 +78,7 @@ namespace hellengine
 			m_image.Destroy(instance, device);
 		}
 
+		template i32 VulkanTexture::ReadPixel<i32>(const VulkanInstance& instance, const VulkanDevice& device, const VulkanCommandPool& command_pool, u32 x, u32 y, u32 layer, u32 face);
 		template u32 VulkanTexture::ReadPixel<u32>(const VulkanInstance& instance, const VulkanDevice& device, const VulkanCommandPool& command_pool, u32 x, u32 y, u32 layer, u32 face);
 		template <typename T>
 		T VulkanTexture::ReadPixel(const VulkanInstance& instance, const VulkanDevice& device, const VulkanCommandPool& command_pool, u32 x, u32 y, u32 layer, u32 face)

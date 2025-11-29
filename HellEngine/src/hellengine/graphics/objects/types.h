@@ -465,6 +465,7 @@ namespace hellengine
 			BufferType_Uniform,
 			BufferType_UniformDynamic,
 			BufferType_Storage,
+			BufferType_DrawIndirect,
 
 			BufferType_Count
 		};

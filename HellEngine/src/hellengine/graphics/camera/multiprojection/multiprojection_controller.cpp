@@ -25,6 +25,26 @@ namespace hellengine
 			EventDispatcher::AddListener(EventType_MouseButtonPressed, HE_BIND_EVENTCALLBACK(OnMouseButtonPressed));
 		}
 
+		void MultiProjectionController::SetCamera(MultiProjectionCamera* camera)
+		{
+			m_camera = camera;
+		}
+
+		MultiProjectionCamera* MultiProjectionController::GetCamera()
+		{
+			return m_camera;
+		}
+
+		void MultiProjectionController::SetActive(b8 active)
+		{
+			m_is_active = active;
+		}
+
+		b8 MultiProjectionController::IsActive()
+		{
+			return m_is_active;
+		}
+
 		void MultiProjectionController::OnProcessUpdate(f32 delta_time)
 		{
 			if (!m_is_active)

@@ -14,11 +14,12 @@ namespace hellengine
 		{
 		public:
 			UUID() : m_uuid(Random::GetUInt64()) {}
-			explicit UUID(u64 uuid) : m_uuid(uuid) {}
+			UUID(u64 uuid) : m_uuid(uuid) {}
 
 			operator u64() const { return m_uuid; }
+			operator void* () const { return (void*)(uintptr_t)m_uuid; }
 
-			INLINE static UUID Generate() { return UUID(); }
+			static UUID Generate() { return UUID(); }
 
 		private:
 			u64 m_uuid;
