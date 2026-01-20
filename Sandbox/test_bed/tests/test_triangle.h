@@ -2,6 +2,7 @@
 
 #include "../base.h"
 
+#if _TEST_BED_ENABLED
 class TestTriangle : public TestBase
 {
 public:
@@ -60,3 +61,4 @@ private:
     Buffer m_vertex_buffer;
     Buffer m_index_buffer;
 };
+#endif // _TEST_BED_ENABLED

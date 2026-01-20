@@ -6,262 +6,293 @@
 
 EditorHierarchy::EditorHierarchy() : Panel("Hierarchy")
 {
-	NO_OP;
+    NO_OP;
 }
 
 void EditorHierarchy::Init(EditorInspector* inspector)
 {
-	m_inspector_panel = inspector;
+    m_inspector_panel = inspector;
 
-	m_active_scene = SceneManager::GetInstance()->GetActiveScene();
-	m_selected_game_object = NULL_ENTITY;
-	m_renaming = false;
+    m_active_scene = SceneManager::GetInstance()->GetActiveScene();
+    m_selected_game_object = NULL_ENTITY;
+    m_renaming = false;
 
-	m_texture_icon_scene = TextureManager::GetInstance()->CreateTexture2D("ICON_SCENE", FileManager::ReadFile(CONCAT_PATHS(EDITOR_TEXTURES_PATH, "icon_scene.png")));
-	m_icon_scene = ImGui_ImplVulkan_AddTexture(m_texture_icon_scene->GetSampler(), m_texture_icon_scene->GetImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    m_texture_icon_scene = TextureManager::GetInstance()->CreateTexture2D(
+        "ICON_SCENE",
+        FileManager::ReadFile(CONCAT_PATHS(EDITOR_TEXTURES_PATH, "icon_scene.png"))
+    );
+    m_icon_scene = ImGui_ImplVulkan_AddTexture(
+        m_texture_icon_scene->GetSampler(),
+        m_texture_icon_scene->GetImageView(),
+        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+    );
 
-	m_texture_icon_entity = TextureManager::GetInstance()->CreateTexture2D("ICON_ENTITY", FileManager::ReadFile(CONCAT_PATHS(EDITOR_TEXTURES_PATH, "icon_entity.png")));
-	m_icon_entity = ImGui_ImplVulkan_AddTexture(m_texture_icon_entity->GetSampler(), m_texture_icon_entity->GetImageView(), VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    m_texture_icon_entity = TextureManager::GetInstance()->CreateTexture2D(
+        "ICON_ENTITY",
+        FileManager::ReadFile(CONCAT_PATHS(EDITOR_TEXTURES_PATH, "icon_entity.png"))
+    );
+    m_icon_entity = ImGui_ImplVulkan_AddTexture(
+        m_texture_icon_entity->GetSampler(),
+        m_texture_icon_entity->GetImageView(),
+        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+    );
 
-	m_icon_size = ImVec2(16.0f, 16.0f);
-	m_editor_panel_size = ImVec2(300.0f, 0.0f);
+    m_icon_size = ImVec2(16.0f, 16.0f);
+    m_editor_panel_size = ImVec2(300.0f, 0.0f);
 }
 
 b8 EditorHierarchy::Begin()
 {
-	if (!ImGui::Begin(m_name.c_str()))
-	{
-		ImGui::End();
-		return false;
-	}
-
-	return true;
+    if (!ImGui::Begin(m_name.c_str()))
+    {
+        ImGui::End();
+        return false;
+    }
+    return true;
 }
 
 void EditorHierarchy::Draw()
 {
-	m_active_scene = SceneManager::GetInstance()->GetActiveScene();
-	if (!m_active_scene)
-	{
-		ImGui::TextDisabled("< NO ACTIVE SCENE >");
+    m_active_scene = SceneManager::GetInstance()->GetActiveScene();
+    if (!m_active_scene)
+    {
+        ImGui::TextDisabled("< NO ACTIVE SCENE >");
 
-		ImGui::SetNextWindowSize(m_editor_panel_size, ImGuiCond_Always);
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5.0f, 8.0f));
-		if (ImGui::BeginPopupContextWindow(nullptr, ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems))
-		{
-			ImGuiStyle& style = ImGui::GetStyle();
-			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { style.ItemSpacing.x, style.ItemSpacing.y * 3.0f });
-			if (ImGui::MenuItem("Create Scene"))
-			{
-				SceneManager::GetInstance()->CreateScene("Untitled");
-			}
+        ImGui::SetNextWindowSize(m_editor_panel_size, ImGuiCond_Always);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5.0f, 8.0f));
+        if (ImGui::BeginPopupContextWindow(nullptr, ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems))
+        {
+            ImGuiStyle& style = ImGui::GetStyle();
+            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { style.ItemSpacing.x, style.ItemSpacing.y * 3.0f });
 
-			if (ImGui::MenuItem("Load Scene"))
-			{
-			}
+            if (ImGui::MenuItem("Create Scene"))
+                SceneManager::GetInstance()->CreateScene("Untitled");
 
-			ImGui::PopStyleVar();
-			ImGui::EndPopup();
-		}
-		ImGui::PopStyleVar();
-	}
-	else
-	{
-		DrawSceneNode(m_active_scene->GetName());
+            if (ImGui::MenuItem("Load Scene"))
+            {
+            }
 
-		DrawUtilityPanel();
+            ImGui::PopStyleVar();
+            ImGui::EndPopup();
+        }
+        ImGui::PopStyleVar();
 
-		if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup) && ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !ImGui::IsAnyItemHovered())
-		{
-			m_selected_game_object = Entity{};
-			m_inspector_panel->SetSelectedEntity(m_selected_game_object);
-		}
-	}
+        return;
+    }
+
+    DrawSceneNode(m_active_scene->GetName());
+    DrawUtilityPanel();
+
+    if (ImGui::IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup) &&
+        ImGui::IsMouseClicked(ImGuiMouseButton_Left) &&
+        !ImGui::IsAnyItemHovered())
+    {
+        m_selected_game_object = Entity{};
+        m_inspector_panel->SetSelectedEntity(m_selected_game_object);
+    }
 }
 
 void EditorHierarchy::End()
 {
-	ImGui::End();
+    ImGui::End();
+}
+
+void EditorHierarchy::SetSelectedGameObject(Entity entity)
+{
+	m_selected_game_object = entity;
+	m_inspector_panel->SetSelectedEntity(m_selected_game_object);
 }
 
 void EditorHierarchy::DrawSceneNode(const std::string& scene_name)
 {
-	ImGuiTreeNodeFlags root_flags =
-		ImGuiTreeNodeFlags_DefaultOpen |
-		ImGuiTreeNodeFlags_SpanAvailWidth |
-		ImGuiTreeNodeFlags_OpenOnArrow;
+    auto& hierarchy = m_active_scene->GetHierarchy();
+    const auto& roots = hierarchy.GetRootNodes();
 
-	const auto& view = m_active_scene->GetRegistry().view<IDComponent>();
-	if (view.empty())
-	{
-		root_flags |= ImGuiTreeNodeFlags_Leaf;
-	}
+    ImGuiTreeNodeFlags root_flags =
+        ImGuiTreeNodeFlags_DefaultOpen |
+        ImGuiTreeNodeFlags_SpanAvailWidth |
+        ImGuiTreeNodeFlags_OpenOnArrow;
 
-	ImGui::Image((ImTextureID)m_icon_scene, m_icon_size);
-	ImGui::SameLine();
+    if (roots.empty())
+        root_flags |= ImGuiTreeNodeFlags_Leaf;
 
-	b8 open = ImGui::TreeNodeEx(m_active_scene->GetUUID(), root_flags, "%s", scene_name.c_str());
+    ImGui::Image((ImTextureID)m_icon_scene, m_icon_size);
+    ImGui::SameLine();
 
-	if (ImGui::BeginDragDropTarget())
-	{
-		if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(ENTITY_PAYLOAD))
-		{
-			entt::entity dragged_entity;
-			std::memcpy(&dragged_entity, payload->Data, sizeof(dragged_entity));
+    // Use scene UUID for stable tree id
+    b8 open = ImGui::TreeNodeEx((void*)(u64)m_active_scene->GetUUID(), root_flags, "%s", scene_name.c_str());
 
-			SceneManager::GetInstance()->GetActiveScene()->ReparentGameObject(
-				Entity{ dragged_entity, m_active_scene },
-				NULL_ENTITY
-			);
-		}
-		ImGui::EndDragDropTarget();
-	}
+    // Drop on scene root => make dropped entity a root (no parent)
+    if (ImGui::BeginDragDropTarget())
+    {
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(ENTITY_PAYLOAD))
+        {
+            UUID dragged_id = UUID((u64)INVALID_ID);
+            std::memcpy(&dragged_id, payload->Data, sizeof(UUID));
 
-	if (open)
-	{
-		auto entities = m_active_scene->GetRegistry().storage<entt::entity>().each();
-		for (const auto& [e] : entities)
-		{
-			Entity entity(e, m_active_scene);
-			const auto& rel = entity.GetComponent<RelationshipComponent>();
-			if (rel.parent == entt::null)
-			{
-				DrawEntityNode(entity);
-			}
-		}
+            Entity dragged = m_active_scene->GetEntity(dragged_id);
+            if (dragged)
+            {
+                SceneManager::GetInstance()->GetActiveScene()->ReparentGameObject(dragged, NULL_ENTITY);
+            }
+        }
+        ImGui::EndDragDropTarget();
+    }
 
-		ImGui::TreePop();
-	}
+    if (open)
+    {
+        for (UUID id : roots)
+        {
+            if ((u64)id == (u64)INVALID_ID) continue;
+
+            Entity e = m_active_scene->GetEntity(id);
+            if (e) DrawEntityNode(e);
+        }
+
+        ImGui::TreePop();
+    }
 }
 
 void EditorHierarchy::DrawEntityNode(Entity entity)
 {
-	ImGui::PushID((u32)entity);
+    auto& hierarchy = m_active_scene->GetHierarchy();
 
-	TagComponent& tag = entity.GetComponent<TagComponent>();
-	ImGuiTreeNodeFlags flags = 
-		ImGuiTreeNodeFlags_OpenOnArrow |
-		ImGuiTreeNodeFlags_SpanAvailWidth | 
-		ImGuiTreeNodeFlags_DefaultOpen;
+    UUID id = entity.GetComponent<IDComponent>().id;
+    HE_ASSERT((u64)id != (u64)INVALID_ID, "Hierarchy UI: entity has INVALID_ID");
 
-	if (m_selected_game_object == entity)
-	{
-		flags |= ImGuiTreeNodeFlags_Selected;
-	}
+    // Stable ImGui ID
+    ImGui::PushID((i32)(u64)id);
 
-	if (entity.GetComponent<RelationshipComponent>().first == entt::null)
-	{
-		flags |= ImGuiTreeNodeFlags_Leaf;
-	}
+    TagComponent& tag = entity.GetComponent<TagComponent>();
 
-	ImGui::Image((ImTextureID)m_icon_entity, m_icon_size);
-	ImGui::SameLine();
-	b8 open = ImGui::TreeNodeEx("", flags, tag.tag.c_str());
+    ImGuiTreeNodeFlags flags =
+        ImGuiTreeNodeFlags_OpenOnArrow |
+        ImGuiTreeNodeFlags_SpanAvailWidth |
+        ImGuiTreeNodeFlags_DefaultOpen;
 
-	if (ImGui::IsItemClicked(ImGuiMouseButton_Left) || ImGui::IsItemClicked(ImGuiMouseButton_Right))
-	{
-		m_selected_game_object = entity;
-		m_inspector_panel->SetSelectedEntity(m_selected_game_object);
-	}
+    if (m_selected_game_object == entity)
+        flags |= ImGuiTreeNodeFlags_Selected;
 
-	if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
-	{
-		entt::entity handle = entity.GetHandle();
-		ImGui::SetDragDropPayload(ENTITY_PAYLOAD, &handle, sizeof(handle));
-		ImGui::TextUnformatted(tag.tag.c_str());
-		ImGui::EndDragDropSource();
-	}
+    // Leaf if no children
+    if ((u64)hierarchy.GetFirstChild(id) == (u64)INVALID_ID)
+        flags |= ImGuiTreeNodeFlags_Leaf;
 
-	if (ImGui::BeginDragDropTarget())
-	{
-		if (auto* payload = ImGui::AcceptDragDropPayload(ENTITY_PAYLOAD))
-		{
-			entt::entity draggedHandle;
-			std::memcpy(&draggedHandle, payload->Data, sizeof(draggedHandle));
+    ImGui::Image((ImTextureID)m_icon_entity, m_icon_size);
+    ImGui::SameLine();
 
-			if (draggedHandle != entity.GetHandle() && !IsDescendant(entity, draggedHandle))
-			{
-				Entity dragged(draggedHandle, m_active_scene);
-				SceneManager::GetInstance()->GetActiveScene()->ReparentGameObject(dragged, entity);
-			}
-		}
-		ImGui::EndDragDropTarget();
-	}
+    b8 open = ImGui::TreeNodeEx((void*)(u64)id, flags, "%s", tag.tag.c_str());
 
-	if (open)
-	{
-		RelationshipComponent& relationship = entity.GetComponent<RelationshipComponent>();
-		Entity child = { relationship.first, m_active_scene };
-		while (child.GetHandle() != entt::null)
-		{
-			DrawEntityNode(child);
-			child = { child.GetComponent<RelationshipComponent>().next, m_active_scene };
-		}
+    if (ImGui::IsItemClicked(ImGuiMouseButton_Left) || ImGui::IsItemClicked(ImGuiMouseButton_Right))
+    {
+        m_selected_game_object = entity;
+        m_inspector_panel->SetSelectedEntity(m_selected_game_object);
+    }
 
-		ImGui::TreePop();
-	}
+    // Drag source payload is UUID (NOT entt::entity)
+    if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceAllowNullID))
+    {
+        ImGui::SetDragDropPayload(ENTITY_PAYLOAD, &id, sizeof(UUID));
+        ImGui::TextUnformatted(tag.tag.c_str());
+        ImGui::EndDragDropSource();
+    }
 
-	ImGui::PopID();
+    // Drop target: reparent dragged under this entity (cycle-safe)
+    if (ImGui::BeginDragDropTarget())
+    {
+        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload(ENTITY_PAYLOAD))
+        {
+            UUID dragged_id = UUID((u64)INVALID_ID);
+            std::memcpy(&dragged_id, payload->Data, sizeof(UUID));
+
+            if ((u64)dragged_id != (u64)INVALID_ID && dragged_id != id)
+            {
+                // Illegal if this target is inside dragged subtree:
+                // i.e. target is descendant of dragged
+                if (!hierarchy.IsDescendant(id, dragged_id))
+                {
+                    Entity dragged = m_active_scene->GetEntity(dragged_id);
+                    if (dragged)
+                        SceneManager::GetInstance()->GetActiveScene()->ReparentGameObject(dragged, entity);
+                }
+            }
+        }
+        ImGui::EndDragDropTarget();
+    }
+
+    if (open)
+    {
+        UUID child = hierarchy.GetFirstChild(id);
+        while ((u64)child != (u64)INVALID_ID)
+        {
+            Entity child_entity = m_active_scene->GetEntity(child);
+            if (child_entity) DrawEntityNode(child_entity);
+
+            child = hierarchy.GetNextSibling(child);
+        }
+
+        ImGui::TreePop();
+    }
+
+    ImGui::PopID();
 }
 
 void EditorHierarchy::DrawUtilityPanel()
 {
-	ImGui::SetNextWindowSize(m_editor_panel_size, ImGuiCond_Always);
-	ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5.0f, 8.0f));
-	if (ImGui::BeginPopupContextWindow(nullptr, ImGuiPopupFlags_MouseButtonRight))
-	{
-		ImGuiStyle& style = ImGui::GetStyle();
-		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { style.ItemSpacing.x, style.ItemSpacing.y * 3.0f });
+    ImGui::SetNextWindowSize(m_editor_panel_size, ImGuiCond_Always);
+    ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5.0f, 8.0f));
+    if (ImGui::BeginPopupContextWindow(nullptr, ImGuiPopupFlags_MouseButtonRight))
+    {
+        ImGuiStyle& style = ImGui::GetStyle();
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { style.ItemSpacing.x, style.ItemSpacing.y * 3.0f });
 
-		if (ImGui::MenuItem("Cut", "Ctrl + X", nullptr, m_selected_game_object != NULL_ENTITY))
-		{
-		}
+        if (ImGui::MenuItem("Cut", "Ctrl + X", nullptr, m_selected_game_object != NULL_ENTITY)) {}
+        if (ImGui::MenuItem("Copy", "Ctrl + C", nullptr, m_selected_game_object != NULL_ENTITY)) {}
+        if (ImGui::MenuItem("Paste", "Ctrl + V", nullptr, m_selected_game_object != NULL_ENTITY)) {}
+        if (ImGui::MenuItem("Rename", "Ctrl + R", nullptr, m_selected_game_object != NULL_ENTITY)) {}
+        if (ImGui::MenuItem("Duplicate", "Ctrl + D", nullptr, m_selected_game_object != NULL_ENTITY)) {}
 
-		if (ImGui::MenuItem("Copy", "Ctrl + C", nullptr, m_selected_game_object != NULL_ENTITY))
-		{
-		}
+        if (ImGui::MenuItem("Delete", "Del", nullptr, m_selected_game_object != NULL_ENTITY))
+        {
+            Scene* scene = SceneManager::GetInstance()->GetActiveScene();
+            if (!scene || !m_selected_game_object)
+                return;
 
-		if (ImGui::MenuItem("Paste", "Ctrl + V", nullptr, m_selected_game_object != NULL_ENTITY))
-		{
-		}
+            UUID root = m_selected_game_object.GetComponent<IDComponent>().id;
+            auto& h = scene->GetHierarchy();
 
-		if (ImGui::MenuItem("Rename", nullptr, nullptr, m_selected_game_object != NULL_ENTITY))
-		{
-		}
+            std::vector<UUID> stack;
+            stack.push_back(root);
 
-		if (ImGui::MenuItem("Duplicate", "Ctrl + D", nullptr, m_selected_game_object != NULL_ENTITY))
-		{
-		}
+            while (!stack.empty())
+            {
+                UUID cur = stack.back();
+                stack.pop_back();
 
-		if (ImGui::MenuItem("Delete", "Del", nullptr, m_selected_game_object != NULL_ENTITY))
-		{
-			SceneManager::GetInstance()->GetActiveScene()->DestroyGameObject(m_selected_game_object);
-			m_selected_game_object = Entity{};
-			m_inspector_panel->SetSelectedEntity(m_selected_game_object);
-		}
+                MeshManager::GetInstance()->RemoveMeshInstance(cur);
 
-		ImGui::Separator();
+                UUID child = h.GetFirstChild(cur);
+                while ((u64)child != (u64)INVALID_ID)
+                {
+                    stack.push_back(child);
+                    child = h.GetNextSibling(child);
+                }
+            }
 
-		if (ImGui::MenuItem("Create Empty"))
-		{
-			SceneManager::GetInstance()->GetActiveScene()->CreateGameObject("GameObject", m_selected_game_object);
-		}
+            scene->DestroyGameObject(m_selected_game_object);
 
-		ImGui::PopStyleVar();
-		ImGui::EndPopup();
-	}
-	ImGui::PopStyleVar();
+            m_selected_game_object = NULL_ENTITY;
+            m_inspector_panel->SetSelectedEntity(m_selected_game_object);
+        }
 
-}
+        ImGui::Separator();
 
-b8 EditorHierarchy::IsDescendant(Entity parent, entt::entity possibleChild)
-{
-	auto& reg = m_active_scene->GetRegistry();
-	entt::entity current = parent.GetComponent<RelationshipComponent>().first;
-	while (current != entt::null)
-	{
-		if (current == possibleChild) return true;
-		current = reg.get<RelationshipComponent>(current).next;
-	}
-	return false;
+        if (ImGui::MenuItem("Create Empty"))
+        {
+            SceneManager::GetInstance()->GetActiveScene()->CreateGameObject("GameObject", m_selected_game_object);
+        }
+
+        ImGui::PopStyleVar();
+        ImGui::EndPopup();
+    }
+    ImGui::PopStyleVar();
 }

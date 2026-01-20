@@ -3,6 +3,7 @@
 // Internal
 #include "../base.h"
 
+#if _TEST_BED_ENABLED
 class TestTextureCubemap : public TestBase
 {
 public:
@@ -68,3 +69,4 @@ private:
 	std::vector<Model*> m_models;
 	std::vector<std::string> m_model_names;
 };
+#endif // _TEST_BED_ENABLED

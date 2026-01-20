@@ -2,6 +2,7 @@
 
 #include "../base.h"
 
+#if _TEST_BED_ENABLED
 #define FM_DIM 512
 
 class TestOffscreen : public TestBase
@@ -92,3 +93,4 @@ private:
     Model* m_plane_model;
 	Model* m_chinese_dragon_model;
 };
+#endif // _TEST_BED_ENABLED

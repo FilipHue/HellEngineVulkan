@@ -4,12 +4,14 @@
 // Internal
 #include <hellengine/math/core.h>
 #include <hellengine/graphics/managers/texture_manager.h>
+#include <hellengine/ecs/scene/scene_manager.h>
 
 namespace hellengine
 {
 
 	using namespace graphics;
 	using namespace math;
+	using namespace ecs;
 	namespace resources
 	{
 		void AssetManager::LoadModel(const File& file)
@@ -27,7 +29,8 @@ namespace hellengine
 
 			ExtractTextures(scene, file);
 
-			ProcessNode(scene->mRootNode, scene, glm::mat4(1.0f), file);
+			Entity root = SceneManager::GetInstance()->GetActiveScene()->CreateGameObject(file.GetStem(), NULL_ENTITY);
+			ProcessNode(scene->mRootNode, scene, glm::mat4(1.0f), root, file);
 
 			HE_GRAPHICS_INFO("\tLoaded");
 		}
@@ -36,8 +39,7 @@ namespace hellengine
 		{
 			if (TextureManager::GetInstance()->GetTexture2D(file.GetName()) != nullptr)
 			{
-				Texture2D texture = TextureManager::GetInstance()->GetTexture2D(file.GetName());
-				return texture;
+				return TextureManager::GetInstance()->GetTexture2D(file.GetName());
 			}
 
 			return TextureManager::GetInstance()->CreateTexture2D(file.GetName(), file);
@@ -47,29 +49,30 @@ namespace hellengine
 		{
 			if (TextureManager::GetInstance()->GetTextureCubemap(file.GetName()) != nullptr)
 			{
-				TextureCubemap texture = TextureManager::GetInstance()->GetTextureCubemap(file.GetName());
-				return texture;
+				return TextureManager::GetInstance()->GetTextureCubemap(file.GetName());
 			}
 
 			return TextureManager::GetInstance()->CreateTextureCubemap(file.GetName(), file);
 		}
 
-		void AssetManager::ProcessNode(aiNode* node, const aiScene* scene, const glm::mat4& parent_transform, const File& file)
+		void AssetManager::ProcessNode(aiNode* node, const aiScene* scene, const glm::mat4& parent_transform, Entity parent_entity, const File& file)
 		{
-			glm::mat4 transform = parent_transform * glm::transpose(glm::make_mat4(&node->mTransformation.a1));
+			glm::mat4 local = glm::transpose(glm::make_mat4(&node->mTransformation.a1));
+			glm::mat4 world = parent_transform * local;
+
 			for (u32 i = 0; i < node->mNumMeshes; i++)
 			{
 				aiMesh* ai_mesh = scene->mMeshes[node->mMeshes[i]];
-				ProcessMesh(ai_mesh, scene, transform, file);
+				ProcessMesh(ai_mesh, scene, world, parent_entity, file);
 			}
 
 			for (u32 i = 0; i < node->mNumChildren; i++)
 			{
-				ProcessNode(node->mChildren[i], scene, transform, file);
+				ProcessNode(node->mChildren[i], scene, world, parent_entity, file);
 			}
 		}
 
-		void AssetManager::ProcessMesh(aiMesh* ai_mesh, const aiScene* scene, const glm::mat4& transform, const File& file)
+		void AssetManager::ProcessMesh(aiMesh* ai_mesh, const aiScene* scene, const glm::mat4& transform, Entity parent_entity, const File& file)
 		{
 			// Vertices
 			RawVertexData verticies = {};
@@ -78,7 +81,7 @@ namespace hellengine
 			{
 
 				glm::vec4 position(ai_mesh->mVertices[j].x, ai_mesh->mVertices[j].y, ai_mesh->mVertices[j].z, 1.0f);
-				verticies.positions.push_back(glm::vec3(transform * position));
+				verticies.positions.push_back(glm::vec3(position));
 
 				if (ai_mesh->HasVertexColors(0))
 				{
@@ -132,7 +135,19 @@ namespace hellengine
 				}
 			}
 
-			MeshManager::GetInstance()->CreateMesh<VertexFormatBase>(ai_mesh->mName.C_Str(), verticies, indices, mesh_mat_info);
+			Entity entity = SceneManager::GetInstance()
+				->GetActiveScene()
+				->CreateGameObject(ai_mesh->mName.C_Str(), parent_entity);
+
+			entity.GetComponent<TransformComponent>().world_transform = transform;
+
+			UUID uuid = entity.GetComponent<IDComponent>().id;
+
+			Mesh* mesh = MeshManager::GetInstance()->CreateMesh(ai_mesh->mName.C_Str(), verticies, indices, mesh_mat_info);
+			MeshManager::GetInstance()->UploadMeshGeometry<VertexFormatBase>(mesh);
+			MeshManager::GetInstance()->CreateMeshInstance(uuid, mesh);
+
+			entity.AddComponent<MeshFilterComponent>().mesh = mesh;
 		}
 
 		void AssetManager::ExtractTextures(const aiScene* scene, const File& file)

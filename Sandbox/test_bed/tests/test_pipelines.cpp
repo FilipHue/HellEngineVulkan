@@ -1,5 +1,6 @@
 #include "test_pipelines.h"
 
+#if _TEST_BED_ENABLED
 TestPipelines::TestPipelines(ApplicationConfiguration* configuration) : TestBase(configuration)
 {
 	NO_OP;
@@ -366,3 +367,4 @@ void TestPipelines::CreateDescriptorSets()
 		m_backend->WriteDescriptor(&m_light_descriptor, descriptor_data_light);
 	}
 }
+#endif // _TEST_BED_ENABLED

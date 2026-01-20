@@ -1,9 +1,14 @@
 #pragma once
 
+// Internal
 #include "hellengine/hellengine.h"
 #include "shared.h"
 #include "panels/editor_hierarchy.h"
 #include "panels/editor_inspector.h"
+#include "panels/editor_viewport.h"
+
+// External
+#include <imguizmo/ImGuizmo.h>
 
 using namespace hellengine;
 using namespace core;
@@ -21,12 +26,12 @@ ALIGN_AS(64) struct GlobalShaderData
 	glm::vec3 camera_position;
 };
 
-struct GridCameraData
-{
-	glm::mat4 proj;
-	glm::mat4 view;
-	glm::vec3 pos;
-};
+//struct GridCameraData
+//{
+//	glm::mat4 proj;
+//	glm::mat4 view;
+//	glm::vec3 pos;
+//};
 
 class Editor : public Application
 {
@@ -62,14 +67,10 @@ public:
 private:
 	void CreateResources();
 	void CreatePipelines();
-	void CreateAttachments();
 	void CreateDescriptors();
 
 	void CreateEditorPanels();
 
-	void OnViewportResize();
-
-	void DrawGrid();
 	void DrawToSwapchain();
 
 	void MenuBar();
@@ -86,49 +87,21 @@ private:
 
 	Pipeline m_editor_pipeline;
 
-	// Viewport
-	glm::vec4 m_viewport_clear_color;
-	glm::vec2 m_viewport_clear_depth;
-	glm::uvec2 m_viewport_size;
+	glm::uvec2 m_viewport_last_size;
 
-	DescriptorSet m_viewport_descriptor;
-
-	Texture2D m_viewport_color_texture;
-	Texture2D m_viewport_pick_texture;
-	Texture2D m_viewport_depth_texture;
-
-	DynamicRenderingAttachmentInfo m_viewport_color_attachment;
-	DynamicRenderingAttachmentInfo m_viewport_pick_attachment;
-	DynamicRenderingAttachmentInfo m_viewport_depth_attachment;
-	DynamicRenderingInfo m_viewport_dri;
-
-	Pipeline m_grid_pipeline;
-	DescriptorSet m_grid_descriptor;
-	UniformBuffer m_grid_buffer;
-
-	Texture2D m_grid_color_texture;
-	Texture2D m_grid_depth_texture;
-
-	DynamicRenderingAttachmentInfo m_grid_color_attachment;
-	DynamicRenderingAttachmentInfo m_grid_depth_attachment;
-	DynamicRenderingInfo m_grid_dri;
-
-	GridCameraData m_grid_data;
+	ImGuizmo::OPERATION m_guizmo_operation = ImGuizmo::TRANSLATE;
+	ImGuizmo::MODE m_guizmo_mode = ImGuizmo::LOCAL;
 
 	// Editor UI
 	EditorHierarchy* m_hierarchy_panel;
 	EditorInspector* m_inspector_panel;
-
-	Viewport* m_viewport_panel;
-	Bounds2D m_viewport_panel_bounds;
-	glm::uvec2 m_viewport_panel_size;
+	EditorViewport* m_viewport_panel;
 
 	// PBR Pipeline
-	GlobalShaderData m_global_shader_data;
+	Pipeline m_pbr_pipeline;
+	DescriptorSet m_pbr_global_descriptor;
+	UniformBuffer m_pbr_global_ubo;
 
-	// TEMP
-	Pipeline m_test_pipeline;
-	DescriptorSet m_test_descriptor;
-	UniformBuffer m_test_ubo;
+	GlobalShaderData m_global_shader_data;
 };
 

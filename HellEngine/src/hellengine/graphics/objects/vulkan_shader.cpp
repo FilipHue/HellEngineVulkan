@@ -105,7 +105,7 @@ namespace hellengine
 			//	return ReadSPIRVSource(binary_name.c_str());
 			//}
 
-			std::string command = "C:/VulkanSDK/1.3.290.0/Bin/glslc.exe " + file.GetAbsolutePath() + " -o " + binary_name;
+			std::string command = "C:/VulkanSDK/1.4.328.1/Bin/glslc.exe " + file.GetAbsolutePath() + " -o " + binary_name;
 			system(command.c_str());
 
 			HE_GRAPHICS_INFO("\tCompiled to cache");

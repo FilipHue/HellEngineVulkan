@@ -11,49 +11,31 @@ namespace hellengine
 	namespace graphics
 	{
 
-		struct BufferAllocation
-		{
-			u32 vertex_start = 0;
-			u32 first_index = 0;
-			u32 index_count = 0;
-			u32 vertex_count = 0;
-		};
-
-		class MeshManager;
-
 		class Mesh
 		{
 		public:
-			Mesh() = default;
+			Mesh();
 			~Mesh();
 
 			void SetName(std::string name) { m_name = name; }
 			std::string& GetName() { return m_name; }
 			const std::string& GetName() const { return m_name; }
 
-			void SetRawData(RawVertexData data) { m_vertices_raw_data = data; }
-			RawVertexData& GetRawData() { return m_vertices_raw_data; }
-			const RawVertexData& GetRawData() const { return m_vertices_raw_data; }
+			void SetRawData(RawVertexData data) { m_verticies = data; }
+			RawVertexData& GetRawData() { return m_verticies; }
+			const RawVertexData& GetRawData() const { return m_verticies; }
 
-			void SetVertexStart(u32 vertex_start) { m_allocation.vertex_start = vertex_start; }
-			u32 GetVertexStart() const { return m_allocation.vertex_start; }
-
-			void SetFirstIndex(u32 first_index) { m_allocation.first_index = first_index; }
-			u32 GetFirstIndex() const { return m_allocation.first_index; }
-
-			void SetIndexCount(u32 index_count) { m_allocation.index_count = index_count; }
-			u32 GetIndexCount() const { return m_allocation.index_count; }
+			void SetIndices(const std::vector<u32>& indices) { m_indices = indices; }
+			std::vector<u32>& GetIndices() { return m_indices; }
+			const std::vector<u32>& GetIndices() const { return m_indices; }
 
 			void SetMaterialInfo(MaterialInfo* info) { m_material_info = info; }
 			MaterialInfo* GetMaterialInfo() { return m_material_info; }
 
 		private:
 			std::string m_name;
-			
-			RawVertexData m_vertices_raw_data;
-
-			BufferAllocation m_allocation;
-
+			RawVertexData m_verticies;
+			std::vector<u32> m_indices;
 			MaterialInfo* m_material_info;
 		};
 

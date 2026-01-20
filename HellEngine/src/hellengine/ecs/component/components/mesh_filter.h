@@ -9,6 +9,12 @@
 namespace hellengine
 {
 
+	namespace graphics
+	{
+		class Mesh;
+	}
+
+	using namespace graphics;
 	namespace ecs
 	{
 
@@ -16,7 +22,7 @@ namespace hellengine
 		{
 			DEFAULT_ALL(MeshFilterComponent);
 
-			std::string mesh_id;
+			Mesh* mesh = nullptr;
 		};
 
 	} // namespace ecs

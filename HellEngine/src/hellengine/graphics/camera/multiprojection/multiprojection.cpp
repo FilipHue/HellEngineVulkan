@@ -18,6 +18,8 @@ namespace hellengine
 			{
 				return os << "Orthographic";
 			}
+
+			return os << "Unknown projection type";
 		}
 
 		void MultiProjectionCamera::CreatePerspective(f32 fov, f32 aspect_ratio, f32 near_z, f32 far_z)

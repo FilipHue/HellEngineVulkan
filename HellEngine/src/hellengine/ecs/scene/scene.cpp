@@ -3,284 +3,256 @@
 
 // Internal
 #include <hellengine/ecs/entity/entity.h>
-#include <hellengine/graphics/managers/mesh_manager.h>
 
 namespace hellengine
 {
+    namespace ecs
+    {
+        Scene::Scene()
+        {
+            NO_OP;
+        }
 
-	namespace ecs
-	{
+        Scene::~Scene()
+        {
+            NO_OP;
+        }
 
-		static entt::entity GetFirstChild(const RelationshipComponent& rc) { return rc.first; }
-		static entt::entity GetNextSibling(const RelationshipComponent& rc) { return rc.next; }
-		static bool         IsRoot(const RelationshipComponent& rc) { return rc.parent == entt::null; }
+        void Scene::Create(std::string& name)
+        {
+            m_name = name;
+            m_uuid = UUID::Generate();
+        }
 
-		Scene::Scene()
-		{
-			NO_OP;
-		}
+        void Scene::Destroy()
+        {
+            // Clear hierarchy + lookup + registry
+            m_hierarchy.Clear();
+            m_entity_lookup.clear();
+            m_registry.clear();
+            m_name.clear();
+        }
 
-		Scene::~Scene()
-		{
-			NO_OP;
-		}
+        Entity Scene::CreateEntity(const std::string& name)
+        {
+            // Always generate a valid non-zero UUID
+            return CreateEntityWithUUID(UUID::Generate(), name);
+        }
 
-		void Scene::Create(std::string& name)
-		{
-			m_name = name;
-			m_uuid = UUID::Generate();
-		}
+        Entity Scene::CreateEntityWithUUID(UUID id, const std::string& name)
+        {
+            // 0 is invalid sentinel for hierarchy
+            if ((u64)id == (u64)INVALID_ID)
+                id = UUID::Generate();
 
-		void Scene::Destroy()
-		{
-			m_registry.clear();
-			m_name.clear();
-		}
+            HE_ASSERT((u64)id != (u64)INVALID_ID, "Scene::CreateEntityWithUUID produced INVALID_ID.");
 
-		Entity Scene::CreateEntity(const std::string& name)
-		{
-			return CreateEntityWithUUID(UUID(), name);
-		}
+            Entity entity = { m_registry.create(), this };
 
-		Entity Scene::CreateEntityWithUUID(UUID id, const std::string& name)
-		{
-			Entity entity = { m_registry.create(), this };
+			entity.AddComponent<IDComponent>(id).id = id;
 
-			entity.AddComponent<IDComponent>(id);
-			entity.AddComponent<RelationshipComponent>();
-			auto& tag = entity.AddComponent<TagComponent>(name);
-			tag.tag = name;
-			entity.AddComponent<TransformComponent>();
+            auto& tag = entity.AddComponent<TagComponent>(name);
+            tag.tag = name;
 
-			return entity;
-		}
+            entity.AddComponent<TransformComponent>();
 
-		void Scene::DestroyEntity(Entity entity)
-		{
-			m_registry.destroy(entity.GetHandle());
-		}
+            // Register in hierarchy as a root by default
+            m_hierarchy.CreateNode(id);
 
-		Entity Scene::CreateGameObject(const std::string& name, Entity parent)
-		{
-			HE_ASSERT(IsValid(parent) || parent == NULL_ENTITY, "Parent entity is not valid in the current scene");
+            // Fast lookup
+            m_entity_lookup[(u64)id] = entity.GetHandle();
 
-			Entity entity = CreateEntity(name);
-			auto& childRel = entity.GetComponent<RelationshipComponent>();
+            return entity;
+        }
 
-			if (parent.GetHandle() == entt::null)
-			{
-				return entity;
-			}
+        void Scene::DestroyEntity(Entity entity)
+        {
+            if (!entity) return;
 
-			childRel.parent = parent.GetHandle();
+            UUID id = entity.GetComponent<IDComponent>().id;
 
-			auto& parentRel = parent.GetComponent<RelationshipComponent>();
+            // Remove hierarchy node (CASCADE delete inside hierarchy)
+            // NOTE: Scene::DestroyGameObject calls DestroyEntity bottom-up, so this will be leaf most times.
+            m_hierarchy.DestroyNode(id);
 
-			if (parentRel.first == entt::null)
-			{
-				parentRel.first = entity.GetHandle();
-				parentRel.last = entity.GetHandle();
-				parentRel.child_count = 1;
-			}
-			else
-			{
-				entt::entity last = parentRel.last;
-				auto& lastRel = m_registry.get<RelationshipComponent>(last);
+            // Remove lookup
+            m_entity_lookup.erase((u64)id);
 
-				lastRel.next = entity.GetHandle();
-				parentRel.last = entity.GetHandle();
-				childRel.prev = last;
+            // Remove from registry
+            m_registry.destroy(entity.GetHandle());
+        }
 
-				++parentRel.child_count;
-			}
+        Entity Scene::CreateGameObject(const std::string& name, Entity parent)
+        {
+            HE_ASSERT(IsValid(parent) || parent == NULL_ENTITY, "Parent entity is not valid in the current scene");
 
-			return entity;
-		}
+            Entity entity = CreateEntity(name);
+            UUID child_id = entity.GetComponent<IDComponent>().id;
 
-		void Scene::DestroyGameObject(Entity entity)
-		{
-			HE_ASSERT(IsValid(entity), "Entity is not valid in the current scene");
+            if (parent)
+            {
+                UUID parent_id = parent.GetComponent<IDComponent>().id;
+                m_hierarchy.AttachNode(child_id, parent_id);
+            }
 
-			auto& relationship = entity.GetComponent<RelationshipComponent>();
-			entt::entity child = relationship.first;
-			while (child != entt::null)
-			{
-				Entity child_entity(child, this);
-				child = child_entity.GetComponent<RelationshipComponent>().next;
-				DestroyGameObject(child_entity);
-			}
-			if (relationship.parent != entt::null)
-			{
-				Entity parent_entity(relationship.parent, this);
-				auto& parent_rel = parent_entity.GetComponent<RelationshipComponent>();
-				if (parent_rel.first == entity.GetHandle())
-				{
-					parent_rel.first = relationship.next;
-				}
-				else if (relationship.next == entt::null)
-				{
-					auto& prev_rel = m_registry.get<RelationshipComponent>(relationship.prev);
-					prev_rel.next = entt::null;
-				}
-				else
-				{
-					entt::entity current = parent_rel.first;
-					while (current != entt::null)
-					{
-						auto& curr_rel = m_registry.get<RelationshipComponent>(current);
-						if (curr_rel.next == entity.GetHandle())
-						{
-							curr_rel.next = relationship.next;
-							break;
-						}
-						current = curr_rel.next;
-					}
-				}
-				parent_rel.child_count = std::max(0u, parent_rel.child_count - 1);
-			}
+            return entity;
+        }
 
-			DestroyEntity(entity);
-		}
+        void Scene::DestroyGameObject(Entity entity)
+        {
+            HE_ASSERT(IsValid(entity), "Entity is not valid in the current scene");
 
-		void Scene::ReparentGameObject(Entity child, Entity newParent)
-		{
-			if (!child || child == newParent)
-			{
-				return;
-			}
+            UUID root_id = entity.GetComponent<IDComponent>().id;
 
-			HE_ASSERT(IsValid(child), "Child entity is not valid in the current scene");
-			HE_ASSERT(IsValid(newParent) || newParent == NULL_ENTITY, "New parent entity is not valid in the current scene");
+            // Collect subtree UUIDs, then delete bottom-up
+            std::vector<UUID> preorder;
+            preorder.reserve(64);
 
-			auto& childTc = child.GetComponent<TransformComponent>();
-			glm::mat4 oldWorld = childTc.world_transform;
+            std::vector<UUID> stack;
+            stack.push_back(root_id);
 
-			auto& childRel = child.GetComponent<RelationshipComponent>();
-			if (childRel.parent != entt::null)
-			{
-				Entity oldParent(childRel.parent, this);
-				auto& opRel = oldParent.GetComponent<RelationshipComponent>();
+            while (!stack.empty())
+            {
+                UUID cur = stack.back();
+                stack.pop_back();
 
-				if (opRel.first == child.GetHandle())
-				{
-					opRel.first = childRel.next;
-				}
-				else
-				{
-					entt::entity cur = opRel.first;
-					while (cur != entt::null)
-					{
-						auto& curRel = m_registry.get<RelationshipComponent>(cur);
-						if (curRel.next == child.GetHandle())
-						{
-							curRel.next = childRel.next;
-							break;
-						}
-						cur = curRel.next;
-					}
-				}
-				--opRel.child_count;
-			}
+                if (!m_hierarchy.Exists(cur))
+                    continue;
 
-			childRel.parent = newParent.GetHandle();
-			childRel.next = entt::null;
+                preorder.push_back(cur);
 
-			if (newParent)
-			{
-				auto& pRel = newParent.GetComponent<RelationshipComponent>();
+                // Push children
+                UUID child = m_hierarchy.GetFirstChild(cur);
+                while ((u64)child != (u64)INVALID_ID)
+                {
+                    stack.push_back(child);
+                    child = m_hierarchy.GetNextSibling(child);
+                }
+            }
 
-				childRel.next = pRel.first;
-				pRel.first = child.GetHandle();
-				++pRel.child_count;
-			}
+            for (auto it = preorder.rbegin(); it != preorder.rend(); ++it)
+            {
+                Entity e = GetEntity(*it);
+                if (e) DestroyEntity(e);
+            }
+        }
 
-			glm::mat4 parentWorld(1.0f);
-			if (newParent)
-			{
-				parentWorld = newParent.GetComponent<TransformComponent>().world_transform;
-			}
+        void Scene::ReparentGameObject(Entity child, Entity newParent)
+        {
+            if (!child || child == newParent)
+                return;
 
-			glm::mat4 newLocal = glm::inverse(parentWorld) * oldWorld;
+            HE_ASSERT(IsValid(child), "Child entity is not valid in the current scene");
+            HE_ASSERT(IsValid(newParent) || newParent == NULL_ENTITY, "New parent entity is not valid in the current scene");
 
-			glm::vec3 t, s, skew;  glm::quat r;  glm::vec4 persp;
-			glm::decompose(newLocal, s, r, t, skew, persp);
+            auto& childTc = child.GetComponent<TransformComponent>();
+            glm::mat4 oldWorld = childTc.world_transform;
 
-			childTc.local_position = t;
-			childTc.local_rotation = glm::eulerAngles(r);
-			childTc.local_scale = s;
-			childTc.is_dirty = true;
-		}
+            UUID child_id = child.GetComponent<IDComponent>().id;
 
-		b8 Scene::IsValid(Entity entity) const
-		{
-			return m_registry.valid(entity.GetHandle());
-		}
+            // Hierarchy reparent
+            if (!newParent)
+            {
+                // Move to root
+                m_hierarchy.ReparentNode(child_id, UUID((u64)INVALID_ID));
+            }
+            else
+            {
+                UUID parent_id = newParent.GetComponent<IDComponent>().id;
+                m_hierarchy.ReparentNode(child_id, parent_id);
+            }
 
-		void Scene::UpdateTransforms()
-		{
-			struct StackEntry
-			{
-				entt::entity e;
-				glm::mat4    parentWorld;
-				bool         parentDirty;
-			};
+            // Keep world transform after reparent
+            glm::mat4 parentWorld(1.0f);
+            if (newParent)
+                parentWorld = newParent.GetComponent<TransformComponent>().world_transform;
 
-			std::vector<StackEntry> stack;
-			stack.reserve(256);
+            glm::mat4 newLocal = glm::inverse(parentWorld) * oldWorld;
 
-			m_registry.view<RelationshipComponent>().each(
-				[&](entt::entity entity, const RelationshipComponent& rel)
-				{
-					if (rel.parent == entt::null)
-						stack.push_back({ entity, glm::mat4(1.0f), true });
-				});
+            glm::vec3 t, s, skew;
+            glm::quat r;
+            glm::vec4 persp;
+            glm::decompose(newLocal, s, r, t, skew, persp);
 
-			while (!stack.empty())
-			{
-				StackEntry current = stack.back();
-				stack.pop_back();
+            childTc.local_position = t;
+            childTc.local_rotation = glm::eulerAngles(r);
+            childTc.local_scale = s;
+            childTc.is_dirty = true;
+        }
 
-				auto& rel = m_registry.get<RelationshipComponent>(current.e);
+        b8 Scene::IsValid(Entity entity) const
+        {
+            return m_registry.valid(entity.GetHandle());
+        }
 
-				TransformComponent* tc = m_registry.try_get<TransformComponent>(current.e);
+        void Scene::UpdateTransforms()
+        {
+            struct StackEntry
+            {
+                UUID      id;
+                glm::mat4 parentWorld;
+                bool      parentDirty;
+            };
 
-				bool dirtyHere = current.parentDirty;
-				if (tc)
-				{
-					dirtyHere |= tc->is_dirty;
-					if (dirtyHere)
-					{
-						tc->world_transform = current.parentWorld * tc->GetLocalTransform();
-						tc->is_dirty = false;
-					}
-				}
+            std::vector<StackEntry> stack;
+            stack.reserve(256);
 
-				glm::mat4 worldForChildren = tc ? tc->world_transform : current.parentWorld;
+            // Start from hierarchy roots
+            for (UUID root : m_hierarchy.GetRootNodes())
+            {
+                if (!m_hierarchy.Exists(root)) continue;
+                stack.push_back({ root, glm::mat4(1.0f), true });
+            }
 
-				entt::entity child = rel.first;
-				while (child != entt::null)
-				{
-					const auto& childRel = m_registry.get<RelationshipComponent>(child);
-					stack.push_back({ child, worldForChildren, dirtyHere });
-					child = childRel.next;
-				}
-			}
-		}
+            while (!stack.empty())
+            {
+                StackEntry current = stack.back();
+                stack.pop_back();
 
-		Entity Scene::GetEntity(std::string name)
-		{
-			auto view = m_registry.view<TagComponent>();
-			for (auto entity : view)
-			{
-				auto& tag = view.get<TagComponent>(entity);
-				if (tag.tag == name)
-				{
-					return Entity(entity, this);
-				}
-			}
-			return NULL_ENTITY;
-		}
+                Entity e = GetEntity(current.id);
+                if (!e) continue;
 
-	} // namespace ecs
+                TransformComponent* tc = m_registry.try_get<TransformComponent>(e.GetHandle());
 
+                bool dirtyHere = current.parentDirty;
+                if (tc)
+                {
+                    dirtyHere |= tc->is_dirty;
+                    if (dirtyHere)
+                    {
+                        tc->world_transform = current.parentWorld * tc->GetLocalTransform();
+                        tc->is_dirty = false;
+                    }
+                }
+
+                glm::mat4 worldForChildren = tc ? tc->world_transform : current.parentWorld;
+
+                // Traverse children through hierarchy sibling links
+                UUID child = m_hierarchy.GetFirstChild(current.id);
+                while ((u64)child != (u64)INVALID_ID)
+                {
+                    stack.push_back({ child, worldForChildren, dirtyHere });
+                    child = m_hierarchy.GetNextSibling(child);
+                }
+            }
+        }
+
+        Entity Scene::GetEntity(UUID id)
+        {
+            auto it = m_entity_lookup.find((u64)id);
+            if (it == m_entity_lookup.end())
+                return Entity{ entt::null, this };
+
+            entt::entity handle = it->second;
+            if (!m_registry.valid(handle))
+            {
+                // heal stale entry
+                m_entity_lookup.erase(it);
+                return Entity{ entt::null, this };
+            }
+
+            return Entity{ handle, this };
+        }
+
+    } // namespace ecs
 } // namespace hellengine

@@ -2,6 +2,7 @@
 
 #include "../base.h"
 
+#if _TEST_BED_ENABLED
 class TestGltfLoading : public TestBase
 {
 public:
@@ -68,3 +69,4 @@ private:
     // Light
 	LightData m_light_data;
 };
+#endif // _TEST_BED_ENABLED

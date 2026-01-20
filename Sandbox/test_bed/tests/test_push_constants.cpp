@@ -1,5 +1,6 @@
 #include "test_push_constants.h"
 
+#if _TEST_BED_ENABLED
 TestPushConstants::TestPushConstants(ApplicationConfiguration* configuration) : TestBase(configuration)
 {
 	NO_OP;
@@ -245,3 +246,4 @@ void TestPushConstants::CreateDescriptorSets()
 		m_backend->WriteDescriptor(&m_model_descriptor, descriptor_data_model);
 	}
 }
+#endif //_TEST_BED_ENABLED

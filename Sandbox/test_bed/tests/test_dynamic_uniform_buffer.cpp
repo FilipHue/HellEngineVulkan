@@ -1,5 +1,6 @@
 #include "test_dynamic_uniform_buffer.h"
 
+#if _TEST_BED_ENABLED
 TestDynamicUniformBuffer::TestDynamicUniformBuffer(ApplicationConfiguration* configuration) : TestBase(configuration)
 {
 	NO_OP;
@@ -347,3 +348,4 @@ void TestDynamicUniformBuffer::UpdateCubes(f32 dt)
 		}
 	}
 }
+#endif // _TEST_BED_ENABLED

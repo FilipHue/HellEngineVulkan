@@ -43,7 +43,7 @@ namespace hellengine
 
 			VulkanTexture2D* texture = m_backend->CreateTexture2D(file);
 
-			u32 index = m_textures_2d_vector.insert(texture);
+			u32 index = (u32)m_textures_2d_vector.insert(texture);
 			m_textures_2d_index_map[name] = index;
 
 			return texture;
@@ -60,7 +60,7 @@ namespace hellengine
 
 			VulkanTexture2D* texture = m_backend->CreateTexture2D(format, width, height);
 
-			u32 index = m_textures_2d_vector.insert(texture);
+			u32 index = (u32)m_textures_2d_vector.insert(texture);
 			m_textures_2d_index_map[name] = index;
 
 			return texture;
@@ -77,7 +77,7 @@ namespace hellengine
 
 			VulkanTexture2D* texture = m_backend->CreateTexture2D(format, data, width, height);
 
-			u32 index = m_textures_2d_vector.insert(texture);
+			u32 index = (u32)m_textures_2d_vector.insert(texture);
 			m_textures_2d_index_map[name] = index;
 
 			return texture;

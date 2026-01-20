@@ -512,7 +512,7 @@ namespace hellengine
 
 		void VulkanContext::UpdateUniformBuffer(VulkanUniformBuffer* buffer, void* data, u32 size, u32 offset)
 		{
-			const u32 min_alignment = m_device.GetProperties().limits.nonCoherentAtomSize;
+			const u32 min_alignment = (u32)m_device.GetProperties().limits.nonCoherentAtomSize;
 
 			memcpy(static_cast<u8*>(buffer->GetMappedMemory()) + offset, data, size);
 
@@ -551,7 +551,7 @@ namespace hellengine
 
 		void VulkanContext::UpdateStorageBuffer(VulkanStorageBuffer* buffer, void* data, u32 size, u32 offset)
 		{
-			const u32 min_alignment = m_device.GetProperties().limits.nonCoherentAtomSize;
+			const u32 min_alignment = (u32)m_device.GetProperties().limits.nonCoherentAtomSize;
 
 			memcpy(static_cast<u8*>(buffer->GetMappedMemory()) + offset, data, size);
 

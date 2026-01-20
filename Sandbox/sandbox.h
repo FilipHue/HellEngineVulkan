@@ -9,6 +9,10 @@ using namespace math;
 using namespace graphics;
 using namespace resources;
 
+#define SHADER_PATH		"assets/shaders"
+#define TEXTURE_PATH	"assets/textures"
+#define MODEL_PATH		"assets/models"
+
 class SandboxApplication : public Application
 {
 public:
@@ -36,31 +40,19 @@ public:
 private:
 	void CreatePipeline();
 	void CreateDescriptorSet();
-	void SetMeshData();
-
-	void CreateCubeMesh(std::string name);
-	void CreateCubeDescriptorSet(std::string name);
 
 private:
 	u32 m_cursor_mode;
 
-	Pipeline m_pipeline;
-
-	DescriptorSet m_camera_descriptor;
-	UniformBuffer m_camera_buffer;
 	CameraData m_camera_data;
 
 	PerspectiveCamera m_camera;
 	PerspectiveController m_controller;
 
-	u32 m_meshes;
-	Texture2D m_texture;
-	std::vector<ObjectData> m_mesh_data;
-	std::vector<UniformBuffer> m_mesh_buffers;
-	std::vector<DescriptorSet> m_mesh_descriptors;
-	DescriptorSet m_material_descriptor;
-	std::vector<VertexFormatBase> m_vertices;
-	std::vector<u32> m_indices;
+	Pipeline m_pipeline;
 
-	Texture2D m_test_texture;
+	DescriptorSet m_camera_descriptor;
+	DescriptorSet m_descriptor_set;
+
+	UniformBuffer m_camera_buffer;
 };

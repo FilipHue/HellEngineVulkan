@@ -1,5 +1,6 @@
 #include "test_gltf_loading.h"
 
+#if _TEST_BED_ENABLED
 TestGltfLoading::TestGltfLoading(ApplicationConfiguration* configuration) : TestBase(configuration)
 {
 	NO_OP;
@@ -304,3 +305,4 @@ void TestGltfLoading::CreateDescriptorSets()
 		m_backend->WriteDescriptor(&m_wireframe_constants_descriptor, descriptor_data_camera);
 	}
 }
+#endif // _TEST_BED_ENABLED

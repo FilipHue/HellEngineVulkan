@@ -2,6 +2,7 @@
 
 #include "../base.h"
 
+#if _TEST_BED_ENABLED
 class TestStencil : public TestBase
 {
 public:
@@ -73,3 +74,4 @@ private:
     // Model
 	Model* m_model;
 };
+#endif // _TEST_BED_ENABLED

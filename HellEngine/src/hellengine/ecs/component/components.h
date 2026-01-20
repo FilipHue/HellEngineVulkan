@@ -3,7 +3,6 @@
 // Internal
 #include <hellengine/ecs/component/components/id.h>
 #include <hellengine/ecs/component/components/mesh_filter.h>
-#include <hellengine/ecs/component/components/relationship.h>
 #include <hellengine/ecs/component/components/tag.h>
 #include <hellengine/ecs/component/components/transform.h>
 
@@ -24,11 +23,6 @@ namespace hellengine
 			if constexpr (std::is_same_v<T, MeshFilterComponent>)
 			{
 				return "Mesh Filter Component";
-			}
-
-			if constexpr (std::is_same_v<T, RelationshipComponent>)
-			{
-				return "Relationship Component";
 			}
 
 			if constexpr (std::is_same_v<T, TagComponent>)

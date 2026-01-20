@@ -1,5 +1,6 @@
 #include "test_gbuffer.h"
 
+#if _TEST_BED_ENABLED
 TestGBuffer::TestGBuffer(ApplicationConfiguration* configuration) : TestBase(configuration)
 {
 	NO_OP;
@@ -685,3 +686,4 @@ void TestGBuffer::UpdateAttachments()
 		m_backend->WriteDescriptor(&m_final_descriptor, descriptor_data_final);
 	}
 }
+#endif // _TEST_BED_ENABLED

@@ -2,6 +2,7 @@
 
 #include "../base.h"
 
+#if _TEST_BED_ENABLED
 class TestGBuffer : public TestBase
 {
 public:
@@ -112,3 +113,4 @@ private:
     // Texture
     Texture2D m_glass_texture;
 };
+#endif // _TEST_BED_ENABLED

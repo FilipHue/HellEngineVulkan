@@ -142,7 +142,7 @@ namespace hellengine
 
 		void VulkanMappedBuffer::CreateMapped(const VulkanInstance& instance, const VulkanDevice& device, VkDeviceSize elem_size, u32 elem_count, VkBufferUsageFlags usage, b8 shared, u32 queue_count, u32* queue_indices, VkMemoryPropertyFlags properties, b8 persistent)
 		{
-			m_stride = ALIGN(elem_size, device.GetProperties().limits.minUniformBufferOffsetAlignment);
+			m_stride = (u32)ALIGN(elem_size, device.GetProperties().limits.minUniformBufferOffsetAlignment);
 			VkDeviceSize size = m_stride * elem_count;
 			Create(instance, device, size, usage, shared, queue_count, queue_indices, properties);
 
