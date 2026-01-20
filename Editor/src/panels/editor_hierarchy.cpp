@@ -48,6 +48,7 @@ b8 EditorHierarchy::Begin()
         ImGui::End();
         return false;
     }
+
     return true;
 }
 
@@ -119,7 +120,6 @@ void EditorHierarchy::DrawSceneNode(const std::string& scene_name)
     ImGui::Image((ImTextureID)m_icon_scene, m_icon_size);
     ImGui::SameLine();
 
-    // Use scene UUID for stable tree id
     b8 open = ImGui::TreeNodeEx((void*)(u64)m_active_scene->GetUUID(), root_flags, "%s", scene_name.c_str());
 
     // Drop on scene root => make dropped entity a root (no parent)
@@ -156,11 +156,8 @@ void EditorHierarchy::DrawSceneNode(const std::string& scene_name)
 void EditorHierarchy::DrawEntityNode(Entity entity)
 {
     auto& hierarchy = m_active_scene->GetHierarchy();
-
     UUID id = entity.GetComponent<IDComponent>().id;
-    HE_ASSERT((u64)id != (u64)INVALID_ID, "Hierarchy UI: entity has INVALID_ID");
 
-    // Stable ImGui ID
     ImGui::PushID((i32)(u64)id);
 
     TagComponent& tag = entity.GetComponent<TagComponent>();
@@ -255,7 +252,9 @@ void EditorHierarchy::DrawUtilityPanel()
         {
             Scene* scene = SceneManager::GetInstance()->GetActiveScene();
             if (!scene || !m_selected_game_object)
+            {
                 return;
+            }
 
             UUID root = m_selected_game_object.GetComponent<IDComponent>().id;
             auto& h = scene->GetHierarchy();
@@ -289,6 +288,16 @@ void EditorHierarchy::DrawUtilityPanel()
         if (ImGui::MenuItem("Create Empty"))
         {
             SceneManager::GetInstance()->GetActiveScene()->CreateGameObject("GameObject", m_selected_game_object);
+        }
+
+        if (ImGui::BeginMenu("2D Object"))
+        {
+            ImGui::EndMenu();
+        }
+
+        if (ImGui::BeginMenu("3D Object"))
+        {
+            ImGui::EndMenu();
         }
 
         ImGui::PopStyleVar();

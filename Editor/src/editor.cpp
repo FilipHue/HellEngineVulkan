@@ -402,6 +402,36 @@ void Editor::MenuBar()
 			ImGui::EndMenu();
 		}
 
+		ImGui::SetNextWindowSize(ImVec2(400.0f, 0.0f), ImGuiCond_Always);
+		if (ImGui::BeginMenu("Component"))
+		{
+			if (ImGui::MenuItem("	Add", "Ctrl + Shift + A", nullptr, m_hierarchy_panel->GetSelectedGameObject() != NULL_ENTITY))
+			{
+			}
+
+			ImGui::Separator();
+
+			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(style.ItemSpacing.x, style.ItemSpacing.y * 3.0f));
+
+			if (ImGui::BeginMenu("Mesh"))
+			{
+				Entity selected = m_hierarchy_panel->GetSelectedGameObject();
+				const b8 hasSelection = (selected != NULL_ENTITY);
+
+				b8 enabled = hasSelection && !selected.HasComponent<MeshFilterComponent>();
+				if (ImGui::MenuItem("	Mesh Filter", nullptr, false, enabled))
+				{
+					selected.AddComponent<MeshFilterComponent>();
+					ImGui::CloseCurrentPopup();
+				}
+
+				ImGui::EndMenu();
+			}
+
+			ImGui::PopStyleVar();
+			ImGui::EndMenu();
+		}
+
 		ImGui::EndMenuBar();
 	}
 
