@@ -7,6 +7,7 @@ EditorInspector::EditorInspector() : Panel("Inspector")
 
 void EditorInspector::Init()
 {
+    NO_OP;
 }
 
 b8 EditorInspector::Begin()
@@ -142,11 +143,10 @@ void EditorInspector::DrawEntityComponents()
             const float previewMax = comboW - arrowAndPadding;
             std::string previewEll = MakeEllipsisText(fullPreview, previewMax);
 
-            // ---- FIXED POPUP SIZE ----
             // Width fixed to comboW. Height fixed to N items (scrollbar appears if more).
-            const int   visibleItems = 10; // <- how many rows you want visible before scrolling
+            const int   visibleItems = 10;
             const float rowH = ImGui::GetTextLineHeightWithSpacing();
-            const float searchH = ImGui::GetFrameHeight();   // InputText height
+            const float searchH = ImGui::GetFrameHeight();
             const float sepH = ImGui::GetStyle().ItemSpacing.y + 1.0f;
 
             const float popupH = (searchH + sepH) + visibleItems * rowH + ImGui::GetStyle().WindowPadding.y * 2.0f;

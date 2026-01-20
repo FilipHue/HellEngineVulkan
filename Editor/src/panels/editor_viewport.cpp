@@ -326,7 +326,6 @@ void EditorViewport::OnMouseButtonPressed()
 	{
 		i32 id = m_backend->ReadPixel<i32>(m_viewport_pick_texture, (u32)mouse_x, (u32)mouse_y, 0, 0) - 1;
 
-		HE_CLIENT_DEBUG("Picked ID: {}", id);
 		m_hierarchy_panel->SetSelectedGameObject({ (EntityId)(id), SceneManager::GetInstance()->GetActiveScene() });
 	}
 }

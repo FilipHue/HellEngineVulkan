@@ -96,7 +96,6 @@ private:
 	Pipeline m_editor_pipeline;
 	EditorHierarchy* m_hierarchy_panel;
 
-	// References
 	VulkanBackend* m_backend;
 	VulkanFrontend* m_frontend;
 };
