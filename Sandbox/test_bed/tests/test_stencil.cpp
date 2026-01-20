@@ -1,5 +1,6 @@
 #include "test_stencil.h"
 
+#if _TEST_BED_ENABLED
 TestStencil::TestStencil(ApplicationConfiguration* configuration) : TestBase(configuration)
 {
 	NO_OP;
@@ -332,3 +333,4 @@ void TestStencil::CreateDescriptorSets()
 		m_backend->WriteDescriptor(&m_object_descriptor_outline, descriptor_data_objects);
 	}
 }
+#endif //_TEST_BED_ENABLED

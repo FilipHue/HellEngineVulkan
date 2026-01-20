@@ -1,5 +1,6 @@
 #include "test_descriptor_sets.h"
 
+#if _TEST_BED_ENABLED
 TestDescriptorSet::TestDescriptorSet(ApplicationConfiguration* configuration) : TestBase(configuration)
 {
 	NO_OP;
@@ -359,3 +360,4 @@ void TestDescriptorSet::UpdateCubes(f32 dt)
 		}
 	}
 }
+#endif // _TEST_BED_ENABLED

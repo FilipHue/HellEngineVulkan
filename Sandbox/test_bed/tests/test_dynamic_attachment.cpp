@@ -1,5 +1,6 @@
 #include "test_dynamic_attachment.h"
 
+#if _TEST_BED_ENABLED
 TestDynamicAttachment::TestDynamicAttachment(ApplicationConfiguration* configuration) : TestBase(configuration)
 {
 	NO_OP;
@@ -450,3 +451,4 @@ void TestDynamicAttachment::CreateDescriptorSets()
 		m_backend->WriteDescriptor(&m_data_descriptor, descriptor_data_screen);
 	}
 }
+#endif // _TEST_BED_ENABLED

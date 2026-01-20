@@ -3,6 +3,7 @@
 // Internal
 #include "../base.h"
 
+#if _TEST_BED_ENABLED
 class TestSpecializationConstants : public TestBase
 {
 public:
@@ -76,3 +77,4 @@ private:
     Model* m_model;
     Texture2D m_texture;
 };
+#endif // _TEST_BED_ENABLED

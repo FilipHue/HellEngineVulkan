@@ -2,6 +2,7 @@
 
 #include "../base.h"
 
+#if _TEST_BED_ENABLED
 #define SIZE1 125
 #define SIZE2 1000
 #define SIZE3 10648
@@ -78,3 +79,4 @@ private:
     Buffer m_vertex_buffer;
     Buffer m_index_buffer;
 };
+#endif // _TEST_BED_ENABLED

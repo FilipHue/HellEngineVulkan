@@ -1,5 +1,6 @@
 #include "test_texture_cubemap_array.h"
 
+#if _TEST_BED_ENABLED
 TestTextureCubemapArray::TestTextureCubemapArray(ApplicationConfiguration* configuration) : TestBase(configuration)
 {
 	NO_OP;
@@ -294,3 +295,4 @@ void TestTextureCubemapArray::CreateDescriptorSets()
 	std::vector<DescriptorSetWriteData> writes = { ubo_write1, ubo_write2 };
 	m_backend->WriteDescriptor(&m_ubo_descriptor, writes);
 }
+#endif // _TEST_BED_ENABLED

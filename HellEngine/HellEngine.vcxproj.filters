@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="dependencies">
@@ -1785,6 +1785,9 @@
     <ClInclude Include="dependencies\STB\include\stb\stb_voxel_render.h">
       <Filter>dependencies\STB\include\stb</Filter>
     </ClInclude>
+    <ClInclude Include="src\hellengine\containers\recycling_vector.h">
+      <Filter>src\hellengine\containers</Filter>
+    </ClInclude>
     <ClInclude Include="src\hellengine\containers\tuple.h">
       <Filter>src\hellengine\containers</Filter>
     </ClInclude>
@@ -1857,7 +1860,7 @@
     <ClInclude Include="src\hellengine\ecs\component\components\id.h">
       <Filter>src\hellengine\ecs\component\components</Filter>
     </ClInclude>
-    <ClInclude Include="src\hellengine\ecs\component\components\relationship.h">
+    <ClInclude Include="src\hellengine\ecs\component\components\mesh_filter.h">
       <Filter>src\hellengine\ecs\component\components</Filter>
     </ClInclude>
     <ClInclude Include="src\hellengine\ecs\component\components\tag.h">
@@ -2001,6 +2004,9 @@
     <ClInclude Include="src\hellengine\math\vertex\vertex.h">
       <Filter>src\hellengine\math\vertex</Filter>
     </ClInclude>
+    <ClInclude Include="src\hellengine\platform\glfw\glfw_types.h">
+      <Filter>src\hellengine\platform\glfw</Filter>
+    </ClInclude>
     <ClInclude Include="src\hellengine\platform\glfw\glfw_window.h">
       <Filter>src\hellengine\platform\glfw</Filter>
     </ClInclude>
@@ -2040,9 +2046,8 @@
     <ClInclude Include="src\hepch.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="src\hellengine\ecs\component\components\mesh_filter.h" />
-    <ClInclude Include="src\hellengine\platform\glfw\glfw_types.h" />
-    <ClInclude Include="src\hellengine\containers\recycling_vector.h" />
+    <ClInclude Include="src\hellengine\math\hash.h" />
+    <ClInclude Include="src\hellengine\ecs\scene\scene_hierarchy.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dependencies\GLM\include\glm\detail\glm.cpp">
@@ -2231,6 +2236,7 @@
     <ClCompile Include="src\hepch.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\hellengine\ecs\scene\scene_hierarchy.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="dependencies\ASSIMP\include\assimp\config.h.in">

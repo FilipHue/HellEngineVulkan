@@ -1,8 +1,5 @@
 #include "editor.h"
 
-// External
-#include <imguizmo/ImGuizmo.h>
-
 Editor::Editor(ApplicationConfiguration* configuration) : Application(configuration)
 {
 	NO_OP;
@@ -26,12 +23,13 @@ void Editor::Init()
 
 	CreateResources();
 	CreatePipelines();
-	CreateAttachments();
 	CreateDescriptors();
 
 	CreateEditorPanels();
 
 	LoadResourcesForTest();
+
+	m_viewport_last_size = m_viewport_panel->GetSize();
 }
 
 void Editor::OnProcessUpdate(f32 delta_time)
@@ -41,9 +39,7 @@ void Editor::OnProcessUpdate(f32 delta_time)
 		m_editor_camera_controller.OnProcessUpdate(delta_time);
 		m_global_shader_data.view = m_editor_camera.GetView();
 		m_global_shader_data.camera_position = m_editor_camera.GetPosition();
-
-		m_grid_data.view = m_editor_camera.GetView();
-		m_grid_data.pos = m_editor_camera.GetPosition();
+		m_viewport_panel->UpdateGridCameraData();
 	}
 
 	if (SceneManager::GetInstance()->GetActiveScene())
@@ -51,45 +47,37 @@ void Editor::OnProcessUpdate(f32 delta_time)
 		SceneManager::GetInstance()->GetActiveScene()->UpdateTransforms();
 	}
 
-	MeshManager::GetInstance()->CleanUp();
 	MeshManager::GetInstance()->UpdatePerDrawData();
 }
 
 void Editor::OnRenderBegin()
 {
-	glm::uvec2& viewport_panel_size = m_viewport_panel->GetSize();
-	if (viewport_panel_size != m_viewport_size && viewport_panel_size.x && viewport_panel_size.y)
+	glm::uvec2& viewport_current_size = m_viewport_panel->GetSize();
+	if (viewport_current_size != m_viewport_last_size && viewport_current_size.x && viewport_current_size.y)
 	{
-		m_viewport_size = m_viewport_panel->GetSize();
-		m_editor_camera.SetAspect((f32)m_viewport_size.x, (f32)m_viewport_size.y);
+		m_viewport_last_size = m_viewport_panel->GetSize();
+		m_editor_camera.SetAspect((f32)m_viewport_last_size.x, (f32)m_viewport_last_size.y);
 		m_global_shader_data.proj = m_editor_camera.GetProjection();
-		m_grid_data.proj = m_editor_camera.GetProjection();
 
-		OnViewportResize();
+		m_viewport_panel->UpdateGridCameraData();
+		m_viewport_panel->OnViewportResize();
 	}
 
-	m_backend->UpdateUniformBuffer(m_grid_buffer, &m_grid_data, sizeof(GridCameraData));
-	m_backend->UpdateUniformBuffer(m_test_ubo, &m_global_shader_data, sizeof(GlobalShaderData));
+	m_backend->UpdateUniformBuffer(m_pbr_global_ubo, &m_global_shader_data, sizeof(GlobalShaderData));
+	m_viewport_panel->RenderBegin();
 }
 
 void Editor::OnRenderUpdate()
 {
-	m_backend->BeginDynamicRenderingWithAttachments(m_viewport_dri);
-
-	m_backend->SetViewport({ { 0.0f, 0.0f, (f32)m_viewport_size.x, (f32)m_viewport_size.y, 0.0f, 1.0f } });
-	m_backend->SetScissor({ { { 0, 0 }, { m_viewport_size.x, m_viewport_size.y } } });
-
-	m_backend->BindPipeline(m_test_pipeline);
-	m_backend->BindDescriptorSet(m_test_pipeline, m_test_descriptor);
+	m_backend->BindPipeline(m_pbr_pipeline);
+	m_backend->BindDescriptorSet(m_pbr_pipeline, m_pbr_global_descriptor);
 	
-	MeshManager::GetInstance()->DrawMeshes(m_test_pipeline);
-
-	m_backend->EndDynamicRenderingWithAttachments(m_viewport_dri);
+	MeshManager::GetInstance()->DrawMeshes(m_pbr_pipeline);
 }
 
 void Editor::OnRenderEnd()
 {
-	DrawGrid();
+	m_viewport_panel->RenderEnd();
 	DrawToSwapchain();
 }
 
@@ -116,9 +104,6 @@ void Editor::OnUIRender()
 		m_viewport_panel->End();
 	}
 
-	m_viewport_panel_bounds = m_viewport_panel->GetBounds();
-	m_viewport_panel_size = m_viewport_panel->GetSize();
-
 	MenuBar();
 
 	m_ui->EndDocking();
@@ -128,13 +113,12 @@ void Editor::Shutdown()
 {
 	m_backend->DestroyPipeline(m_editor_pipeline);
 
-	m_backend->DestroyPipeline(m_grid_pipeline);
-	m_backend->DestroyBuffer(m_grid_buffer);
-
-	m_backend->DestroyBuffer(m_test_ubo);
-	m_backend->DestroyPipeline(m_test_pipeline);
+	m_backend->DestroyBuffer(m_pbr_global_ubo);
+	m_backend->DestroyPipeline(m_pbr_pipeline);
 
 	delete m_hierarchy_panel;
+	delete m_inspector_panel;
+	delete m_viewport_panel;
 }
 
 b8 Editor::OnEventWindowClose(EventContext& event)
@@ -180,6 +164,25 @@ b8 Editor::OnEventKeyPressed(EventContext& event)
 		m_running = false;
 	}
 
+	if (m_inspector_panel->GetSelectedEntity() != NULL_ENTITY && m_viewport_panel->IsHovered() && !m_editor_camera_controller.IsActive())
+	{
+		if (event.data.key_event.key == KEY_W)
+		{
+			m_guizmo_operation = ImGuizmo::TRANSLATE;
+			m_guizmo_mode = ImGuizmo::WORLD;
+		}
+		else if (event.data.key_event.key == KEY_E)
+		{
+			m_guizmo_operation = ImGuizmo::ROTATE;
+			m_guizmo_mode = ImGuizmo::LOCAL;
+		}
+		else if (event.data.key_event.key == KEY_R)
+		{
+			m_guizmo_operation = ImGuizmo::SCALE;
+			m_guizmo_mode = ImGuizmo::LOCAL;
+		}
+	}
+
 	return false;
 }
 
@@ -204,26 +207,7 @@ b8 Editor::OnEventMouseButtonPressed(EventContext& event)
 
 	if (event.data.mouse_button_event.button == MOUSE_BUTTON_LEFT && m_viewport_panel->IsFocused() && m_viewport_panel->IsHovered() && SceneManager::GetInstance()->GetActiveScene())
 	{
-		auto mouse_pos = Input::GetMousePosition();
-		i32 mx = (i32)mouse_pos.GetFirst();
-		i32 my = (i32)mouse_pos.GetSecond();
-
-		mx -= (i32)m_viewport_panel_bounds.min.x;
-		my -= (i32)m_viewport_panel_bounds.min.y;
-
-		auto viewport_width = m_viewport_panel_bounds.max.x - m_viewport_panel_bounds.min.x;
-		auto viewport_height = m_viewport_panel_bounds.max.y - m_viewport_panel_bounds.min.y;
-
-		i32 mouse_x = mx;
-		i32 mouse_y = (i32)viewport_height - my;
-
-		if (mouse_x >= 0 && mouse_y >= 0 && mouse_x < (int)viewport_width && mouse_y < (int)viewport_height)
-		{
-			i32 id = m_backend->ReadPixel<i32>(m_viewport_pick_texture, (u32)mouse_x, (u32)mouse_y, 0, 0);
-
-			HE_CLIENT_DEBUG("Picked ID: {}", id);
-			m_inspector_panel->SetSelectedEntity({ (EntityId)(id), SceneManager::GetInstance()->GetActiveScene() });
-		}
+		m_viewport_panel->OnMouseButtonPressed();
 	}
 
 	return false;
@@ -257,7 +241,7 @@ void Editor::CreateResources()
 		{ DescriptorType_UniformBuffer, 100 },
 		{ DescriptorType_StorageBuffer, 100 },
 		{ DescriptorType_CombinedImageSampler, 100 }
-		}, 100);
+		}, 100000);
 
 	// Camera
 	m_editor_camera = MultiProjectionCamera();
@@ -269,12 +253,6 @@ void Editor::CreateResources()
 	m_editor_camera_controller.Init();
 	m_editor_camera_controller.SetCamera(&m_editor_camera);
 	m_editor_camera_controller.SetActive(false);
-
-	// Viewport
-	m_viewport_clear_color = { 0.0f, 0.0f, 0.0f, 1.0f };
-	m_viewport_clear_depth = { 1.0f, 0.0f };
-
-	m_viewport_size = { m_window->GetWidth(), m_window->GetHeight() };
 }
 
 void Editor::CreatePipelines()
@@ -315,244 +293,25 @@ void Editor::CreatePipelines()
 		m_editor_pipeline = m_backend->CreatePipeline(pipeline_info, shader_info);
 		m_backend->InitImGuiForDynamicRendering(m_editor_pipeline->GetRenderingCreateInfo());
 	}
-
-	// Viewport grid
-	{
-		PipelineCreateInfo pipeline_info = {};
-
-		pipeline_info.topology = PipelinePrimitiveTopology_TriangleList;
-		pipeline_info.polygon_mode = PipelinePolygonMode_Fill;
-		pipeline_info.cull_mode = PipelineCullMode_None;
-		pipeline_info.front_face = PipelineFrontFace_CounterClockwise;
-		pipeline_info.line_width = 1.0f;
-
-		pipeline_info.dynamic_states = { PipelineDynamicState_Viewport, PipelineDynamicState_Scissor };
-		pipeline_info.layout = {
-			{
-				{ { 0, DescriptorType_UniformBuffer, 1, ShaderStage_Vertex, DescriptorBindingFlags_None } },
-				DescriptorSetFlags_None
-			}
-		};
-		pipeline_info.vertex_binding_description = {};
-		pipeline_info.vertex_attribute_descriptions = {};
-
-		pipeline_info.push_constant_ranges = {};
-		pipeline_info.depth_stencil_info = { true, true, false };
-
-		pipeline_info.dynamic_rendering_info = {
-			true,
-			{ VK_FORMAT_B8G8R8A8_SRGB },
-			VK_FORMAT_D32_SFLOAT,
-		};
-
-		ShaderStageInfo shader_info = {};
-		shader_info.sources[ShaderType_Vertex] = CONCAT_PATHS(EDITOR_SHADER_PATH, "grid.vert");
-		shader_info.sources[ShaderType_Fragment] = CONCAT_PATHS(EDITOR_SHADER_PATH, "grid.frag");
-
-		pipeline_info.depth_stencil_info = { true, true };
-
-		m_grid_pipeline = m_backend->CreatePipeline(pipeline_info, shader_info);
-	}
-}
-
-void Editor::CreateAttachments()
-{
-	// Viewport
-	{
-		m_viewport_color_texture = m_frontend->CreateTexture2D(VIEWPORT_COLOR, VK_FORMAT_B8G8R8A8_SRGB, m_viewport_size.x, m_viewport_size.y);
-		m_viewport_pick_texture = m_frontend->CreateTexture2D(VIEWPORT_PICK, VK_FORMAT_R32_UINT, m_viewport_size.x, m_viewport_size.y);
-		m_viewport_depth_texture = m_frontend->CreateTexture2D(VIEWPORT_DEPTH, VK_FORMAT_D32_SFLOAT, m_viewport_size.x, m_viewport_size.y);
-
-		m_viewport_color_attachment = {
-			m_viewport_color_texture->GetHandle(),
-			m_viewport_color_texture->GetImageView(),
-			m_viewport_color_texture->GetFormat(),
-			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-			VK_ATTACHMENT_LOAD_OP_CLEAR,
-			VK_ATTACHMENT_STORE_OP_STORE,
-			{ { m_viewport_clear_color.r, m_viewport_clear_color.g, m_viewport_clear_color.b, m_viewport_clear_color.a } }
-		};
-
-		m_viewport_pick_attachment = {
-			m_viewport_pick_texture->GetHandle(),
-			m_viewport_pick_texture->GetImageView(),
-			m_viewport_pick_texture->GetFormat(),
-			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-			VK_ATTACHMENT_LOAD_OP_CLEAR,
-			VK_ATTACHMENT_STORE_OP_STORE,
-			{ { 0.0f, 0.0f, 0.0f, 0.0f } }
-		};
-
-		m_viewport_depth_attachment = {
-			m_viewport_depth_texture->GetHandle(),
-			m_viewport_depth_texture->GetImageView(),
-			m_viewport_depth_texture->GetFormat(),
-			VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
-			VK_ATTACHMENT_LOAD_OP_CLEAR,
-			VK_ATTACHMENT_STORE_OP_STORE,
-			{ { m_viewport_clear_depth.r, m_viewport_clear_depth.g } }
-		};
-
-		m_viewport_dri = {
-			{ m_viewport_color_attachment, m_viewport_pick_attachment },
-			m_viewport_depth_attachment,
-			0,
-			{ m_viewport_size.x, m_viewport_size.y }
-		};
-	}
-
-	// Viewport grid
-	{
-		m_grid_color_attachment = {
-			m_viewport_color_texture->GetHandle(),
-			m_viewport_color_texture->GetImageView(),
-			m_viewport_color_texture->GetFormat(),
-			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-			VK_ATTACHMENT_LOAD_OP_LOAD,
-			VK_ATTACHMENT_STORE_OP_STORE,
-			{ { m_viewport_clear_color.r, m_viewport_clear_color.g, m_viewport_clear_color.b, m_viewport_clear_color.a } }
-		};
-
-		m_grid_depth_attachment = {
-			m_viewport_depth_texture->GetHandle(),
-			m_viewport_depth_texture->GetImageView(),
-			m_viewport_depth_texture->GetFormat(),
-			VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
-			VK_ATTACHMENT_LOAD_OP_LOAD,
-			VK_ATTACHMENT_STORE_OP_DONT_CARE,
-			{ { m_viewport_clear_depth.r, m_viewport_clear_depth.g } }
-		};
-
-		m_grid_dri = {
-			{ m_grid_color_attachment },
-			m_grid_depth_attachment,
-			0,
-			{ m_viewport_size.x, m_viewport_size.y }
-		};
-	}
 }
 
 void Editor::CreateDescriptors()
 {
-	// Viewport
-	{
-		m_viewport_descriptor = m_backend->CreateDescriptorSet(m_editor_pipeline, 0);
-
-		DescriptorSetWriteData editor_write_data{};
-		editor_write_data.type = DescriptorType_CombinedImageSampler;
-		editor_write_data.binding = 0;
-
-		editor_write_data.data.image.image_views = new VkImageView[1];
-		editor_write_data.data.image.samplers = new VkSampler[1];
-		editor_write_data.data.image.image_views[0] = m_viewport_color_texture->GetImageView();
-		editor_write_data.data.image.samplers[0] = m_viewport_color_texture->GetSampler();
-
-		std::vector<DescriptorSetWriteData> write_data = { editor_write_data };
-		m_backend->WriteDescriptor(&m_viewport_descriptor, write_data);
-	}
-
-	// Viewport grid
-	{
-		m_grid_data.proj = m_editor_camera.GetProjection();
-		m_grid_data.view = m_editor_camera.GetView();
-		m_grid_data.pos = m_editor_camera.GetPosition();
-
-		m_grid_buffer = m_backend->CreateUniformBufferMappedPersistent(sizeof(GridCameraData), 1);
-		m_grid_descriptor = m_backend->CreateDescriptorSet(m_grid_pipeline, 0);
-
-		DescriptorSetWriteData data{};
-
-		data.type = DescriptorType_UniformBuffer;
-		data.binding = 0;
-		data.data.buffer.buffers = new VkBuffer(m_grid_buffer->GetHandle());
-		data.data.buffer.offsets = new VkDeviceSize(0);
-		data.data.buffer.ranges = new VkDeviceSize(sizeof(GridCameraData));
-
-		std::vector<DescriptorSetWriteData> write_data = { data };
-		m_backend->WriteDescriptor(&m_grid_descriptor, write_data);
-	}
 }
 
 void Editor::CreateEditorPanels()
 {
-	m_viewport_panel = new Viewport("Viewport");
-	m_viewport_panel->SetHandle(m_viewport_descriptor->GetHandle());
-
 	m_inspector_panel = new EditorInspector();
 	m_inspector_panel->Init();
 
 	m_hierarchy_panel = new EditorHierarchy();
 	m_hierarchy_panel->Init(m_inspector_panel);
-}
 
-void Editor::OnViewportResize()
-{
-	m_frontend->DestroyTexture2D(VIEWPORT_COLOR);
-	m_frontend->DestroyTexture2D(VIEWPORT_PICK);
-	m_frontend->DestroyTexture2D(VIEWPORT_DEPTH);
-
-	m_viewport_color_texture = m_frontend->CreateTexture2D(VIEWPORT_COLOR, VK_FORMAT_B8G8R8A8_SRGB, m_viewport_size.x, m_viewport_size.y);
-	m_viewport_pick_texture = m_frontend->CreateTexture2D(VIEWPORT_PICK, VK_FORMAT_R32_UINT, m_viewport_size.x, m_viewport_size.y);
-	m_viewport_depth_texture = m_frontend->CreateTexture2D(VIEWPORT_DEPTH, VK_FORMAT_D32_SFLOAT, m_viewport_size.x, m_viewport_size.y);
-
-	m_viewport_color_attachment.image = m_viewport_color_texture->GetHandle();
-	m_viewport_color_attachment.image_view = m_viewport_color_texture->GetImageView();
-	m_viewport_color_attachment.format = m_viewport_color_texture->GetFormat();
-
-	m_viewport_pick_attachment.image = m_viewport_pick_texture->GetHandle();
-	m_viewport_pick_attachment.image_view = m_viewport_pick_texture->GetImageView();
-	m_viewport_pick_attachment.format = m_viewport_pick_texture->GetFormat();
-
-	m_viewport_depth_attachment.image = m_viewport_depth_texture->GetHandle();
-	m_viewport_depth_attachment.image_view = m_viewport_depth_texture->GetImageView();
-	m_viewport_depth_attachment.format = m_viewport_depth_texture->GetFormat();
-
-	m_grid_color_attachment.image = m_viewport_color_texture->GetHandle();
-	m_grid_color_attachment.image_view = m_viewport_color_texture->GetImageView();
-	m_grid_color_attachment.format = m_viewport_color_texture->GetFormat();
-
-	m_grid_depth_attachment.image = m_viewport_depth_texture->GetHandle();
-	m_grid_depth_attachment.image_view = m_viewport_depth_texture->GetImageView();
-	m_grid_depth_attachment.format = m_viewport_depth_texture->GetFormat();
-
-	m_viewport_dri = {
-		{ m_viewport_color_attachment, m_viewport_pick_attachment },
-		m_viewport_depth_attachment,
-		0,
-		{ m_viewport_size.x, m_viewport_size.y }
-	};
-
-	m_grid_dri = {
-		{ m_grid_color_attachment },
-		m_grid_depth_attachment,
-		0,
-		{ m_viewport_size.x, m_viewport_size.y }
-	};
-
-	DescriptorSetWriteData editor_write_data{};
-	editor_write_data.type = DescriptorType_CombinedImageSampler;
-	editor_write_data.binding = 0;
-
-	editor_write_data.data.image.image_views = new VkImageView(m_viewport_color_texture->GetImageView());
-	editor_write_data.data.image.samplers = new VkSampler(m_viewport_color_texture->GetSampler());
-
-	std::vector<DescriptorSetWriteData> data = { editor_write_data };
-	m_backend->WriteDescriptor(&m_viewport_descriptor, data);
-}
-
-void Editor::DrawGrid()
-{
-	m_backend->BeginDynamicRenderingWithAttachments(m_grid_dri);
-
-	m_backend->SetViewport({ { 0.0f, 0.0f, (f32)m_viewport_size.x, (f32)m_viewport_size.y, 0.0f, 1.0f } });
-	m_backend->SetScissor({ { { 0, 0 }, { m_viewport_size.x, m_viewport_size.y } } });
-
-	m_backend->BindPipeline(m_grid_pipeline);
-	m_backend->BindDescriptorSet(m_grid_pipeline, m_grid_descriptor);
-
-	m_backend->Draw(6, 1, 0, 0);
-
-	m_backend->EndDynamicRenderingWithAttachments(m_grid_dri);
+	m_viewport_panel = new EditorViewport();
+	m_viewport_panel->Init(m_backend, m_frontend, m_hierarchy_panel);
+	m_viewport_panel->SetSize(m_window->GetWidth(), m_window->GetHeight());
+	m_viewport_panel->SetViewportEditorReferences(m_editor_pipeline, &m_editor_camera);
+	m_viewport_panel->CreateViewportResources();
 }
 
 void Editor::DrawToSwapchain()
@@ -618,7 +377,7 @@ void Editor::MenuBar()
 
 				File file = FileManager::OpenFile("Model Files (*.gltf)\0*.gltf\0Model Files (*.glb)\0*.glb\0All Files (*.*)\0*.*\0");
 				AssetManager::LoadModel(file);
-				MeshManager::GetInstance()->UploadToGpu(m_test_pipeline, 1, TextureType_Diffuse | TextureType_Ambient | TextureType_Specular);
+				MeshManager::GetInstance()->UploadToGpu(m_pbr_pipeline, 1, TextureType_Diffuse | TextureType_Ambient | TextureType_Specular);
 			}
 
 			ImGui::PopStyleVar();
@@ -675,7 +434,30 @@ void Editor::ShowGuizmo()
 	proj[1][1] *= -1.0f; // Invert Y axis for ImGuizmo
 
 	auto& tc = selected.GetComponent<TransformComponent>();
-	glm::mat4 model = tc.world_transform;
+
+	glm::mat4 parentWorld(1.0f);
+	Scene* scene = SceneManager::GetInstance()->GetActiveScene();
+	if (scene)
+	{
+		UUID selectedId = selected.GetComponent<IDComponent>().id;
+		UUID parentId = scene->GetHierarchy().GetParent(selectedId);
+
+		if ((u64)parentId != (u64)INVALID_ID)
+		{
+			Entity parent = scene->GetEntity(parentId);
+			if (parent)
+			{
+				parentWorld = parent.GetComponent<TransformComponent>().world_transform;
+			}
+		}
+	}
+
+	glm::mat4 local =
+		glm::translate(glm::mat4(1.0f), tc.local_position) *
+		glm::mat4_cast(glm::quat(tc.local_rotation)) *
+		glm::scale(glm::mat4(1.0f), tc.local_scale);
+
+	glm::mat4 model = parentWorld * local;
 
 	bool  snapOn = Input::IsKeyPressed(KEY_LEFT_CONTROL);
 	float snap[3]{ 0.5f, 0.5f, 0.5f };
@@ -683,27 +465,36 @@ void Editor::ShowGuizmo()
 	ImGuizmo::SetOrthographic(false);
 	ImGuizmo::Manipulate(glm::value_ptr(view),
 		glm::value_ptr(proj),
-		ImGuizmo::TRANSLATE, ImGuizmo::LOCAL,
+		m_guizmo_operation, m_guizmo_mode,
 		glm::value_ptr(model),
 		nullptr,
 		snapOn ? snap : nullptr);
 
 	if (ImGuizmo::IsUsing())
 	{
-		glm::mat4 parentWorld(1.0f);
-		auto& rel = selected.GetComponent<RelationshipComponent>();
-		if (rel.parent != entt::null)
-			parentWorld = SceneManager::GetInstance()->GetActiveScene()->GetRegistry().get<TransformComponent>(rel.parent).world_transform;
+		m_viewport_panel->CanPick(false);
 
 		glm::mat4 newLocal = glm::inverse(parentWorld) * model;
 
-		glm::vec3 t, s, skew;  glm::quat r;  glm::vec4 persp;
+		glm::vec3 t, s, skew;
+		glm::vec4 persp;
+		glm::quat r;
 		glm::decompose(newLocal, s, r, t, skew, persp);
 
+		// Stabilize quaternion sign to reduce flip jitter
+		static glm::quat lastQ = glm::quat(1, 0, 0, 0);
+		if (glm::dot(lastQ, r) < 0.0f) r = -r;
+		lastQ = r;
+
 		tc.local_position = t;
-		tc.local_rotation = glm::eulerAngles(r);
+		tc.local_rotation = glm::eulerAngles(r); // radians
 		tc.local_scale = s;
+
 		tc.is_dirty = true;
+	}
+	else
+	{
+		m_viewport_panel->CanPick(true);
 	}
 }
 
@@ -721,21 +512,21 @@ void Editor::LoadResourcesForTest()
 	pipeline_info.layout = {
 		{
 			{ 
-				{ 0, DescriptorType_UniformBuffer, 1, ShaderStage_Vertex | ShaderStage_Fragment, DescriptorBindingFlags_None }
+				{ 0, DescriptorType_UniformBuffer, 1, ShaderStage_Vertex | ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind }
 			},
-			DescriptorSetFlags_None
+			DescriptorSetFlags_UpdateAfterBindPool
 		},
 		{
 			{
-				{ 0, DescriptorType_StorageBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_None },
+				{ 0, DescriptorType_StorageBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
 			},
-			DescriptorSetFlags_None
+			DescriptorSetFlags_UpdateAfterBindPool
 		},
 		{
 			{
-				{ 0, DescriptorType_StorageBuffer, 1, ShaderStage_Vertex | ShaderStage_Fragment, DescriptorBindingFlags_None },
+				{ 0, DescriptorType_StorageBuffer, 1, ShaderStage_Vertex | ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
 			},
-			DescriptorSetFlags_None
+			DescriptorSetFlags_UpdateAfterBindPool
 		},
 		{
 			{
@@ -749,10 +540,6 @@ void Editor::LoadResourcesForTest()
 
 	pipeline_info.depth_stencil_info = { true, true };
 
-	//pipeline_info.push_constant_ranges = {
-	//	{ ShaderStage_Vertex | ShaderStage_Fragment, 0, sizeof(glm::mat4) + 2 * sizeof(u32) }
-	//};
-
 	pipeline_info.dynamic_rendering_info = {
 		false,
 		{ VK_FORMAT_B8G8R8A8_SRGB, VK_FORMAT_R32_UINT },
@@ -763,26 +550,26 @@ void Editor::LoadResourcesForTest()
 	shader_info.sources[ShaderType_Vertex] = CONCAT_PATHS(EDITOR_SHADER_PATH, "test.vert");
 	shader_info.sources[ShaderType_Fragment] = CONCAT_PATHS(EDITOR_SHADER_PATH, "test.frag");
 
-	m_test_pipeline = m_backend->CreatePipeline(pipeline_info, shader_info);
+	m_pbr_pipeline = m_backend->CreatePipeline(pipeline_info, shader_info);
 
-	m_test_descriptor = m_backend->CreateDescriptorSet(m_test_pipeline, 0);
+	m_pbr_global_descriptor = m_backend->CreateDescriptorSet(m_pbr_pipeline, 0);
 
 	m_global_shader_data = {};
 	m_global_shader_data.proj = m_editor_camera.GetProjection();
 	m_global_shader_data.view = m_editor_camera.GetView();
 	m_global_shader_data.camera_position = m_editor_camera.GetPosition();
 
-	m_test_ubo = m_backend->CreateUniformBufferMappedPersistent(sizeof(GlobalShaderData), 1);
+	m_pbr_global_ubo = m_backend->CreateUniformBufferMappedPersistent(sizeof(GlobalShaderData), 1);
 
 	DescriptorSetWriteData data1{};
 	data1.type = DescriptorType_UniformBuffer;
 	data1.binding = 0;
-	data1.data.buffer.buffers = new VkBuffer(m_test_ubo->GetHandle());
+	data1.data.buffer.buffers = new VkBuffer(m_pbr_global_ubo->GetHandle());
 	data1.data.buffer.offsets = new VkDeviceSize(0);
 	data1.data.buffer.ranges = new VkDeviceSize(sizeof(GlobalShaderData));
 
 	std::vector<DescriptorSetWriteData> write_data = { data1 };
-	m_backend->WriteDescriptor(&m_test_descriptor, write_data);
+	m_backend->WriteDescriptor(&m_pbr_global_descriptor, write_data);
 
-	MeshManager::GetInstance()->CreateMeshResource(m_test_pipeline, 1);
+	MeshManager::GetInstance()->CreateDescriptors(m_pbr_pipeline, 1);
 }

@@ -7,7 +7,7 @@ int main(int argc, char** argv)
 
 	std::vector<Application*> apps{
 		new SandboxApplication(&config),			// 0
-
+#if _TEST_BED_ENABLE
 		new TestCpuParticles(&config),				// 1
 		new TestDescriptorSet(&config),				// 2
 		new TestDynamicAttachment(&config),			// 3
@@ -25,11 +25,12 @@ int main(int argc, char** argv)
 		new TestTextureCubemap(&config),			// 15
 		new TestTextureCubemapArray(&config),		// 16
 		new TestTriangle(&config)					// 17
+#endif // _TEST_BED_ENABLE
 	};
 
 	Engine::GetInstance().Init();
 
-	Engine::GetInstance().Run(*apps[7]);
+	Engine::GetInstance().Run(*apps[0]);
 
 	Engine::GetInstance().Shutdown();
 }

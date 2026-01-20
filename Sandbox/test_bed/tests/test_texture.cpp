@@ -1,5 +1,6 @@
 #include "test_texture.h"
 
+#if _TEST_BED_ENABLED
 TestTexture::TestTexture(ApplicationConfiguration* configuration) : TestBase(configuration)
 {
 	NO_OP;
@@ -343,3 +344,4 @@ void TestTexture::CreateDescriptorSets()
 		m_backend->WriteDescriptor(&m_texture_descriptor, descriptor_data_texture);
 	}
 }
+#endif // _TEST_BED_ENABLED

@@ -3,6 +3,7 @@
 // Internal
 #include "../base.h"
 
+#if _TEST_BED_ENABLED
 class TestTexture : public TestBase
 {
 public:
@@ -75,3 +76,4 @@ private:
     std::vector<VertexFormatBase> m_vertices;
     std::vector<u32> m_indices;
 };
+#endif //_TEST_BED_ENABLED

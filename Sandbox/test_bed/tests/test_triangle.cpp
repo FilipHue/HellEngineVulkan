@@ -1,5 +1,6 @@
 #include "test_triangle.h"
 
+#if _TEST_BED_ENABLED
 TestTriangle::TestTriangle(ApplicationConfiguration* configuration) : TestBase(configuration)
 {
 	NO_OP;
@@ -239,3 +240,4 @@ void TestTriangle::CreateDescriptorSets()
 		m_backend->WriteDescriptor(&m_triangle_descriptor, descriptor_data_objects);
 	}
 }
+#endif // _TEST_BED_ENABLED

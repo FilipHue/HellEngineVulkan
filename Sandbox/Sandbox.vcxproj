@@ -41,15 +41,15 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>..\bin\Debug-windows-x86_64\Sandbox\</OutDir>
-    <IntDir>..\bin-int\Debug-windows-x86_64\Sandbox\</IntDir>
+    <OutDir>$(ProjectDir)..\bin\Debug-windows-x86_64\Sandbox\</OutDir>
+    <IntDir>$(ProjectDir)..\bin-int\Debug-windows-x86_64\Sandbox\</IntDir>
     <TargetName>Sandbox</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>..\bin\Release-windows-x86_64\Sandbox\</OutDir>
-    <IntDir>..\bin-int\Release-windows-x86_64\Sandbox\</IntDir>
+    <OutDir>$(ProjectDir)..\bin\Release-windows-x86_64\Sandbox\</OutDir>
+    <IntDir>$(ProjectDir)..\bin-int\Release-windows-x86_64\Sandbox\</IntDir>
     <TargetName>Sandbox</TargetName>
     <TargetExt>.exe</TargetExt>
   </PropertyGroup>
@@ -58,7 +58,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>HE_PLATFORM_WINDOWS;HE_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\HellEngine\src;..\HellEngine\dependencies\SPDLOG\include;..\HellEngine\dependencies\GLFW\include;..\HellEngine\dependencies\GLM\include;..\HellEngine\dependencies\STB\include;..\HellEngine\dependencies\ASSIMP\include;..\HellEngine\dependencies\KTX\include;..\HellEngine\dependencies\IMGUI;..\HellEngine\dependencies\IMGUIZMO\include;..\HellEngine\dependencies\ENTT\include;C:\VulkanSDK\1.3.290.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\HellEngine\src;..\HellEngine\dependencies\SPDLOG\include;..\HellEngine\dependencies\GLFW\include;..\HellEngine\dependencies\GLM\include;..\HellEngine\dependencies\STB\include;..\HellEngine\dependencies\ASSIMP\include;..\HellEngine\dependencies\KTX\include;..\HellEngine\dependencies\IMGUI;..\HellEngine\dependencies\IMGUIZMO\include;..\HellEngine\dependencies\ENTT\include;C:\VulkanSDK\1.4.328.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -78,7 +78,7 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>HE_PLATFORM_WINDOWS;HE_RELEASE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\HellEngine\src;..\HellEngine\dependencies\SPDLOG\include;..\HellEngine\dependencies\GLFW\include;..\HellEngine\dependencies\GLM\include;..\HellEngine\dependencies\STB\include;..\HellEngine\dependencies\ASSIMP\include;..\HellEngine\dependencies\KTX\include;..\HellEngine\dependencies\IMGUI;..\HellEngine\dependencies\IMGUIZMO\include;..\HellEngine\dependencies\ENTT\include;C:\VulkanSDK\1.3.290.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\HellEngine\src;..\HellEngine\dependencies\SPDLOG\include;..\HellEngine\dependencies\GLFW\include;..\HellEngine\dependencies\GLM\include;..\HellEngine\dependencies\STB\include;..\HellEngine\dependencies\ASSIMP\include;..\HellEngine\dependencies\KTX\include;..\HellEngine\dependencies\IMGUI;..\HellEngine\dependencies\IMGUIZMO\include;..\HellEngine\dependencies\ENTT\include;C:\VulkanSDK\1.4.328.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>

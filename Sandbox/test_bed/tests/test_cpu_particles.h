@@ -2,6 +2,7 @@
 
 #include "../base.h"
 
+#if _TEST_BED_ENABLED
 #define PARTICLE_COUNT 512
 
 #define FLAME_RADIUS 8.0f
@@ -102,3 +103,4 @@ private:
     // Models
     Model* m_model_fireplace;
 };
+#endif // _TEST_BED_ENABLED

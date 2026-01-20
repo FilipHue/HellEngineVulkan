@@ -5,9 +5,9 @@
 // STL
 #include <random>
 
-#define SHADER_PATH		"test_bed/assets/shaders"
-#define TEXTURE_PATH	"test_bed/assets/textures"
-#define MODEL_PATH		"test_bed/assets/models"
+//#define SHADER_PATH		"test_bed/assets/shaders"
+//#define TEXTURE_PATH	"test_bed/assets/textures"
+//#define MODEL_PATH		"test_bed/assets/models"
 
 using namespace hellengine;
 using namespace core;

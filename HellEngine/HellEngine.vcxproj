@@ -40,14 +40,14 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>..\bin\Debug-windows-x86_64\HellEngine\</OutDir>
-    <IntDir>..\bin-int\Debug-windows-x86_64\HellEngine\</IntDir>
+    <OutDir>$(ProjectDir)..\bin\Debug-windows-x86_64\HellEngine\</OutDir>
+    <IntDir>$(ProjectDir)..\bin-int\Debug-windows-x86_64\HellEngine\</IntDir>
     <TargetName>HellEngine</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>..\bin\Release-windows-x86_64\HellEngine\</OutDir>
-    <IntDir>..\bin-int\Release-windows-x86_64\HellEngine\</IntDir>
+    <OutDir>$(ProjectDir)..\bin\Release-windows-x86_64\HellEngine\</OutDir>
+    <IntDir>$(ProjectDir)..\bin-int\Release-windows-x86_64\HellEngine\</IntDir>
     <TargetName>HellEngine</TargetName>
     <TargetExt>.lib</TargetExt>
   </PropertyGroup>
@@ -57,7 +57,7 @@
       <PrecompiledHeaderFile>hepch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>HE_PLATFORM_WINDOWS;HE_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;dependencies\SPDLOG\include;..;dependencies\GLFW\include;dependencies\GLM\include;dependencies\STB\include;dependencies\ASSIMP\include;dependencies\KTX\include;dependencies\IMGUI;dependencies\IMGUIZMO\include;dependencies\ENTT\include;C:\VulkanSDK\1.3.290.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;dependencies\SPDLOG\include;..;dependencies\GLFW\include;dependencies\GLM\include;dependencies\STB\include;dependencies\ASSIMP\include;dependencies\KTX\include;dependencies\IMGUI;dependencies\IMGUIZMO\include;dependencies\ENTT\include;C:\VulkanSDK\1.4.328.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -72,8 +72,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalDependencies>dependencies\SPDLOG\spdlogd.lib;dependencies\GLFW\lib-vc2022\glfw3.lib;dependencies\ASSIMP\lib\assimp-vc143-mtd.lib;dependencies\KTX\lib\ktx.lib;C:\VulkanSDK\1.3.290.0\Lib\vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>dependencies\SPDLOG;dependencies\GLFW\lib-vc2022;dependencies\ASSIMP\lib;dependencies\KTX\lib;C:\VulkanSDK\1.3.290.0\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>dependencies\SPDLOG\spdlogd.lib;dependencies\GLFW\lib-vc2022\glfw3.lib;dependencies\ASSIMP\lib\assimp-vc143-mtd.lib;dependencies\KTX\lib\ktx.lib;C:\VulkanSDK\1.4.328.1\Lib\vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>dependencies\SPDLOG;dependencies\GLFW\lib-vc2022;dependencies\ASSIMP\lib;dependencies\KTX\lib;C:\VulkanSDK\1.4.328.1\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -82,7 +82,7 @@
       <PrecompiledHeaderFile>hepch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>HE_PLATFORM_WINDOWS;HE_RELEASE;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;dependencies\SPDLOG\include;..;dependencies\GLFW\include;dependencies\GLM\include;dependencies\STB\include;dependencies\ASSIMP\include;dependencies\KTX\include;dependencies\IMGUI;dependencies\IMGUIZMO\include;dependencies\ENTT\include;C:\VulkanSDK\1.3.290.0\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;dependencies\SPDLOG\include;..;dependencies\GLFW\include;dependencies\GLM\include;dependencies\STB\include;dependencies\ASSIMP\include;dependencies\KTX\include;dependencies\IMGUI;dependencies\IMGUIZMO\include;dependencies\ENTT\include;C:\VulkanSDK\1.4.328.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -100,8 +100,8 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <Lib>
-      <AdditionalDependencies>dependencies\SPDLOG\spdlogd.lib;dependencies\GLFW\lib-vc2022\glfw3.lib;dependencies\ASSIMP\lib\assimp-vc143-mtd.lib;dependencies\KTX\lib\ktx.lib;C:\VulkanSDK\1.3.290.0\Lib\vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>dependencies\SPDLOG;dependencies\GLFW\lib-vc2022;dependencies\ASSIMP\lib;dependencies\KTX\lib;C:\VulkanSDK\1.3.290.0\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>dependencies\SPDLOG\spdlogd.lib;dependencies\GLFW\lib-vc2022\glfw3.lib;dependencies\ASSIMP\lib\assimp-vc143-mtd.lib;dependencies\KTX\lib\ktx.lib;C:\VulkanSDK\1.4.328.1\Lib\vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>dependencies\SPDLOG;dependencies\GLFW\lib-vc2022;dependencies\ASSIMP\lib;dependencies\KTX\lib;C:\VulkanSDK\1.4.328.1\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -647,11 +647,11 @@
     <ClInclude Include="src\hellengine\ecs\component\components.h" />
     <ClInclude Include="src\hellengine\ecs\component\components\id.h" />
     <ClInclude Include="src\hellengine\ecs\component\components\mesh_filter.h" />
-    <ClInclude Include="src\hellengine\ecs\component\components\relationship.h" />
     <ClInclude Include="src\hellengine\ecs\component\components\tag.h" />
     <ClInclude Include="src\hellengine\ecs\component\components\transform.h" />
     <ClInclude Include="src\hellengine\ecs\entity\entity.h" />
     <ClInclude Include="src\hellengine\ecs\scene\scene.h" />
+    <ClInclude Include="src\hellengine\ecs\scene\scene_hierarchy.h" />
     <ClInclude Include="src\hellengine\ecs\scene\scene_manager.h" />
     <ClInclude Include="src\hellengine\ecs\shared.h" />
     <ClInclude Include="src\hellengine\graphics\backend\vulkan_backend.h" />
@@ -690,6 +690,7 @@
     <ClInclude Include="src\hellengine\hellengine.h" />
     <ClInclude Include="src\hellengine\math\algebra.h" />
     <ClInclude Include="src\hellengine\math\core.h" />
+    <ClInclude Include="src\hellengine\math\hash.h" />
     <ClInclude Include="src\hellengine\math\noise\fractal_noise.h" />
     <ClInclude Include="src\hellengine\math\noise\perlin_noise.h" />
     <ClInclude Include="src\hellengine\math\random\random.h" />
@@ -763,6 +764,7 @@
     <ClCompile Include="src\hellengine\ecs\entity\entity.cpp" />
     <ClCompile Include="src\hellengine\ecs\scene\scene.cpp" />
     <ClCompile Include="src\hellengine\ecs\scene\scene_manager.cpp" />
+    <ClCompile Include="src\hellengine\ecs\scene\scene_hierarchy.cpp" />
     <ClCompile Include="src\hellengine\graphics\backend\vulkan_backend.cpp" />
     <ClCompile Include="src\hellengine\graphics\camera\multiprojection\multiprojection.cpp" />
     <ClCompile Include="src\hellengine\graphics\camera\multiprojection\multiprojection_controller.cpp" />

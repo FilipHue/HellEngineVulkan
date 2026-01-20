@@ -23,6 +23,7 @@ public:
 	void Draw() override;
 	void End() override;
 
+	Entity GetSelectedEntity();
 	void SetSelectedEntity(Entity entity);
 
 private:

@@ -35,8 +35,19 @@ void EditorInspector::End()
     ImGui::End();
 }
 
+Entity EditorInspector::GetSelectedEntity()
+{
+	return m_selected_entity;
+}
+
 void EditorInspector::SetSelectedEntity(Entity entity)
 {
+	if (SceneManager::GetInstance()->GetActiveScene()->GetRegistry().valid(entity.GetHandle()) == false)
+    {
+        m_selected_entity = NULL_ENTITY;
+        return;
+    }
+
 	m_selected_entity = entity;
 }
 
@@ -85,11 +96,128 @@ void EditorInspector::DrawEntityComponents()
 			c.is_dirty = true;
 		});
 
-	DrawComponent<MeshFilterComponent>("Mesh Filter", m_selected_entity,
-		[](MeshFilterComponent& c)
-		{
-			ImGui::Text("Mesh ID: %s", c.mesh_id.c_str());
-		});
+    DrawComponent<MeshFilterComponent>("Mesh Filter", m_selected_entity,
+        [&](MeshFilterComponent& c)
+        {
+            MeshManager& mm = *MeshManager::GetInstance();
+            IDComponent& idComp = m_selected_entity.GetComponent<IDComponent>();
+
+            const Mesh* current = c.mesh;
+            const std::string fullPreview =
+                (current && !current->GetName().empty()) ? current->GetName() : "None";
+
+            static char search[128] = "";
+
+            auto MakeEllipsisText = [&](const std::string& text, float maxTextWidth) -> std::string
+                {
+                    if (maxTextWidth <= 0.0f) return "...";
+                    if (ImGui::CalcTextSize(text.c_str()).x <= maxTextWidth) return text;
+
+                    const char* ell = "...";
+                    const float ellW = ImGui::CalcTextSize(ell).x;
+
+                    std::string out = text;
+                    while (!out.empty() && (ImGui::CalcTextSize(out.c_str()).x + ellW) > maxTextWidth)
+                        out.pop_back();
+
+                    return out.empty() ? std::string("...") : (out + "...");
+                };
+
+            auto matches = [&](const std::string& name) -> bool {
+                if (search[0] == '\0') return true;
+                std::string a = name, b = search;
+                std::transform(a.begin(), a.end(), a.begin(), ::tolower);
+                std::transform(b.begin(), b.end(), b.begin(), ::tolower);
+                return a.find(b) != std::string::npos;
+                };
+
+            ImGui::PushItemWidth(-FLT_MIN);
+
+            // Combo width (available content region)
+            const float comboW = ImGui::GetContentRegionAvail().x;
+
+            // Ellipsis for preview
+            const float arrowAndPadding =
+                ImGui::GetFrameHeight() + ImGui::GetStyle().FramePadding.x * 4.0f;
+            const float previewMax = comboW - arrowAndPadding;
+            std::string previewEll = MakeEllipsisText(fullPreview, previewMax);
+
+            // ---- FIXED POPUP SIZE ----
+            // Width fixed to comboW. Height fixed to N items (scrollbar appears if more).
+            const int   visibleItems = 10; // <- how many rows you want visible before scrolling
+            const float rowH = ImGui::GetTextLineHeightWithSpacing();
+            const float searchH = ImGui::GetFrameHeight();   // InputText height
+            const float sepH = ImGui::GetStyle().ItemSpacing.y + 1.0f;
+
+            const float popupH = (searchH + sepH) + visibleItems * rowH + ImGui::GetStyle().WindowPadding.y * 2.0f;
+
+            ImGui::SetNextWindowSizeConstraints(
+                ImVec2(comboW, popupH),
+                ImVec2(comboW, popupH)
+            );
+
+            if (ImGui::BeginCombo("##Mesh", previewEll.c_str(), ImGuiComboFlags_HeightRegular))
+            {
+                // Search box
+                ImGui::PushItemWidth(-FLT_MIN);
+                ImGui::InputTextWithHint("##mesh_search", "Search...", search, IM_ARRAYSIZE(search));
+                ImGui::PopItemWidth();
+                ImGui::Separator();
+
+                // Items: full-width stable rows + ellipsis + tooltip
+                const float itemW = ImGui::GetContentRegionAvail().x;
+                const float maxLabelW = itemW - ImGui::GetStyle().FramePadding.x * 2.0f;
+
+                for (Mesh* mesh : mm.GetAllMeshes())
+                {
+                    if (!mesh) continue;
+
+                    const std::string& fullName = mesh->GetName();
+                    if (!matches(fullName)) continue;
+
+                    ImGui::PushID(mesh);
+
+                    bool selected = (mesh == c.mesh);
+
+                    // Full-width selectable row (stable sizing)
+                    bool clicked = ImGui::Selectable("##row", selected, 0, ImVec2(itemW, 0.0f));
+
+                    // Draw ellipsized label on top
+                    ImVec2 rmin = ImGui::GetItemRectMin();
+                    ImVec2 rmax = ImGui::GetItemRectMax();
+                    (void)rmax;
+
+                    std::string labelEll = MakeEllipsisText(fullName, maxLabelW);
+
+                    ImGui::GetWindowDrawList()->AddText(
+                        ImVec2(rmin.x + ImGui::GetStyle().FramePadding.x,
+                            rmin.y + ImGui::GetStyle().FramePadding.y),
+                        ImGui::GetColorU32(ImGuiCol_Text),
+                        labelEll.c_str()
+                    );
+
+                    // Tooltip when truncated
+                    if (ImGui::IsItemHovered() && labelEll != fullName)
+                        ImGui::SetTooltip("%s", fullName.c_str());
+
+                    if (clicked)
+                    {
+                        c.mesh = mesh;
+                        mm.SetMeshInstanceFilter(idComp.id, c.mesh);
+                    }
+
+                    ImGui::PopID();
+                }
+
+                ImGui::EndCombo();
+            }
+
+            // Tooltip for preview when truncated
+            if (ImGui::IsItemHovered() && previewEll != fullPreview)
+                ImGui::SetTooltip("%s", fullPreview.c_str());
+
+            ImGui::PopItemWidth();
+        });
 }
 
 void EditorInspector::DrawTransformVec3(const std::string& label, glm::vec3& value, f32 reset_value)

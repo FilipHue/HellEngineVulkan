@@ -1,5 +1,6 @@
 #include "test_cpu_particles.h"
 
+#if _TEST_BED_ENABLED
 TestCpuParticles::TestCpuParticles(ApplicationConfiguration* configuration) : TestBase(configuration)
 {
 	NO_OP;
@@ -393,3 +394,4 @@ void TestCpuParticles::CreateDescriptorSets()
 		m_backend->WriteDescriptor(&m_particle_descriptor, descriptor_data_objects);
 	}
 }
+#endif //_TEST_BED_ENABLED

@@ -3,12 +3,21 @@
 
 namespace hellengine
 {
+
 	namespace graphics
 	{
 
+		Mesh::Mesh()
+		{
+			m_material_info = nullptr;
+		}
+
 		Mesh::~Mesh()
 		{
-			delete m_material_info;
+			if (m_material_info)
+			{
+				delete m_material_info;
+			}
 		}
 
 	} // namespace graphics

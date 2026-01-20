@@ -3,6 +3,7 @@
 // Internal
 #include "../base.h"
 
+#if _TEST_BED_ENABLED
 #define MAX_OBJECTS 8
 
 class TestTextureArray : public TestBase
@@ -71,3 +72,4 @@ private:
     std::vector<VertexFormatBase> m_vertices;
     std::vector<u32> m_indices;
 };
+#endif // _TEST_BED_ENABLED

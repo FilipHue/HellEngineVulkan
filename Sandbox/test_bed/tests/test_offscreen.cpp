@@ -1,5 +1,6 @@
 #include "test_offscreen.h"
 
+#if _TEST_BED_ENABLED
 TestOffscreen::TestOffscreen(ApplicationConfiguration* configuration) : TestBase(configuration)
 {
 	NO_OP;
@@ -586,3 +587,4 @@ void TestOffscreen::CreateDescriptorSets()
 		m_backend->WriteDescriptor(&m_debug_descriptor, descriptor_data_debug);
 	}
 }
+#endif // _TEST_BED_ENABLED

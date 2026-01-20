@@ -2,6 +2,7 @@
 
 #include "../base.h"
 
+#if _TEST_BED_ENABLED
 class TestDynamicAttachment : public TestBase
 {
 public:
@@ -77,3 +78,4 @@ private:
 	Texture2D m_color_texture;
 	Texture2D m_depth_texture;
 };
+#endif // _TEST_BED_ENABLED

@@ -28,14 +28,13 @@ public:
 	void Draw() override;
 	void End() override;
 
+	void SetSelectedGameObject(Entity entity);
 	Entity GetSelectedGameObject() const { return m_selected_game_object; }
 
 private:
 	void DrawSceneNode(const std::string& scene_name);
 	void DrawEntityNode(Entity entity);
 	void DrawUtilityPanel();
-
-	b8 IsDescendant(Entity parent, entt::entity possibleChild);
 
 private:
 	EditorInspector* m_inspector_panel;

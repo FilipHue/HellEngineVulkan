@@ -18,6 +18,9 @@ namespace hellengine
 
 			operator u64() const { return m_uuid; }
 			operator void* () const { return (void*)(uintptr_t)m_uuid; }
+			b8 operator ==(const UUID& other) const { return m_uuid == other.m_uuid; }
+			b8 operator ==(const i32 other) const { return (i32)m_uuid == other; }
+			b8 operator !=(const i32 other) const { return (i32)m_uuid != other; }
 
 			static UUID Generate() { return UUID(); }
 
@@ -39,4 +42,5 @@ namespace std {
 			return hash<uint64_t>()(uuid);
 		}
 	};
-}
+
+} // namespace std

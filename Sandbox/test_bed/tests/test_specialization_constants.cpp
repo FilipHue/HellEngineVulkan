@@ -1,5 +1,6 @@
 #include "test_specialization_constants.h"
 
+#if _TEST_BED_ENABLED
 TestSpecializationConstants::TestSpecializationConstants(ApplicationConfiguration* configuration) : TestBase(configuration)
 {
 	NO_OP;
@@ -320,3 +321,4 @@ void TestSpecializationConstants::CreateDescriptorSets()
 		m_backend->WriteDescriptor(&m_texture_descriptor, descriptor_data_texture);
 	}
 }
+#endif // _TEST_BED_ENABLED
