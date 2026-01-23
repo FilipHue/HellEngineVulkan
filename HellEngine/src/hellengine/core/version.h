@@ -7,8 +7,8 @@
 #define _TO_STRING_IMPL(x) #x
 #define TO_STRING(x) _TO_STRING_IMPL(x)
 
-#define HELL_VERSION_MAJOR 1
-#define HELL_VERSION_MINOR 0
+#define HELL_VERSION_MAJOR 0
+#define HELL_VERSION_MINOR 1
 #define HELL_VERSION_PATCH 0
 
 #define HELL_MAKE_VERSION(major, minor, patch) \

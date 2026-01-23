@@ -293,8 +293,9 @@ namespace hellengine
 			auto it = m_mesh_instance_allocation_map.find(id);
 			if (it == m_mesh_instance_allocation_map.end())
 			{
-				HE_GRAPHICS_WARN("Mesh instance with given UUID not found, cannot set filter.");
-				return;
+				HE_GRAPHICS_DEBUG("Mesh instance with given UUID not found, creating new instance.");
+				CreateMeshInstance(id, mesh);
+				it = m_mesh_instance_allocation_map.find(id);
 			}
 			u32 allocation_index = it->second;
 			MeshInstanceAllocation* allocation = m_mesh_instances_allocation[allocation_index];
