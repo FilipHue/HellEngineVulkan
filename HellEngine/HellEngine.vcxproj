@@ -638,6 +638,7 @@
     <ClInclude Include="src\hellengine\core\logging\logger.h" />
     <ClInclude Include="src\hellengine\core\memory.hpp" />
     <ClInclude Include="src\hellengine\core\platform.h" />
+    <ClInclude Include="src\hellengine\core\singleton.h" />
     <ClInclude Include="src\hellengine\core\time\timer.h" />
     <ClInclude Include="src\hellengine\core\typedefs.h" />
     <ClInclude Include="src\hellengine\core\uuid\uuid.h" />
@@ -666,6 +667,7 @@
     <ClInclude Include="src\hellengine\graphics\graphic_types.h" />
     <ClInclude Include="src\hellengine\graphics\graphics_core.h" />
     <ClInclude Include="src\hellengine\graphics\managers\mesh_manager.h" />
+    <ClInclude Include="src\hellengine\graphics\managers\pipeline_manager.h" />
     <ClInclude Include="src\hellengine\graphics\managers\texture_manager.h" />
     <ClInclude Include="src\hellengine\graphics\mesh\material.h" />
     <ClInclude Include="src\hellengine\graphics\mesh\mesh.h" />
@@ -773,6 +775,7 @@
     <ClCompile Include="src\hellengine\graphics\context.cpp" />
     <ClCompile Include="src\hellengine\graphics\frontend\vulkan_frontend.cpp" />
     <ClCompile Include="src\hellengine\graphics\managers\mesh_manager.cpp" />
+    <ClCompile Include="src\hellengine\graphics\managers\pipeline_manager.cpp" />
     <ClCompile Include="src\hellengine\graphics\managers\texture_manager.cpp" />
     <ClCompile Include="src\hellengine\graphics\mesh\material.cpp" />
     <ClCompile Include="src\hellengine\graphics\mesh\mesh.cpp" />

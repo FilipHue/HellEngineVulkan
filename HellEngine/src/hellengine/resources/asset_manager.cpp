@@ -81,7 +81,7 @@ namespace hellengine
 			{
 
 				glm::vec4 position(ai_mesh->mVertices[j].x, ai_mesh->mVertices[j].y, ai_mesh->mVertices[j].z, 1.0f);
-				verticies.positions.push_back(glm::vec3(position));
+				verticies.positions.push_back(glm::vec3(transform * position));
 
 				if (ai_mesh->HasVertexColors(0))
 				{

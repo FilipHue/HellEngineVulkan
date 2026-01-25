@@ -81,7 +81,7 @@ namespace hellengine
 			}
 		};
 
-		class MeshManager
+		class MeshManager : public Singleton<MeshManager>
 		{
 		public:
 			using MeshHash = u64;
@@ -99,7 +99,7 @@ namespace hellengine
 			template<typename VertexT>
 			b8 UploadMeshGeometry(Mesh* mesh);
 
-			void UploadToGpu(VulkanPipeline* pipeline, u32 set, TextureType types);
+			void UploadToGpu(TextureType types);
 			void CreateDrawCommands();
 			void CreatePackedData();
 
@@ -111,9 +111,6 @@ namespace hellengine
 			const std::vector<Mesh*>& GetAllMeshes() const { return m_meshes; }
 
 			void SetMeshInstanceFilter(UUID id, Mesh* mesh);
-
-			VulkanBackend* GetBackend() { return m_backend; }
-			static MeshManager* GetInstance();
 
 		private:
 			void CreatePool();

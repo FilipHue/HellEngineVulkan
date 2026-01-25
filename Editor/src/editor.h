@@ -2,7 +2,10 @@
 
 // Internal
 #include "hellengine/hellengine.h"
+
 #include "shared.h"
+
+#include "bars/editor_menu_bar.h"
 #include "panels/editor_hierarchy.h"
 #include "panels/editor_inspector.h"
 #include "panels/editor_viewport.h"
@@ -25,13 +28,6 @@ ALIGN_AS(64) struct GlobalShaderData
 	glm::mat4 view;
 	glm::vec3 camera_position;
 };
-
-//struct GridCameraData
-//{
-//	glm::mat4 proj;
-//	glm::mat4 view;
-//	glm::vec3 pos;
-//};
 
 class Editor : public Application
 {
@@ -69,23 +65,16 @@ private:
 	void CreatePipelines();
 	void CreateDescriptors();
 
-	void CreateEditorPanels();
+	void CreateEditorUI();
 
 	void DrawToSwapchain();
 
-	void MenuBar();
-
 	void ShowGuizmo();
-
-	// TEMP
-	void LoadResourcesForTest();
 
 private:
 	// Editor
 	MultiProjectionCamera m_editor_camera;
 	MultiProjectionController m_editor_camera_controller;
-
-	Pipeline m_editor_pipeline;
 
 	glm::uvec2 m_viewport_last_size;
 
@@ -96,9 +85,9 @@ private:
 	EditorHierarchy* m_hierarchy_panel;
 	EditorInspector* m_inspector_panel;
 	EditorViewport* m_viewport_panel;
+	EditorMenuBar* m_menu_bar;
 
 	// PBR Pipeline
-	Pipeline m_pbr_pipeline;
 	DescriptorSet m_pbr_global_descriptor;
 	UniformBuffer m_pbr_global_ubo;
 

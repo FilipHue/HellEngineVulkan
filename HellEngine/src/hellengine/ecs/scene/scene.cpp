@@ -26,7 +26,6 @@ namespace hellengine
 
         void Scene::Destroy()
         {
-            // Clear hierarchy + lookup + registry
             m_hierarchy.Clear();
             m_entity_lookup.clear();
             m_registry.clear();
@@ -35,18 +34,11 @@ namespace hellengine
 
         Entity Scene::CreateEntity(const std::string& name)
         {
-            // Always generate a valid non-zero UUID
             return CreateEntityWithUUID(UUID::Generate(), name);
         }
 
         Entity Scene::CreateEntityWithUUID(UUID id, const std::string& name)
         {
-            // 0 is invalid sentinel for hierarchy
-            if ((u64)id == (u64)INVALID_ID)
-                id = UUID::Generate();
-
-            HE_ASSERT((u64)id != (u64)INVALID_ID, "Scene::CreateEntityWithUUID produced INVALID_ID.");
-
             Entity entity = { m_registry.create(), this };
 
 			entity.AddComponent<IDComponent>(id).id = id;
@@ -56,10 +48,8 @@ namespace hellengine
 
             entity.AddComponent<TransformComponent>();
 
-            // Register in hierarchy as a root by default
             m_hierarchy.CreateNode(id);
 
-            // Fast lookup
             m_entity_lookup[(u64)id] = entity.GetHandle();
 
             return entity;
@@ -71,14 +61,8 @@ namespace hellengine
 
             UUID id = entity.GetComponent<IDComponent>().id;
 
-            // Remove hierarchy node (CASCADE delete inside hierarchy)
-            // NOTE: Scene::DestroyGameObject calls DestroyEntity bottom-up, so this will be leaf most times.
             m_hierarchy.DestroyNode(id);
-
-            // Remove lookup
             m_entity_lookup.erase((u64)id);
-
-            // Remove from registry
             m_registry.destroy(entity.GetHandle());
         }
 
@@ -104,7 +88,6 @@ namespace hellengine
 
             UUID root_id = entity.GetComponent<IDComponent>().id;
 
-            // Collect subtree UUIDs, then delete bottom-up
             std::vector<UUID> preorder;
             preorder.reserve(64);
 
@@ -121,7 +104,6 @@ namespace hellengine
 
                 preorder.push_back(cur);
 
-                // Push children
                 UUID child = m_hierarchy.GetFirstChild(cur);
                 while ((u64)child != (u64)INVALID_ID)
                 {
@@ -150,10 +132,9 @@ namespace hellengine
 
             UUID child_id = child.GetComponent<IDComponent>().id;
 
-            // Hierarchy reparent
+  
             if (!newParent)
             {
-                // Move to root
                 m_hierarchy.ReparentNode(child_id, UUID((u64)INVALID_ID));
             }
             else
@@ -162,7 +143,6 @@ namespace hellengine
                 m_hierarchy.ReparentNode(child_id, parent_id);
             }
 
-            // Keep world transform after reparent
             glm::mat4 parentWorld(1.0f);
             if (newParent)
                 parentWorld = newParent.GetComponent<TransformComponent>().world_transform;
@@ -227,7 +207,6 @@ namespace hellengine
 
                 glm::mat4 worldForChildren = tc ? tc->world_transform : current.parentWorld;
 
-                // Traverse children through hierarchy sibling links
                 UUID child = m_hierarchy.GetFirstChild(current.id);
                 while ((u64)child != (u64)INVALID_ID)
                 {
@@ -246,7 +225,6 @@ namespace hellengine
             entt::entity handle = it->second;
             if (!m_registry.valid(handle))
             {
-                // heal stale entry
                 m_entity_lookup.erase(it);
                 return Entity{ entt::null, this };
             }

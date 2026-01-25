@@ -40,10 +40,12 @@ namespace hellengine
             }
 
             T& operator[](size_t index) {
+				HE_ASSERT(index < m_data.size(), "Index out of bounds");
                 return *m_data[index];
             }
 
             const T& operator[](size_t index) const {
+				HE_ASSERT(index < m_data.size(), "Index out of bounds");
                 return *m_data[index];
             }
 

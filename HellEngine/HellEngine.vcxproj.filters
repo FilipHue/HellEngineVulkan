@@ -2048,6 +2048,8 @@
     </ClInclude>
     <ClInclude Include="src\hellengine\math\hash.h" />
     <ClInclude Include="src\hellengine\ecs\scene\scene_hierarchy.h" />
+    <ClInclude Include="src\hellengine\graphics\managers\pipeline_manager.h" />
+    <ClInclude Include="src\hellengine\core\singleton.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dependencies\GLM\include\glm\detail\glm.cpp">
@@ -2237,6 +2239,7 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\hellengine\ecs\scene\scene_hierarchy.cpp" />
+    <ClCompile Include="src\hellengine\graphics\managers\pipeline_manager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="dependencies\ASSIMP\include\assimp\config.h.in">

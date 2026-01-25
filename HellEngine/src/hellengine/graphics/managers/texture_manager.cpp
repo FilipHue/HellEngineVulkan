@@ -145,13 +145,6 @@ namespace hellengine
 			}
 		}
 
-		TextureManager* TextureManager::GetInstance()
-		{
-			static TextureManager instance;
-
-			return &instance;
-		}
-
 	} // namespace graphics
 
 } // namespace hellengine

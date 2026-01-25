@@ -2,6 +2,7 @@
 
 // Internal
 #include <hellengine/graphics/managers/mesh_manager.h>
+#include <hellengine/graphics/managers/pipeline_manager.h>
 #include <hellengine/graphics/managers/texture_manager.h>
 
 namespace hellengine
@@ -23,6 +24,10 @@ namespace hellengine
 			HE_API b8 CreateMesh(std::string name, std::vector<VertexFormatBase> vertices, std::vector<u32> indices);
 			HE_API void DrawMesh(std::string name, u32 instance_count = 1);
 
+			// Pipeline
+			HE_API VulkanPipeline* CreatePipeline(const std::string& name, const PipelineCreateInfo& create_info, const ShaderStageInfo& shader_info);
+			HE_API VulkanPipeline* GetPipeline(const std::string& name);
+
 			// Texture
 			HE_API VulkanTexture2D* CreateTexture2D(std::string name, const File& file);
 			HE_API VulkanTexture2D* CreateTexture2D(std::string name, VkFormat format, u32 width, u32 height);
@@ -40,6 +45,7 @@ namespace hellengine
 			VulkanBackend* m_backend;
 
 			MeshManager* m_mesh_manager;
+			PipelineManager* m_pipeline_manager;
 			TextureManager* m_texture_manager;
 		};
 

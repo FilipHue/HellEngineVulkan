@@ -81,7 +81,7 @@ namespace hellengine
 			Scene* m_scene;
 		};
 
-		INLINE static const Entity NULL_ENTITY = Entity(entt::null, nullptr);
+		INLINE static const Entity NULL_ENTITY = Entity();
 
 	} // namespace ecs
 

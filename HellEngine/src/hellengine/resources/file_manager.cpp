@@ -85,6 +85,16 @@ namespace hellengine
 			return OpenFile(path.c_str());
 		}
 
+		b8 FileManager::Exists(const char* path)
+		{
+			return std::filesystem::exists(path);
+		}
+
+		b8 FileManager::Exists(const std::string& path)
+		{
+			return Exists(path.c_str());
+		}
+
 	} // namespace resources
 
 } // namespace hellengine
