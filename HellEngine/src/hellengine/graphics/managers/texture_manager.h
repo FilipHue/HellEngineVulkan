@@ -23,7 +23,7 @@ namespace hellengine
 
 		class MeshManager;
 
-		class TextureManager
+		class TextureManager : public Singleton<TextureManager>
 		{
 		public:
 			void Init(VulkanBackend* backend);
@@ -42,8 +42,6 @@ namespace hellengine
 			u32 GetTexture2DIndex(std::string name);
 
 			void DestroyTexture2D(std::string name);
-
-			static TextureManager* GetInstance();
 
 		private:
 			friend class MeshManager;

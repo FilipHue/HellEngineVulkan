@@ -88,6 +88,8 @@ namespace hellengine
 			VkAttachmentLoadOp load_op;
 			VkAttachmentStoreOp store_op;
 			VkClearValue clear_value;
+			VkImageLayout initial_layout;
+			VkImageLayout final_layout;
 		};
 
 		struct DynamicRenderingInfo

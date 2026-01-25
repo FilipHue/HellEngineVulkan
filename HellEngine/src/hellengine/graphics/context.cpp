@@ -302,12 +302,12 @@ namespace hellengine
 
 			for (u32 i = 0; i < info.color_attachments.size(); i++)
 			{
-				VulkanImage::PrepareTransition(m_frame_data[m_current_frame].command_buffer, info.color_attachments[i].image, { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 }, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+				VulkanImage::PrepareTransition(m_frame_data[m_current_frame].command_buffer, info.color_attachments[i].image, { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 }, info.color_attachments[i].initial_layout, info.color_attachments[i].image_layout);
 			}
 
 			if (info.depth_attachment.has_value())
 			{
-				VulkanImage::PrepareTransition(m_frame_data[m_current_frame].command_buffer, info.depth_attachment.value().image, { VK_IMAGE_ASPECT_DEPTH_BIT, 0, 1, 0, 1 }, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
+				VulkanImage::PrepareTransition(m_frame_data[m_current_frame].command_buffer, info.depth_attachment.value().image, { VK_IMAGE_ASPECT_DEPTH_BIT, 0, 1, 0, 1 }, info.depth_attachment.value().initial_layout, info.depth_attachment.value().image_layout);
 			}
 
 			vkCmdBeginRendering(m_frame_data[m_current_frame].command_buffer.GetHandle(), &rendering_info);
@@ -319,12 +319,12 @@ namespace hellengine
 
 			for (u32 i = 0; i < info.color_attachments.size(); i++)
 			{
-				VulkanImage::PrepareTransition(m_frame_data[m_current_frame].command_buffer, info.color_attachments[i].image, { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 }, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+				VulkanImage::PrepareTransition(m_frame_data[m_current_frame].command_buffer, info.color_attachments[i].image, { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 }, info.color_attachments[i].image_layout, info.color_attachments[i].final_layout);
 			}
 
 			if (info.depth_attachment.has_value())
 			{
-				VulkanImage::PrepareTransition(m_frame_data[m_current_frame].command_buffer, info.depth_attachment.value().image, { VK_IMAGE_ASPECT_DEPTH_BIT, 0, 1, 0, 1 }, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+				VulkanImage::PrepareTransition(m_frame_data[m_current_frame].command_buffer, info.depth_attachment.value().image, { VK_IMAGE_ASPECT_DEPTH_BIT, 0, 1, 0, 1 }, info.depth_attachment.value().image_layout, info.depth_attachment.value().final_layout);
 			}
 		}
 

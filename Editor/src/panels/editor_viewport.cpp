@@ -7,7 +7,6 @@ EditorViewport::EditorViewport() : Viewport("Viewport")
 
 EditorViewport::~EditorViewport()
 {
-	m_backend->DestroyPipeline(m_grid_pipeline);
 	m_backend->DestroyBuffer(m_grid_buffer);
 }
 
@@ -54,9 +53,8 @@ void EditorViewport::SetViewportClearDepth(const glm::vec2& depth)
 	m_depth_color = depth;
 }
 
-void EditorViewport::SetViewportEditorReferences(Pipeline pipeline, MultiProjectionCamera* camera)
+void EditorViewport::SetViewportEditorReferences(MultiProjectionCamera* camera)
 {
-	m_editor_pipeline = pipeline;
 	m_editor_camera = camera;
 }
 
@@ -92,7 +90,7 @@ void EditorViewport::CreatePipelines()
 
 	pipeline_info.dynamic_rendering_info = {
 		true,
-		{ VK_FORMAT_B8G8R8A8_SRGB },
+		{ VK_FORMAT_R16G16B16A16_SFLOAT },
 		VK_FORMAT_D32_SFLOAT,
 	};
 
@@ -102,14 +100,15 @@ void EditorViewport::CreatePipelines()
 
 	pipeline_info.depth_stencil_info = { true, true };
 
-	m_grid_pipeline = m_backend->CreatePipeline(pipeline_info, shader_info);
+	//m_grid_pipeline = m_backend->CreatePipeline(pipeline_info, shader_info);
+	PipelineManager::GetInstance()->CreatePipeline(C_PIPELINE_GRID, pipeline_info, shader_info);
 }
 
 void EditorViewport::CreateAttachments()
 {
 	// Viewport
 	{
-		m_viewport_color_texture = m_frontend->CreateTexture2D(VIEWPORT_COLOR, VK_FORMAT_B8G8R8A8_SRGB, m_size.x, m_size.y);
+		m_viewport_color_texture = m_frontend->CreateTexture2D(VIEWPORT_COLOR, VK_FORMAT_R16G16B16A16_SFLOAT, m_size.x, m_size.y);
 		m_viewport_pick_texture = m_frontend->CreateTexture2D(VIEWPORT_PICK, VK_FORMAT_R32_UINT, m_size.x, m_size.y);
 		m_viewport_depth_texture = m_frontend->CreateTexture2D(VIEWPORT_DEPTH, VK_FORMAT_D32_SFLOAT, m_size.x, m_size.y);
 
@@ -120,7 +119,9 @@ void EditorViewport::CreateAttachments()
 			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
 			VK_ATTACHMENT_LOAD_OP_CLEAR,
 			VK_ATTACHMENT_STORE_OP_STORE,
-			{ { m_clear_color.r, m_clear_color.g, m_clear_color.b, m_clear_color.a } }
+			{ { m_clear_color.r, m_clear_color.g, m_clear_color.b, m_clear_color.a } },
+			VK_IMAGE_LAYOUT_UNDEFINED,
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 		};
 
 		m_viewport_pick_attachment = {
@@ -130,7 +131,9 @@ void EditorViewport::CreateAttachments()
 			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
 			VK_ATTACHMENT_LOAD_OP_CLEAR,
 			VK_ATTACHMENT_STORE_OP_STORE,
-			{ { 0.0f, 0.0f, 0.0f, 0.0f } }
+			{ { 0.0f, 0.0f, 0.0f, 0.0f } },
+			VK_IMAGE_LAYOUT_UNDEFINED,
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 		};
 
 		m_viewport_depth_attachment = {
@@ -140,7 +143,9 @@ void EditorViewport::CreateAttachments()
 			VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
 			VK_ATTACHMENT_LOAD_OP_CLEAR,
 			VK_ATTACHMENT_STORE_OP_STORE,
-			{ { m_depth_color.r, m_depth_color.g } }
+			{ { m_depth_color.r, m_depth_color.g } },
+			VK_IMAGE_LAYOUT_UNDEFINED,
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 		};
 
 		m_viewport_dri = {
@@ -160,7 +165,9 @@ void EditorViewport::CreateAttachments()
 			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
 			VK_ATTACHMENT_LOAD_OP_LOAD,
 			VK_ATTACHMENT_STORE_OP_STORE,
-			{ { m_clear_color.r, m_clear_color.g, m_clear_color.b, m_clear_color.a } }
+			{ { m_clear_color.r, m_clear_color.g, m_clear_color.b, m_clear_color.a } },
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 		};
 
 		m_grid_depth_attachment = {
@@ -170,7 +177,9 @@ void EditorViewport::CreateAttachments()
 			VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
 			VK_ATTACHMENT_LOAD_OP_LOAD,
 			VK_ATTACHMENT_STORE_OP_DONT_CARE,
-			{ { m_depth_color.r, m_depth_color.g } }
+			{ { m_depth_color.r, m_depth_color.g } },
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
 		};
 
 		m_grid_dri = {
@@ -186,7 +195,7 @@ void EditorViewport::CreateDescriptors()
 {
 	// Viewport
 	{
-		m_viewport_descriptor = m_backend->CreateDescriptorSet(m_editor_pipeline, 0);
+		m_viewport_descriptor = m_backend->CreateDescriptorSet(PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_EDITOR), 0);
 
 		DescriptorSetWriteData editor_write_data{};
 		editor_write_data.type = DescriptorType_CombinedImageSampler;
@@ -210,7 +219,7 @@ void EditorViewport::CreateDescriptors()
 		m_grid_data.pos = m_editor_camera->GetPosition();
 
 		m_grid_buffer = m_backend->CreateUniformBufferMappedPersistent(sizeof(GridCameraData), 1);
-		m_grid_descriptor = m_backend->CreateDescriptorSet(m_grid_pipeline, 0);
+		m_grid_descriptor = m_backend->CreateDescriptorSet(PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_GRID), 0);
 
 		DescriptorSetWriteData data{};
 
@@ -232,8 +241,8 @@ void EditorViewport::DrawGrid()
 	m_backend->SetViewport({ { 0.0f, 0.0f, (f32)m_size.x, (f32)m_size.y, 0.0f, 1.0f } });
 	m_backend->SetScissor({ { { 0, 0 }, { m_size.x, m_size.y } } });
 
-	m_backend->BindPipeline(m_grid_pipeline);
-	m_backend->BindDescriptorSet(m_grid_pipeline, m_grid_descriptor);
+	m_backend->BindPipeline(PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_GRID));
+	m_backend->BindDescriptorSet(PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_GRID), m_grid_descriptor);
 
 	m_backend->Draw(6, 1, 0, 0);
 
@@ -253,7 +262,7 @@ void EditorViewport::OnViewportResize()
 	m_frontend->DestroyTexture2D(VIEWPORT_PICK);
 	m_frontend->DestroyTexture2D(VIEWPORT_DEPTH);
 
-	m_viewport_color_texture = m_frontend->CreateTexture2D(VIEWPORT_COLOR, VK_FORMAT_B8G8R8A8_SRGB, m_size.x, m_size.y);
+	m_viewport_color_texture = m_frontend->CreateTexture2D(VIEWPORT_COLOR, VK_FORMAT_R16G16B16A16_SFLOAT, m_size.x, m_size.y);
 	m_viewport_pick_texture = m_frontend->CreateTexture2D(VIEWPORT_PICK, VK_FORMAT_R32_UINT, m_size.x, m_size.y);
 	m_viewport_depth_texture = m_frontend->CreateTexture2D(VIEWPORT_DEPTH, VK_FORMAT_D32_SFLOAT, m_size.x, m_size.y);
 

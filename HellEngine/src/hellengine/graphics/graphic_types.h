@@ -13,7 +13,7 @@ namespace hellengine
 		typedef VulkanDescriptorSet* DescriptorSet;
 		typedef VulkanDevice* Device;
 		typedef VulkanInstance* Instance;
-		typedef VulkanPipeline* Pipeline;
+		using Pipeline = VulkanPipeline;
 		typedef VulkanRenderPass* RenderPass;
 		typedef VulkanTexture2D* Texture2D;
 		typedef VulkanTexture3D* Texture3D;

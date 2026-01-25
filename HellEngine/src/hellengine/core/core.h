@@ -5,5 +5,6 @@
 #include "defines.h"
 #include "memory.hpp"
 #include "platform.h"
+#include "singleton.h"
 #include "typedefs.h"
 #include "version.h"

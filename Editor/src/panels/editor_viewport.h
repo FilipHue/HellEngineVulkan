@@ -2,6 +2,7 @@
 
 #include "hellengine/hellengine.h"
 
+#include "../shared.h"
 #include "editor_hierarchy.h"
 
 using namespace hellengine;
@@ -12,13 +13,6 @@ using namespace ui;
 using namespace math;
 using namespace resources;
 using namespace tools;
-
-constexpr auto EDITOR_SHADER_PATH = "assets/editor/shaders";
-constexpr auto EDITOR_MODEL_PATH = "assets/models";
-
-constexpr auto VIEWPORT_COLOR = "EDITOR_VIEWPORT_COLOR_ATTACHMENT";
-constexpr auto VIEWPORT_PICK = "EDITOR_VIEWPORT_PICK_ATTACHMENT";
-constexpr auto VIEWPORT_DEPTH = "EDITOR_VIEWPORT_DEPTH_ATTACHMENT";
 
 struct GridCameraData
 {
@@ -44,13 +38,16 @@ public:
 
 	void CanPick(b8 can_pick) { m_can_pick = can_pick; }
 
-	void SetViewportEditorReferences(Pipeline pipeline, MultiProjectionCamera* camera);
+	void SetViewportEditorReferences(MultiProjectionCamera* camera);
 
 	void CreateViewportResources();
 
 	void UpdateGridCameraData();
 	void OnViewportResize();
 	void OnMouseButtonPressed();
+
+	Texture2D GetColorTexture() const { return m_viewport_color_texture; }
+	Texture2D GetDepthTexture() const { return m_viewport_depth_texture; }
 private:
 	void CreatePipelines();
 	void CreateAttachments();
@@ -78,7 +75,6 @@ private:
 	b8 m_can_pick;
 
 	// Viewport grid
-	Pipeline m_grid_pipeline;
 	UniformBuffer m_grid_buffer;
 	DescriptorSet m_grid_descriptor;
 
@@ -93,7 +89,6 @@ private:
 
 	// Editor references
 	MultiProjectionCamera* m_editor_camera;
-	Pipeline m_editor_pipeline;
 	EditorHierarchy* m_hierarchy_panel;
 
 	VulkanBackend* m_backend;

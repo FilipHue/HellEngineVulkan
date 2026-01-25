@@ -319,13 +319,7 @@ namespace hellengine
 			CreatePackedData();
 		}
 
-		MeshManager* MeshManager::GetInstance()
-		{
-			static MeshManager instance;
-			return &instance;
-		}
-
-		void MeshManager::UploadToGpu(VulkanPipeline* pipeline, u32 set, TextureType types)
+		void MeshManager::UploadToGpu(TextureType types)
 		{
 			if (m_materials_descriptor == nullptr || m_textures_descriptor == nullptr)
 			{

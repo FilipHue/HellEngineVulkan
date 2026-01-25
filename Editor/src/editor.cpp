@@ -25,9 +25,7 @@ void Editor::Init()
 	CreatePipelines();
 	CreateDescriptors();
 
-	CreateEditorPanels();
-
-	LoadResourcesForTest();
+	CreateEditorUI();
 
 	m_viewport_last_size = m_viewport_panel->GetSize();
 }
@@ -69,10 +67,10 @@ void Editor::OnRenderBegin()
 
 void Editor::OnRenderUpdate()
 {
-	m_backend->BindPipeline(m_pbr_pipeline);
-	m_backend->BindDescriptorSet(m_pbr_pipeline, m_pbr_global_descriptor);
-	
-	MeshManager::GetInstance()->DrawMeshes(m_pbr_pipeline);
+	m_backend->BindPipeline(PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_PBR));
+	m_backend->BindDescriptorSet(PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_PBR), m_pbr_global_descriptor);
+
+	MeshManager::GetInstance()->DrawMeshes(PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_PBR));
 }
 
 void Editor::OnRenderEnd()
@@ -104,17 +102,14 @@ void Editor::OnUIRender()
 		m_viewport_panel->End();
 	}
 
-	MenuBar();
+	m_menu_bar->Draw();
 
 	m_ui->EndDocking();
 }
 
 void Editor::Shutdown()
 {
-	m_backend->DestroyPipeline(m_editor_pipeline);
-
 	m_backend->DestroyBuffer(m_pbr_global_ubo);
-	m_backend->DestroyPipeline(m_pbr_pipeline);
 
 	delete m_hierarchy_panel;
 	delete m_inspector_panel;
@@ -257,7 +252,63 @@ void Editor::CreateResources()
 
 void Editor::CreatePipelines()
 {
-	// Editor
+	// PBR Pipeline
+	{
+		PipelineCreateInfo pipeline_info = {};
+
+		pipeline_info.topology = PipelinePrimitiveTopology_TriangleList;
+		pipeline_info.polygon_mode = PipelinePolygonMode_Fill;
+		pipeline_info.cull_mode = PipelineCullMode_None;
+		pipeline_info.front_face = PipelineFrontFace_CounterClockwise;
+		pipeline_info.line_width = 1.0f;
+
+		pipeline_info.dynamic_states = { PipelineDynamicState_Viewport, PipelineDynamicState_Scissor };
+		pipeline_info.layout = {
+			{
+				{
+					{ 0, DescriptorType_UniformBuffer, 1, ShaderStage_Vertex | ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind }
+				},
+				DescriptorSetFlags_UpdateAfterBindPool
+			},
+			{
+				{
+					{ 0, DescriptorType_StorageBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
+				},
+				DescriptorSetFlags_UpdateAfterBindPool
+			},
+			{
+				{
+					{ 0, DescriptorType_StorageBuffer, 1, ShaderStage_Vertex | ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
+				},
+				DescriptorSetFlags_UpdateAfterBindPool
+			},
+			{
+				{
+					{ 0, DescriptorType_CombinedImageSampler, MAX_TEXTURES, ShaderStage_Fragment, DescriptorBindingFlags_VariableCount | DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind }
+				},
+				DescriptorSetFlags_UpdateAfterBindPool
+			}
+		};
+		pipeline_info.vertex_binding_description = VertexFormatBase::GetBindingDescription();
+		pipeline_info.vertex_attribute_descriptions = VertexFormatBase::GetAttributeDescriptions();
+
+		pipeline_info.depth_stencil_info = { true, true };
+
+		pipeline_info.dynamic_rendering_info = {
+			false,
+			{ VK_FORMAT_R16G16B16A16_SFLOAT, VK_FORMAT_R32_UINT },
+			VK_FORMAT_D32_SFLOAT
+		};
+
+		ShaderStageInfo shader_info = {};
+		shader_info.sources[ShaderType_Vertex] = CONCAT_PATHS(EDITOR_SHADER_PATH, "test.vert");
+		shader_info.sources[ShaderType_Fragment] = CONCAT_PATHS(EDITOR_SHADER_PATH, "test.frag");
+
+		PipelineManager::GetInstance()->CreatePipeline(C_PIPELINE_PBR, pipeline_info, shader_info);
+		MeshManager::GetInstance()->CreateDescriptors(PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_PBR), 1);
+	}
+
+	// Editor Pipeline
 	{
 		PipelineCreateInfo pipeline_info = {};
 
@@ -287,19 +338,40 @@ void Editor::CreatePipelines()
 		};
 
 		ShaderStageInfo shader_info = {};
-		shader_info.sources[ShaderType_Vertex] = CONCAT_PATHS(EDITOR_SHADER_PATH, "screen.vert");
-		shader_info.sources[ShaderType_Fragment] = CONCAT_PATHS(EDITOR_SHADER_PATH, "screen.frag");
+		shader_info.sources[ShaderType_Vertex] = CONCAT_PATHS(EDITOR_SHADER_PATH, "full_screen.vert");
+		shader_info.sources[ShaderType_Fragment] = CONCAT_PATHS(EDITOR_SHADER_PATH, "full_screen.frag");
 
-		m_editor_pipeline = m_backend->CreatePipeline(pipeline_info, shader_info);
-		m_backend->InitImGuiForDynamicRendering(m_editor_pipeline->GetRenderingCreateInfo());
+		PipelineManager::GetInstance()->CreatePipeline(C_PIPELINE_EDITOR, pipeline_info, shader_info);
+		m_backend->InitImGuiForDynamicRendering(PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_EDITOR)->GetRenderingCreateInfo());
 	}
 }
 
 void Editor::CreateDescriptors()
 {
+	// PBR Global Descriptor Set
+	{
+		m_pbr_global_descriptor = m_backend->CreateDescriptorSet(PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_PBR), 0);
+
+		m_global_shader_data = {};
+		m_global_shader_data.proj = m_editor_camera.GetProjection();
+		m_global_shader_data.view = m_editor_camera.GetView();
+		m_global_shader_data.camera_position = m_editor_camera.GetPosition();
+
+		m_pbr_global_ubo = m_backend->CreateUniformBufferMappedPersistent(sizeof(GlobalShaderData), 1);
+
+		DescriptorSetWriteData data1{};
+		data1.type = DescriptorType_UniformBuffer;
+		data1.binding = 0;
+		data1.data.buffer.buffers = new VkBuffer(m_pbr_global_ubo->GetHandle());
+		data1.data.buffer.offsets = new VkDeviceSize(0);
+		data1.data.buffer.ranges = new VkDeviceSize(sizeof(GlobalShaderData));
+
+		std::vector<DescriptorSetWriteData> write_data = { data1 };
+		m_backend->WriteDescriptor(&m_pbr_global_descriptor, write_data);
+	}
 }
 
-void Editor::CreateEditorPanels()
+void Editor::CreateEditorUI()
 {
 	m_inspector_panel = new EditorInspector();
 	m_inspector_panel->Init();
@@ -310,8 +382,11 @@ void Editor::CreateEditorPanels()
 	m_viewport_panel = new EditorViewport();
 	m_viewport_panel->Init(m_backend, m_frontend, m_hierarchy_panel);
 	m_viewport_panel->SetSize(m_window->GetWidth(), m_window->GetHeight());
-	m_viewport_panel->SetViewportEditorReferences(m_editor_pipeline, &m_editor_camera);
+	m_viewport_panel->SetViewportEditorReferences(&m_editor_camera);
 	m_viewport_panel->CreateViewportResources();
+
+	m_menu_bar = new EditorMenuBar();
+	m_menu_bar->Init(m_hierarchy_panel);
 }
 
 void Editor::DrawToSwapchain()
@@ -325,117 +400,6 @@ void Editor::DrawToSwapchain()
 	m_backend->SetScissor({ { { 0, 0 }, { m_window->GetWidth(), m_window->GetHeight()} } });
 
 	m_backend->EndDynamicRendering();
-}
-
-void Editor::MenuBar()
-{
-	ImGuiStyle& style = ImGui::GetStyle();
-	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { style.ItemSpacing.x * 2.0f, style.ItemSpacing.y });
-
-	if (ImGui::BeginMenuBar())
-	{
-		ImGui::SetNextWindowSize(ImVec2(400.0f, 0.0f), ImGuiCond_Always);
-		if (ImGui::BeginMenu("File"))
-		{
-			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(style.ItemSpacing.x, style.ItemSpacing.y * 3.0f));
-			if (ImGui::MenuItem("	New Scene", "Ctrl + N"))
-			{
-				SceneManager::GetInstance()->CreateScene("Untitled");
-			}
-
-			if (ImGui::MenuItem("	Open Scene", "Ctrl + O"))
-			{
-			}
-
-			ImGui::Separator();
-
-			if (ImGui::MenuItem("	Save", "Ctrl + S"))
-			{
-			}
-
-			if (ImGui::MenuItem("	Save As", "Ctrl + Shift + S"))
-			{
-			}
-
-			ImGui::PopStyleVar();
-			ImGui::EndMenu();
-		}
-
-		ImGui::SetNextWindowSize(ImVec2(400.0f, 0.0f), ImGuiCond_Always);
-		if (ImGui::BeginMenu("Assets"))
-		{
-			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(style.ItemSpacing.x, style.ItemSpacing.y * 3.0f));
-
-			ImGui::Separator();
-
-			if (ImGui::MenuItem("	Import New Asset"))
-			{
-				if (SceneManager::GetInstance()->GetActiveScene() == nullptr)
-				{
-					SceneManager::GetInstance()->CreateScene("Untitled");
-				}
-
-				File file = FileManager::OpenFile("Model Files (*.gltf)\0*.gltf\0Model Files (*.glb)\0*.glb\0All Files (*.*)\0*.*\0");
-				AssetManager::LoadModel(file);
-				MeshManager::GetInstance()->UploadToGpu(m_pbr_pipeline, 1, TextureType_Diffuse | TextureType_Ambient | TextureType_Specular);
-			}
-
-			ImGui::PopStyleVar();
-			ImGui::EndMenu();
-		}
-
-		ImGui::SetNextWindowSize(ImVec2(400.0f, 0.0f), ImGuiCond_Always);
-		if (ImGui::BeginMenu("GameObject"))
-		{
-			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(style.ItemSpacing.x, style.ItemSpacing.y * 3.0f));
-			if (ImGui::MenuItem("	Create Empty", "Ctrl + Shift + N"))
-			{
-				if (SceneManager::GetInstance()->GetActiveScene() == nullptr)
-				{
-					SceneManager::GetInstance()->CreateScene("Untitled");
-				}
-
-				SceneManager::GetInstance()->GetActiveScene()->CreateGameObject("GameObject", m_hierarchy_panel->GetSelectedGameObject());
-			}
-
-			ImGui::PopStyleVar();
-			ImGui::EndMenu();
-		}
-
-		ImGui::SetNextWindowSize(ImVec2(400.0f, 0.0f), ImGuiCond_Always);
-		if (ImGui::BeginMenu("Component"))
-		{
-			if (ImGui::MenuItem("	Add", "Ctrl + Shift + A", nullptr, m_hierarchy_panel->GetSelectedGameObject() != NULL_ENTITY))
-			{
-			}
-
-			ImGui::Separator();
-
-			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(style.ItemSpacing.x, style.ItemSpacing.y * 3.0f));
-
-			if (ImGui::BeginMenu("Mesh"))
-			{
-				Entity selected = m_hierarchy_panel->GetSelectedGameObject();
-				const b8 hasSelection = (selected != NULL_ENTITY);
-
-				b8 enabled = hasSelection && !selected.HasComponent<MeshFilterComponent>();
-				if (ImGui::MenuItem("	Mesh Filter", nullptr, false, enabled))
-				{
-					selected.AddComponent<MeshFilterComponent>();
-					ImGui::CloseCurrentPopup();
-				}
-
-				ImGui::EndMenu();
-			}
-
-			ImGui::PopStyleVar();
-			ImGui::EndMenu();
-		}
-
-		ImGui::EndMenuBar();
-	}
-
-	ImGui::PopStyleVar();
 }
 
 void Editor::ShowGuizmo()
@@ -526,80 +490,4 @@ void Editor::ShowGuizmo()
 	{
 		m_viewport_panel->CanPick(true);
 	}
-}
-
-void Editor::LoadResourcesForTest()
-{
-	PipelineCreateInfo pipeline_info = {};
-
-	pipeline_info.topology = PipelinePrimitiveTopology_TriangleList;
-	pipeline_info.polygon_mode = PipelinePolygonMode_Fill;
-	pipeline_info.cull_mode = PipelineCullMode_None;
-	pipeline_info.front_face = PipelineFrontFace_CounterClockwise;
-	pipeline_info.line_width = 1.0f;
-
-	pipeline_info.dynamic_states = { PipelineDynamicState_Viewport, PipelineDynamicState_Scissor };
-	pipeline_info.layout = {
-		{
-			{ 
-				{ 0, DescriptorType_UniformBuffer, 1, ShaderStage_Vertex | ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind }
-			},
-			DescriptorSetFlags_UpdateAfterBindPool
-		},
-		{
-			{
-				{ 0, DescriptorType_StorageBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
-			},
-			DescriptorSetFlags_UpdateAfterBindPool
-		},
-		{
-			{
-				{ 0, DescriptorType_StorageBuffer, 1, ShaderStage_Vertex | ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
-			},
-			DescriptorSetFlags_UpdateAfterBindPool
-		},
-		{
-			{
-				{ 0, DescriptorType_CombinedImageSampler, MAX_TEXTURES, ShaderStage_Fragment, DescriptorBindingFlags_VariableCount | DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind }
-			},
-			DescriptorSetFlags_UpdateAfterBindPool
-		}
-	};
-	pipeline_info.vertex_binding_description = VertexFormatBase::GetBindingDescription();
-	pipeline_info.vertex_attribute_descriptions = VertexFormatBase::GetAttributeDescriptions();
-
-	pipeline_info.depth_stencil_info = { true, true };
-
-	pipeline_info.dynamic_rendering_info = {
-		false,
-		{ VK_FORMAT_B8G8R8A8_SRGB, VK_FORMAT_R32_UINT },
-		VK_FORMAT_D32_SFLOAT
-	};
-
-	ShaderStageInfo shader_info = {};
-	shader_info.sources[ShaderType_Vertex] = CONCAT_PATHS(EDITOR_SHADER_PATH, "test.vert");
-	shader_info.sources[ShaderType_Fragment] = CONCAT_PATHS(EDITOR_SHADER_PATH, "test.frag");
-
-	m_pbr_pipeline = m_backend->CreatePipeline(pipeline_info, shader_info);
-
-	m_pbr_global_descriptor = m_backend->CreateDescriptorSet(m_pbr_pipeline, 0);
-
-	m_global_shader_data = {};
-	m_global_shader_data.proj = m_editor_camera.GetProjection();
-	m_global_shader_data.view = m_editor_camera.GetView();
-	m_global_shader_data.camera_position = m_editor_camera.GetPosition();
-
-	m_pbr_global_ubo = m_backend->CreateUniformBufferMappedPersistent(sizeof(GlobalShaderData), 1);
-
-	DescriptorSetWriteData data1{};
-	data1.type = DescriptorType_UniformBuffer;
-	data1.binding = 0;
-	data1.data.buffer.buffers = new VkBuffer(m_pbr_global_ubo->GetHandle());
-	data1.data.buffer.offsets = new VkDeviceSize(0);
-	data1.data.buffer.ranges = new VkDeviceSize(sizeof(GlobalShaderData));
-
-	std::vector<DescriptorSetWriteData> write_data = { data1 };
-	m_backend->WriteDescriptor(&m_pbr_global_descriptor, write_data);
-
-	MeshManager::GetInstance()->CreateDescriptors(m_pbr_pipeline, 1);
 }
