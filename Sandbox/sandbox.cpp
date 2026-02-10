@@ -151,9 +151,7 @@ SandboxApplication::SandboxApplication(ApplicationConfiguration* configuration)
 	m_cursor_mode = GLFW_CURSOR_NORMAL;
 }
 
-SandboxApplication::~SandboxApplication()
-{
-}
+SandboxApplication::~SandboxApplication() {}
 
 void SandboxApplication::Init()
 {
@@ -206,6 +204,8 @@ void SandboxApplication::Shutdown()
 
 void SandboxApplication::OnProcessUpdate(f32 delta_time)
 {
+	m_dt = delta_time;
+
 	if (m_cursor_mode == GLFW_CURSOR_DISABLED)
 	{
 		m_controller.OnProcessUpdate(delta_time);
@@ -213,40 +213,41 @@ void SandboxApplication::OnProcessUpdate(f32 delta_time)
 	}
 }
 
+// -----------------------------------------------------------------------------
+// IMPORTANT: OnRenderBegin/OnRenderEnd is your "command recording region".
+// NO BeginDynamicRendering/EndDynamicRendering here.
+// ALL UpdateBuffers / Barriers / Dispatch must be here.
+// -----------------------------------------------------------------------------
 void SandboxApplication::OnRenderBegin()
 {
 	m_backend->SetExtent({ m_window->GetWidth(), m_window->GetHeight() });
 	m_backend->SetClearColor({ 0.0f, 0.0f, 0.0f, 1.0f });
 
-	// camera UBO
+	// Camera UBO update (allowed here)
 	m_backend->UpdateUniformBuffer(m_camera_buffer, &m_camera_data, sizeof(m_camera_data));
 
-	// update cube transform UBO
+	// Cube transform UBO update (allowed here)
 	m_wireframe_cube->UpdateBuffers(m_backend);
 
-	// physics step (currently BVH-only)
-	// NOTE: if you want delta_time here, store it from OnProcessUpdate; or add it to your engine hooks.
-	// We'll keep it fixed for now:
-	m_physics_world->Step(0.016f);
+	// BVH rebuild + debug VB/IB upload (allowed here, NOT in dynamic rendering)
+	m_physics_world->RebuildBVHAndUploadDebug(m_backend, true);
 
-	// BVH rebuild + debug geometry upload
-	m_physics_world->RebuildBVHAndDebug(m_backend, true);
+	// If spawn happened (or first frame), upload bodies + initial instance tint (allowed here)
+	m_physics_world->UploadSpawnDataIfNeeded(m_backend, m_shape_manager);
 
-	// sync transforms -> render instances
-	m_physics_world->SyncTransformsTo(m_shape_manager);
-
-	// upload instance transforms SSBO
-	m_shape_manager->UpdateBuffers(m_backend);
+	// Compute step: barriers + dispatch (allowed here, NOT in dynamic rendering)
+	m_physics_world->RunCompute(m_backend, m_wireframe_cube->aabb, m_dt);
 }
 
 void SandboxApplication::OnRenderUpdate()
 {
+	// DRAW ONLY
 	m_backend->BeginDynamicRendering();
 
 	m_backend->SetViewport({ { 0.0f, 0.0f, (f32)m_window->GetWidth(), (f32)m_window->GetHeight(), 0.0f, 1.0f } });
 	m_backend->SetScissor({ { { 0, 0 }, { m_window->GetWidth(), m_window->GetHeight()} } });
 
-	// Spawn cube
+	// Spawn cube draw
 	{
 		auto pipe = PipelineManager::GetInstance()->GetPipeline(WIREFRAME_PIPELINE_NAME);
 		m_backend->BindPipeline(pipe);
@@ -254,17 +255,18 @@ void SandboxApplication::OnRenderUpdate()
 		m_wireframe_cube->Draw(m_backend);
 	}
 
-	// BVH debug
+	// BVH debug draw
 	{
 		if (m_show_debug)
 		{
 			auto pipe = PipelineManager::GetInstance()->GetPipeline(DEBUG_LINES_PIPELINE_NAME);
 			m_backend->BindPipeline(pipe);
+			m_backend->BindDescriptorSet(pipe, m_camera_descriptor_debug_lines, 0);
 			m_physics_world->DrawDebug(m_backend, m_camera_descriptor_debug_lines);
 		}
 	}
 
-	// Shapes
+	// Shapes draw (instance transforms were written by compute BEFORE dynamic rendering)
 	{
 		auto pipe = PipelineManager::GetInstance()->GetPipeline(GRAPHICS_PIPELINE_NAME);
 		m_backend->BindPipeline(pipe);
@@ -277,11 +279,10 @@ void SandboxApplication::OnRenderUpdate()
 
 void SandboxApplication::OnRenderEnd()
 {
+	// Optional: end-of-frame command recording work here if your engine supports it.
 }
 
-void SandboxApplication::OnUIRender()
-{
-}
+void SandboxApplication::OnUIRender() {}
 
 b8 SandboxApplication::OnWindowClose(EventContext& event)
 {
@@ -317,7 +318,7 @@ b8 SandboxApplication::OnKeyPressed(EventContext& event)
 		SetCursorMode(m_cursor_mode);
 	}
 
-	// Resize spawn volume
+	// Resize spawn volume (compute reads new world AABB next frame)
 	if (event.data.key_event.key == KEY_KP_ADD)
 	{
 		m_wireframe_cube->transform = glm::scale(m_wireframe_cube->transform, glm::vec3(1.1f));
@@ -351,15 +352,11 @@ b8 SandboxApplication::OnKeyPressed(EventContext& event)
 
 void SandboxApplication::RestartSimulation()
 {
-	// Update spawn box in physics
 	m_physics_world->SetSpawnBox(m_wireframe_cube->aabb.min, m_wireframe_cube->aabb.max);
 	m_physics_world->SetShapePrototypes(m_shape_prototypes);
-
-	// Respawn bodies (same count per shape as render)
 	m_physics_world->Spawn(m_shape_manager->instance_count);
 
-	// Sync transforms -> render
-	m_physics_world->SyncTransformsTo(m_shape_manager);
+	// Upload will happen next OnRenderBegin() via UploadSpawnDataIfNeeded()
 }
 
 void SandboxApplication::CreateResources()
@@ -372,24 +369,22 @@ void SandboxApplication::CreateResources()
 	m_wireframe_cube->CreateBuffers(m_backend);
 	m_wireframe_cube->SetScale(glm::vec3(25.0f));
 
-	// Shapes (render only)
-	m_shape_manager = new ShapeManager(10);
+	// Shapes
+	m_shape_manager = new ShapeManager(1000);
 	m_shape_manager->CreateCube(1.0f);
 	m_shape_manager->CreateUVSphere(0.5f, 36, 18);
 	m_shape_manager->CreateCone(0.5f, 1.0f, 36);
 	m_shape_manager->BuildInitialInstances();
 	m_shape_manager->CreateBuffers(m_backend);
 
-	// PhysicsWorld
+	// Physics
 	m_physics_world = new PhysicsWorld();
-	m_physics_world->CreateBuffers(m_backend);
 	m_physics_world->SetSpawnBox(m_wireframe_cube->aabb.min, m_wireframe_cube->aabb.max);
 
-	// Prototypes MUST match shape order created above: cube, sphere, cone
+	// prototypes match shape creation order: cube, sphere, cone
 	m_shape_prototypes.clear();
 	m_shape_prototypes.reserve(3);
 
-	// Cube (size 1.0 -> half extents 0.5)
 	{
 		Body b{};
 		b.type = Collider_AABB;
@@ -397,8 +392,6 @@ void SandboxApplication::CreateResources()
 		b.inv_mass = 1.0f;
 		m_shape_prototypes.push_back(b);
 	}
-
-	// Sphere (radius 0.5)
 	{
 		Body b{};
 		b.type = Collider_Sphere;
@@ -406,8 +399,6 @@ void SandboxApplication::CreateResources()
 		b.inv_mass = 1.0f;
 		m_shape_prototypes.push_back(b);
 	}
-
-	// Cone approx (radius sqrt(r^2 + (h/2)^2) = sqrt(0.5^2 + 0.5^2))
 	{
 		Body b{};
 		b.type = Collider_ConeSphereApprox;
@@ -417,10 +408,12 @@ void SandboxApplication::CreateResources()
 	}
 
 	m_physics_world->SetShapePrototypes(m_shape_prototypes);
-	m_physics_world->Spawn(m_shape_manager->instance_count);
 
-	// Sync transforms and upload
-	m_physics_world->SyncTransformsTo(m_shape_manager);
+	// Create compute bindings AFTER ShapeManager buffers exist
+	m_physics_world->CreateBuffers(m_backend, m_shape_manager);
+
+	// Spawn bodies (GPU upload happens in OnRenderBegin)
+	m_physics_world->Spawn(m_shape_manager->instance_count);
 }
 
 void SandboxApplication::CreatePipelines()
@@ -466,7 +459,7 @@ void SandboxApplication::CreatePipelines()
 			PipelineManager::GetInstance()->GetPipeline(GRAPHICS_PIPELINE_NAME)->GetRenderingCreateInfo());
 	}
 
-	// Wireframe pipeline (cube, needs set1 transform)
+	// Wireframe pipeline
 	{
 		PipelineCreateInfo pipeline_info{};
 		pipeline_info.type = PipelineType_Graphics;
@@ -504,7 +497,7 @@ void SandboxApplication::CreatePipelines()
 		PipelineManager::GetInstance()->CreatePipeline(WIREFRAME_PIPELINE_NAME, pipeline_info, shader_info);
 	}
 
-	// Debug lines pipeline (BVH, camera only)
+	// Debug lines pipeline
 	{
 		PipelineCreateInfo pipeline_info{};
 		pipeline_info.type = PipelineType_Graphics;
@@ -537,13 +530,39 @@ void SandboxApplication::CreatePipelines()
 
 		PipelineManager::GetInstance()->CreatePipeline(DEBUG_LINES_PIPELINE_NAME, pipeline_info, shader_info);
 	}
+
+	// Compute pipeline (physics)
+	{
+		PipelineCreateInfo pipeline_info{};
+		pipeline_info.type = PipelineType_Compute;
+
+		pipeline_info.layout = {
+			{
+				{ { 0, DescriptorType_StorageBuffer, 1, ShaderStage_Compute, DescriptorBindingFlags_None } },
+				DescriptorSetFlags_None
+			},
+			{
+				{ { 0, DescriptorType_StorageBuffer, 1, ShaderStage_Compute, DescriptorBindingFlags_None } },
+				DescriptorSetFlags_None
+			},
+			{
+				{ { 0, DescriptorType_UniformBuffer, 1, ShaderStage_Compute, DescriptorBindingFlags_None } },
+				DescriptorSetFlags_None
+			}
+		};
+
+		ShaderStageInfo shader_info{};
+		shader_info.sources[ShaderType_Compute] = CONCAT_PATHS(SHADER_PATH, SHADER_PHYSICS_COMPUTE);
+
+		PipelineManager::GetInstance()->CreatePipeline(PHYSICS_COMPUTE_PIPELINE_NAME, pipeline_info, shader_info);
+	}
 }
 
 void SandboxApplication::CreateDescriptorSets()
 {
 	m_backend->InitDescriptorPoolGrowable({
-		{ DescriptorType_UniformBuffer, 16 },
-		{ DescriptorType_StorageBuffer, 8 }
+		{ DescriptorType_UniformBuffer, 32 },
+		{ DescriptorType_StorageBuffer, 32 }
 		}, 1);
 
 	m_camera_buffer = m_backend->CreateUniformBufferMappedPersistent(sizeof(CameraData), 1);
