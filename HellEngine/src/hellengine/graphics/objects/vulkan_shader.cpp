@@ -11,6 +11,20 @@ namespace hellengine
 	namespace graphics
 	{
 
+		static inline const char* ShaderTypeToExt(ShaderType t)
+		{
+			switch (t)
+			{
+			case ShaderType_Vertex:   return "vert";
+			case ShaderType_Fragment: return "frag";
+			case ShaderType_Compute:  return "comp";
+			case ShaderType_Geometry: return "geom";
+			case ShaderType_TessControl: return "tesc";
+			case ShaderType_TessEvaluation: return "tese";
+			default: return "unk";
+			}
+		}
+
 		VulkanShader::VulkanShader()
 		{
 			m_handle = VK_NULL_HANDLE;
@@ -96,7 +110,7 @@ namespace hellengine
 		{
 			HE_GRAPHICS_INFO("Compiling shader: {0}", file.GetRelativePath());
 
-			std::string binary_name = type == ShaderType_Vertex ? "vert" : "frag";
+			std::string binary_name = ShaderTypeToExt(type);
 			binary_name = file.GetAbsoluteDirectory() + "\\cache\\" + file.GetStem() + "_" + binary_name + ".spv";
 
 			//if (std::filesystem::exists(binary_name))

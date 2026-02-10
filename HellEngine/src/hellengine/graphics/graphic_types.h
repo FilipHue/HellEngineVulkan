@@ -8,18 +8,18 @@ namespace hellengine
 
 	namespace graphics
 	{
-		typedef VulkanBuffer* Buffer;
-		typedef VulkanCommandBuffer* CommandBuffer;
-		typedef VulkanDescriptorSet* DescriptorSet;
-		typedef VulkanDevice* Device;
-		typedef VulkanInstance* Instance;
+		using Buffer = VulkanBuffer;
+		using CommandBuffer = VulkanCommandBuffer;
+		using DescriptorSet = VulkanDescriptorSet;
+		using Device = VulkanDevice;
+		using Instance = VulkanInstance;
 		using Pipeline = VulkanPipeline;
-		typedef VulkanRenderPass* RenderPass;
-		typedef VulkanTexture2D* Texture2D;
-		typedef VulkanTexture3D* Texture3D;
-		typedef VulkanTextureCubemap* TextureCubemap;
-		typedef VulkanUniformBuffer* UniformBuffer;
-		typedef VulkanStorageBuffer* StorageBuffer;
+		using RenderPass = VulkanRenderPass;
+		using Texture2D = VulkanTexture2D;
+		using Texture3D = VulkanTexture3D;
+		using TextureCubemap = VulkanTextureCubemap;
+		using UniformBuffer = VulkanUniformBuffer;
+		using StorageBuffer = VulkanStorageBuffer;
 
 	} // namespace graphics
 

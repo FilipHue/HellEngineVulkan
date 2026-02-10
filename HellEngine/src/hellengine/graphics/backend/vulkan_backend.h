@@ -60,11 +60,15 @@ namespace hellengine
 
 			// Pipeline
 			HE_API VulkanPipeline* CreatePipeline(const PipelineCreateInfo& info, const ShaderStageInfo& shader_info);
-
 			HE_API void DestroyPipeline(VulkanPipeline* pipeline) const;
 
 			HE_API void BindPipeline(VulkanPipeline* pipeline) const;
 			HE_API void BindPushConstants(VulkanPipeline* pipeline, ShaderStage stage, u32 offset, u32 size, void* data) const;
+
+			void Dispatch(u32 group_count_x, u32 group_count_y, u32 group_count_z) const;
+			void BarrierGraphicsToCompute() const;
+			void BarrierComputeToGraphics() const;
+			void BarrierComputeToCompute() const;
 
 			// Buffer
 			HE_API VulkanBuffer* CreateVertexBufferEmpty(u32 size);

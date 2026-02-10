@@ -384,9 +384,71 @@ namespace hellengine
 		VulkanPipeline* VulkanContext::CreatePipeline(const PipelineCreateInfo& info, const ShaderStageInfo& shader_info)
 		{
 			VulkanPipeline* pipeline = new VulkanPipeline();
-			pipeline->Create(m_instance, m_device, m_swapchain, info, shader_info);
+			if (info.type == PipelineType_Graphics)
+			{
+				pipeline->CreateGraphics(m_instance, m_device, m_swapchain, info, shader_info);
+			}
+			else if (info.type == PipelineType_Compute)
+			{
+				pipeline->CreateCompute(m_instance, m_device, info, shader_info);
+			}
 
 			return pipeline;
+		}
+
+		void VulkanContext::Dispatch(u32 group_count_x, u32 group_count_y, u32 group_count_z) const
+		{
+			vkCmdDispatch(m_frame_data[m_current_frame].command_buffer.GetHandle(), group_count_x, group_count_y, group_count_z);
+		}
+
+		void VulkanContext::BarrierGraphicsToCompute() const
+		{
+			VkMemoryBarrier mb{};
+			mb.sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER;
+			mb.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
+			mb.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+			vkCmdPipelineBarrier(
+				m_frame_data[m_current_frame].command_buffer.GetHandle(),
+				VK_PIPELINE_STAGE_VERTEX_SHADER_BIT,
+				VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+				0,
+				1, &mb,
+				0, nullptr,
+				0, nullptr);
+		}
+
+		void VulkanContext::BarrierComputeToGraphics() const
+		{
+			VkMemoryBarrier mb{};
+			mb.sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER;
+			mb.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
+			mb.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+			vkCmdPipelineBarrier(
+				m_frame_data[m_current_frame].command_buffer.GetHandle(),
+				VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+				VK_PIPELINE_STAGE_VERTEX_SHADER_BIT,
+				0,
+				1, &mb,
+				0, nullptr,
+				0, nullptr);
+		}
+
+		void VulkanContext::BarrierComputeToCompute() const
+		{
+			VkMemoryBarrier mb{};
+			mb.sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER;
+			mb.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
+			mb.dstAccessMask = VK_ACCESS_SHADER_READ_BIT | VK_ACCESS_SHADER_WRITE_BIT;
+
+			vkCmdPipelineBarrier(
+				m_frame_data[m_current_frame].command_buffer.GetHandle(),
+				VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+				VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+				0,
+				1, &mb,
+				0, nullptr,
+				0, nullptr);
 		}
 
 		void VulkanContext::DestroyPipeline(VulkanPipeline* pipeline) const
@@ -403,7 +465,7 @@ namespace hellengine
 
 		void VulkanContext::BindPushConstants(VulkanPipeline* pipeline, ShaderStage stage, u32 offset, u32 size, const void* data) const
 		{
-			vkCmdPushConstants(m_frame_data[m_current_frame].command_buffer.GetHandle(), pipeline->GetLayout(), stage, offset, size, data);
+			vkCmdPushConstants(m_frame_data[m_current_frame].command_buffer.GetHandle(), pipeline->GetLayout(), GetVulkanStageFlags(stage), offset, size, data);
 		}
 
 		VulkanBuffer* VulkanContext::CreateVertexBuffer(void* data, u32 size)

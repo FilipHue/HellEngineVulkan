@@ -332,6 +332,7 @@ namespace hellengine
 		{
 			PipelineType_None,
 			PipelineType_Graphics,
+			PipelineType_Compute,
 
 			PipelineType_Count
 		};
@@ -438,6 +439,7 @@ namespace hellengine
 
 		struct PipelineCreateInfo
 		{
+			PipelineType type;
 			PipelinePrimitiveTopology topology;
 			PipelinePolygonMode polygon_mode;
 			PipelineCullMode cull_mode;
