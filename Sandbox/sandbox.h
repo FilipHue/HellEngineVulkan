@@ -528,6 +528,27 @@ struct PhysicsWorld
 		backend->BarrierComputeToGraphics();
 	}
 
+	void SyncBodiesFromMappedGPU()
+	{
+		// Only valid if bodies_buffer is host-visible + persistently mapped.
+		// Also requires GPU completion + invalidate if non-coherent (handled outside).
+		const u32 N = (u32)bodies.size();
+		if (N == 0) return;
+
+		const BodyGPU* gpu = (const BodyGPU*)bodies_buffer->GetMappedMemory(); // your function name
+
+		for (u32 i = 0; i < N; ++i)
+		{
+			bodies[i].position = glm::vec3(gpu[i].pos_invMass);
+			bodies[i].inv_mass = gpu[i].pos_invMass.w;
+			bodies[i].velocity = glm::vec3(gpu[i].vel_type);
+			bodies[i].type = (u32)gpu[i].vel_type.w;
+			bodies[i].half_extents = glm::vec3(gpu[i].halfExt_radius);
+			bodies[i].radius = gpu[i].halfExt_radius.w;
+		}
+	}
+
+
 	// -----------------------------------------------------------------
 	// CPU BVH build + GPU debug mesh upload (also must be outside dynamic)
 	// -----------------------------------------------------------------

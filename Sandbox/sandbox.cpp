@@ -211,13 +211,10 @@ void SandboxApplication::OnProcessUpdate(f32 delta_time)
 		m_controller.OnProcessUpdate(delta_time);
 		m_camera_data.view = m_camera.GetView();
 	}
+
+	m_physics_world->SyncBodiesFromMappedGPU();
 }
 
-// -----------------------------------------------------------------------------
-// IMPORTANT: OnRenderBegin/OnRenderEnd is your "command recording region".
-// NO BeginDynamicRendering/EndDynamicRendering here.
-// ALL UpdateBuffers / Barriers / Dispatch must be here.
-// -----------------------------------------------------------------------------
 void SandboxApplication::OnRenderBegin()
 {
 	m_backend->SetExtent({ m_window->GetWidth(), m_window->GetHeight() });
