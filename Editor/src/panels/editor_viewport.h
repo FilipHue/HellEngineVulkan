@@ -46,8 +46,8 @@ public:
 	void OnViewportResize();
 	void OnMouseButtonPressed();
 
-	Texture2D GetColorTexture() const { return m_viewport_color_texture; }
-	Texture2D GetDepthTexture() const { return m_viewport_depth_texture; }
+	Texture2D* GetColorTexture() const { return m_viewport_color_texture; }
+	Texture2D* GetDepthTexture() const { return m_viewport_depth_texture; }
 private:
 	void CreatePipelines();
 	void CreateAttachments();
@@ -61,11 +61,11 @@ private:
 	glm::vec2 m_depth_color;
 
 	// Viewport
-	DescriptorSet m_viewport_descriptor;
+	DescriptorSet* m_viewport_descriptor;
 
-	Texture2D m_viewport_color_texture;
-	Texture2D m_viewport_pick_texture;
-	Texture2D m_viewport_depth_texture;
+	Texture2D* m_viewport_color_texture;
+	Texture2D* m_viewport_pick_texture;
+	Texture2D* m_viewport_depth_texture;
 
 	DynamicRenderingAttachmentInfo m_viewport_color_attachment;
 	DynamicRenderingAttachmentInfo m_viewport_pick_attachment;
@@ -75,11 +75,11 @@ private:
 	b8 m_can_pick;
 
 	// Viewport grid
-	UniformBuffer m_grid_buffer;
-	DescriptorSet m_grid_descriptor;
+	UniformBuffer* m_grid_buffer;
+	DescriptorSet* m_grid_descriptor;
 
-	Texture2D m_grid_color_texture;
-	Texture2D m_grid_depth_texture;
+	Texture2D* m_grid_color_texture;
+	Texture2D* m_grid_depth_texture;
 
 	DynamicRenderingAttachmentInfo m_grid_color_attachment;
 	DynamicRenderingAttachmentInfo m_grid_depth_attachment;

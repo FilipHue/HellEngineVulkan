@@ -69,6 +69,7 @@ void EditorViewport::CreatePipelines()
 {
 	PipelineCreateInfo pipeline_info = {};
 
+	pipeline_info.type = PipelineType_Graphics;
 	pipeline_info.topology = PipelinePrimitiveTopology_TriangleList;
 	pipeline_info.polygon_mode = PipelinePolygonMode_Fill;
 	pipeline_info.cull_mode = PipelineCullMode_None;

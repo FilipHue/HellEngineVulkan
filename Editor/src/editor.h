@@ -88,8 +88,8 @@ private:
 	EditorMenuBar* m_menu_bar;
 
 	// PBR Pipeline
-	DescriptorSet m_pbr_global_descriptor;
-	UniformBuffer m_pbr_global_ubo;
+	DescriptorSet* m_pbr_global_descriptor;
+	UniformBuffer* m_pbr_global_ubo;
 
 	GlobalShaderData m_global_shader_data;
 };
