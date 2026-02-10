@@ -142,6 +142,26 @@ namespace hellengine
 			return m_context->CreatePipeline(info, shader_info);
 		}
 
+		void VulkanBackend::Dispatch(u32 x, u32 y, u32 z) const
+		{
+			m_context->Dispatch(x, y, z);
+		}
+
+		void VulkanBackend::BarrierGraphicsToCompute() const
+		{
+			m_context->BarrierGraphicsToCompute();
+		}
+
+		void VulkanBackend::BarrierComputeToGraphics() const
+		{
+			m_context->BarrierComputeToGraphics();
+		}
+
+		void VulkanBackend::BarrierComputeToCompute() const
+		{
+			m_context->BarrierComputeToCompute();
+		}
+
 		void VulkanBackend::DestroyPipeline(VulkanPipeline* pipeline) const
 		{
 			m_context->DestroyPipeline(pipeline);

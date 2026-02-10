@@ -15,7 +15,9 @@ namespace hellengine
 			VulkanPipeline();
 			~VulkanPipeline();
 
-			void Create(const VulkanInstance& instance, VulkanDevice& device, VulkanSwapchain& swapchain, const PipelineCreateInfo& info, const ShaderStageInfo& shader_info);
+			void CreateGraphics(const VulkanInstance& instance, VulkanDevice& device, VulkanSwapchain& swapchain, const PipelineCreateInfo& info, const ShaderStageInfo& shader_info);
+			void CreateCompute(const VulkanInstance& instance, VulkanDevice& device, const PipelineCreateInfo& info, const ShaderStageInfo& shader_info);
+
 			void Destroy(const VulkanInstance& instance, const VulkanDevice& device) const;
 
 			void Bind(const VulkanDevice& device, VkCommandBuffer command_buffer) const;

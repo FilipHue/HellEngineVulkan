@@ -35,7 +35,7 @@ namespace hellengine
 			HE_GRAPHICS_INFO("\tLoaded");
 		}
 
-		Texture2D AssetManager::LoadTexture2D(const File& file)
+		Texture2D* AssetManager::LoadTexture2D(const File& file)
 		{
 			if (TextureManager::GetInstance()->GetTexture2D(file.GetName()) != nullptr)
 			{
@@ -45,7 +45,7 @@ namespace hellengine
 			return TextureManager::GetInstance()->CreateTexture2D(file.GetName(), file);
 		}
 
-		TextureCubemap AssetManager::LoadTextureCubemap(const File& file)
+		TextureCubemap* AssetManager::LoadTextureCubemap(const File& file)
 		{
 			if (TextureManager::GetInstance()->GetTextureCubemap(file.GetName()) != nullptr)
 			{

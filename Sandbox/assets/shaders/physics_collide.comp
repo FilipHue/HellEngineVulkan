@@ -1,0 +1,231 @@
+#version 450
+
+// One thread per body
+layout(local_size_x = 64, local_size_y = 1, local_size_z = 1) in;
+
+// Must match your rendering SSBO layout used by unlit_instanced.vert
+struct InstanceData
+{
+    vec4 tint_color;
+    mat4 transform;
+};
+
+// Packed Body for std430 friendliness (use vec4s)
+struct BodyGPU
+{
+    vec4 pos_invMass;        // xyz = position, w = invMass
+    vec4 vel_type;           // xyz = velocity, w = float(type)
+    vec4 halfExt_radius;     // xyz = half extents, w = radius
+};
+
+// set=0: bodies
+layout(std430, set = 0, binding = 0) buffer Bodies
+{
+    BodyGPU b[];
+} BodiesSSBO;
+
+// set=1: instance buffer (same buffer graphics uses)
+layout(std430, set = 1, binding = 0) buffer Instances
+{
+    InstanceData inst[];
+} InstSSBO;
+
+// set=2: params
+layout(set = 2, binding = 0) uniform Params
+{
+    vec3 world_min;
+    float dt;
+    vec3 world_max;
+    uint  body_count;
+    float separation_slop;   // small to avoid jitter, e.g. 0.001
+    float push_strength;     // e.g. 0.8
+    float damping;           // velocity damping, e.g. 0.98
+} P;
+
+uint collider_type(uint i)
+{
+    return uint(BodiesSSBO.b[i].vel_type.w + 0.5);
+}
+
+vec3 position(uint i) { return BodiesSSBO.b[i].pos_invMass.xyz; }
+vec3 velocity(uint i) { return BodiesSSBO.b[i].vel_type.xyz; }
+float invMass(uint i) { return BodiesSSBO.b[i].pos_invMass.w; }
+vec3 halfExt(uint i)  { return BodiesSSBO.b[i].halfExt_radius.xyz; }
+float radius(uint i)  { return BodiesSSBO.b[i].halfExt_radius.w; }
+
+void set_position(uint i, vec3 p) { BodiesSSBO.b[i].pos_invMass.xyz = p; }
+void set_velocity(uint i, vec3 v) { BodiesSSBO.b[i].vel_type.xyz = v; }
+
+// ---------- collision helpers ----------
+bool aabb_overlap(vec3 amin, vec3 amax, vec3 bmin, vec3 bmax)
+{
+    return (amin.x <= bmax.x && amax.x >= bmin.x) &&
+           (amin.y <= bmax.y && amax.y >= bmin.y) &&
+           (amin.z <= bmax.z && amax.z >= bmin.z);
+}
+
+// returns minimal push vector for AABB-vs-AABB pushing A out of B (for *this* body only)
+vec3 resolve_aabb_aabb(vec3 aC, vec3 aE, vec3 bC, vec3 bE)
+{
+    vec3 d = aC - bC;
+    vec3 o = (aE + bE) - abs(d); // overlap per axis
+    if (o.x <= 0.0 || o.y <= 0.0 || o.z <= 0.0) return vec3(0);
+
+    // push along smallest overlap axis
+    if (o.x < o.y && o.x < o.z)
+        return vec3(sign(d.x) * o.x, 0, 0);
+    else if (o.y < o.z)
+        return vec3(0, sign(d.y) * o.y, 0);
+    else
+        return vec3(0, 0, sign(d.z) * o.z);
+}
+
+vec3 resolve_sphere_sphere(vec3 pa, float ra, vec3 pb, float rb)
+{
+    vec3 d = pa - pb;
+    float dist2 = dot(d,d);
+    float r = ra + rb;
+    if (dist2 >= r*r) return vec3(0);
+
+    float dist = sqrt(max(dist2, 1e-8));
+    vec3 n = d / dist;
+    float pen = (r - dist);
+    return n * pen;
+}
+
+// sphere (p,r) vs aabb (c,e): push sphere center out of box
+vec3 resolve_sphere_aabb(vec3 p, float r, vec3 c, vec3 e)
+{
+    vec3 q = clamp(p, c - e, c + e); // closest point on box
+    vec3 d = p - q;
+    float dist2 = dot(d,d);
+    if (dist2 >= r*r) return vec3(0);
+
+    float dist = sqrt(max(dist2, 1e-8));
+    vec3 n = d / dist;
+    float pen = (r - dist);
+    return n * pen;
+}
+
+// Keep inside world AABB, reflect velocity
+void contain(inout vec3 p, inout vec3 v, vec3 e, float r, uint type)
+{
+    // For AABB: use extents e; for sphere: use radius r
+    vec3 margin = (type == 1u) ? e : vec3(r);
+
+    vec3 minp = P.world_min + margin;
+    vec3 maxp = P.world_max - margin;
+
+    if (p.x < minp.x) { p.x = minp.x; v.x *= -0.5; }
+    if (p.x > maxp.x) { p.x = maxp.x; v.x *= -0.5; }
+
+    if (p.y < minp.y) { p.y = minp.y; v.y *= -0.5; }
+    if (p.y > maxp.y) { p.y = maxp.y; v.y *= -0.5; }
+
+    if (p.z < minp.z) { p.z = minp.z; v.z *= -0.5; }
+    if (p.z > maxp.z) { p.z = maxp.z; v.z *= -0.5; }
+}
+
+void main()
+{
+    uint i = gl_GlobalInvocationID.x;
+    if (i >= P.body_count) return;
+
+    uint ti = collider_type(i);
+    float invMi = invMass(i);
+    if (invMi == 0.0) return;
+
+    vec3 pi = position(i);
+    vec3 vi = velocity(i);
+
+    // Optional integration (disabled by default)
+    // pi += vi * P.dt;
+
+    // Accumulate correction locally (thread-safe)
+    vec3 corr = vec3(0);
+
+    for (uint j = 0; j < P.body_count; ++j)
+    {
+        if (j == i) continue;
+
+        uint tj = collider_type(j);
+
+        vec3 pj = position(j);
+
+        // Treat cone as sphere approx (type 2 -> sphere)
+        bool iSphere = (ti == 0u) || (ti == 2u);
+        bool jSphere = (tj == 0u) || (tj == 2u);
+
+        if (iSphere && jSphere)
+        {
+            float ri = radius(i);
+            float rj = radius(j);
+            vec3 push = resolve_sphere_sphere(pi, ri, pj, rj);
+            if (length(push) > 0.0)
+                corr += push;
+        }
+        else if (ti == 1u && tj == 1u) // AABB-AABB
+        {
+            vec3 ei = halfExt(i);
+            vec3 ej = halfExt(j);
+
+            vec3 push = resolve_aabb_aabb(pi, ei, pj, ej);
+            if (length(push) > 0.0)
+                corr += push;
+        }
+        else
+        {
+            // Sphere-AABB (either direction): only push THIS body
+            if (iSphere && tj == 1u)
+            {
+                vec3 ej = halfExt(j);
+                vec3 push = resolve_sphere_aabb(pi, radius(i), pj, ej);
+                if (length(push) > 0.0)
+                    corr += push;
+            }
+            else if (ti == 1u && jSphere)
+            {
+                // pushing an AABB out of a sphere is non-physical; do a cheap approximation:
+                // push AABB center away from sphere center using "sphere-aabb" but swap roles.
+                vec3 ei = halfExt(i);
+                vec3 push = resolve_sphere_aabb(pj, radius(j), pi, ei);
+                // push is "sphere center out of AABB", we want "AABB center out of sphere" => invert
+                push = -push;
+                if (length(push) > 0.0)
+                    corr += push;
+            }
+        }
+    }
+
+    // Apply correction
+    float corrLen = length(corr);
+    if (corrLen > 0.0)
+    {
+        vec3 n = corr / corrLen;
+        float pen = max(corrLen - P.separation_slop, 0.0);
+        pi += n * (pen * P.push_strength);
+
+        // simple velocity response: damp into collision normal
+        float vn = dot(vi, n);
+        if (vn < 0.0)
+            vi -= n * vn;
+    }
+
+    vi *= P.damping;
+
+    // Containment against world box
+    contain(pi, vi, halfExt(i), radius(i), ti);
+
+    // Write back
+    set_position(i, pi);
+    set_velocity(i, vi);
+
+    // Write instance transform for graphics
+    // Preserve tint_color; only overwrite transform
+    InstSSBO.inst[i].transform = mat4(
+        vec4(1,0,0,0),
+        vec4(0,1,0,0),
+        vec4(0,0,1,0),
+        vec4(pi, 1)
+    );
+}

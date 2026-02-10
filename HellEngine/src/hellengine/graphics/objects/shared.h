@@ -221,6 +221,8 @@ namespace hellengine
 			{
 			case PipelineType_Graphics:
 				return VK_PIPELINE_BIND_POINT_GRAPHICS;
+			case PipelineType_Compute:
+				return VK_PIPELINE_BIND_POINT_COMPUTE;
 			default:
 				return VK_PIPELINE_BIND_POINT_GRAPHICS;
 			}

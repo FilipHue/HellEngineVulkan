@@ -42,8 +42,10 @@ namespace hellengine
 			NO_OP;
 		}
 
-		void VulkanPipeline::Create(const VulkanInstance& instance, VulkanDevice& device, VulkanSwapchain& swapchain, const PipelineCreateInfo& info, const ShaderStageInfo& shader_info)
+		void VulkanPipeline::CreateGraphics(const VulkanInstance& instance, VulkanDevice& device, VulkanSwapchain& swapchain, const PipelineCreateInfo& info, const ShaderStageInfo& shader_info)
 		{
+			m_type = PipelineType_Graphics;
+
 			SetPipelineLayout(instance, device, info);
 			SetPipelineState(instance, device, info);
 			CreateShaderStages(instance, device, shader_info);
@@ -113,29 +115,86 @@ namespace hellengine
 			}
 			m_rendering_create_info = rendering_info;
 
-			VkGraphicsPipelineCreateInfo pipeline_info = {};
-			pipeline_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-			pipeline_info.pNext = info.dynamic_rendering_info.has_value() ? &rendering_info : VK_NULL_HANDLE;
-			pipeline_info.flags = 0;
-			pipeline_info.stageCount = (u32)m_shader_stages.size();
-			pipeline_info.pStages = (u32)m_shader_stages.size() > 0 ? m_shader_stages.data() : nullptr;
-			pipeline_info.pVertexInputState = &m_vertex_input_state;
-			pipeline_info.pInputAssemblyState = &m_input_assembly_state;
-			pipeline_info.pTessellationState = VK_NULL_HANDLE;
-			pipeline_info.pViewportState = &m_viewport_state;
-			pipeline_info.pRasterizationState = &m_rasterization_state;
-			pipeline_info.pMultisampleState = &m_multisample_state;
-			pipeline_info.pDepthStencilState = &m_depth_stencil_state;
-			pipeline_info.pColorBlendState = &m_color_blend_state;
-			pipeline_info.pDynamicState = &m_dynamic_state;
-			pipeline_info.layout = m_layout;
-			pipeline_info.renderPass = info.renderpass_rendering_info.has_value() ? info.renderpass_rendering_info.value().render_pass : VK_NULL_HANDLE;
-			pipeline_info.subpass = info.renderpass_rendering_info.has_value() ? info.renderpass_rendering_info.value().subpass : 0;
-			pipeline_info.basePipelineHandle = VK_NULL_HANDLE;
-			pipeline_info.basePipelineIndex = -1;
+			VkGraphicsPipelineCreateInfo graphics_pipeline_info = {};
+			graphics_pipeline_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+			graphics_pipeline_info.pNext = info.dynamic_rendering_info.has_value() ? &rendering_info : VK_NULL_HANDLE;
+			graphics_pipeline_info.flags = 0;
+			graphics_pipeline_info.stageCount = (u32)m_shader_stages.size();
+			graphics_pipeline_info.pStages = (u32)m_shader_stages.size() > 0 ? m_shader_stages.data() : nullptr;
+			graphics_pipeline_info.pVertexInputState = &m_vertex_input_state;
+			graphics_pipeline_info.pInputAssemblyState = &m_input_assembly_state;
+			graphics_pipeline_info.pTessellationState = VK_NULL_HANDLE;
+			graphics_pipeline_info.pViewportState = &m_viewport_state;
+			graphics_pipeline_info.pRasterizationState = &m_rasterization_state;
+			graphics_pipeline_info.pMultisampleState = &m_multisample_state;
+			graphics_pipeline_info.pDepthStencilState = &m_depth_stencil_state;
+			graphics_pipeline_info.pColorBlendState = &m_color_blend_state;
+			graphics_pipeline_info.pDynamicState = &m_dynamic_state;
+			graphics_pipeline_info.layout = m_layout;
+			graphics_pipeline_info.renderPass = info.renderpass_rendering_info.has_value() ? info.renderpass_rendering_info.value().render_pass : VK_NULL_HANDLE;
+			graphics_pipeline_info.subpass = info.renderpass_rendering_info.has_value() ? info.renderpass_rendering_info.value().subpass : 0;
+			graphics_pipeline_info.basePipelineHandle = VK_NULL_HANDLE;
+			graphics_pipeline_info.basePipelineIndex = -1;
 
-			VK_CHECK(vkCreateGraphicsPipelines(device.GetLogicalDevice(), VK_NULL_HANDLE, 1, &pipeline_info, instance.GetAllocator(), &m_handle));
+			VK_CHECK(vkCreateGraphicsPipelines(device.GetLogicalDevice(), VK_NULL_HANDLE, 1, &graphics_pipeline_info, instance.GetAllocator(), &m_handle));
 		
+			DestroyShaderStages(instance, device);
+		}
+
+		void VulkanPipeline::CreateCompute(const VulkanInstance& instance, VulkanDevice& device, const PipelineCreateInfo& info, const ShaderStageInfo& shader_info)
+		{
+			m_type = PipelineType_Compute;
+
+			SetPipelineLayout(instance, device, info);
+			CreateShaderStages(instance, device, shader_info);
+
+			std::vector<std::vector<VkSpecializationMapEntry>> all_entries;
+
+			if (!shader_info.specialization_infos.empty())
+			{
+				for (auto& specialization_info : shader_info.specialization_infos)
+				{
+					all_entries.emplace_back();
+					std::vector<VkSpecializationMapEntry>& entries = all_entries.back();
+
+					for (auto& entry : specialization_info.entries)
+					{
+						VkSpecializationMapEntry map_entry = {};
+						map_entry.constantID = entry.id;
+						map_entry.offset = entry.offset;
+						map_entry.size = entry.size;
+
+						entries.push_back(map_entry);
+					}
+
+					VkSpecializationInfo specialization_info_vk = {};
+					specialization_info_vk.mapEntryCount = (u32)entries.size();
+					specialization_info_vk.pMapEntries = entries.data();
+					specialization_info_vk.dataSize = specialization_info.size;
+					specialization_info_vk.pData = specialization_info.data;
+
+					for (auto& stage : m_shader_stages)
+					{
+						if (!(stage.flags & specialization_info.stage))
+						{
+							stage.pSpecializationInfo = &specialization_info_vk;
+							m_specialization_infos.push_back(specialization_info_vk);
+						}
+					}
+				}
+			}
+
+			VkComputePipelineCreateInfo compute_pipeline_info{};
+			compute_pipeline_info.sType = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO;
+			compute_pipeline_info.pNext = VK_NULL_HANDLE;
+			compute_pipeline_info.flags = 0;
+			compute_pipeline_info.stage = m_shader_stages[0];
+			compute_pipeline_info.layout = m_layout;
+			compute_pipeline_info.basePipelineHandle = VK_NULL_HANDLE;
+			compute_pipeline_info.basePipelineIndex = -1;
+
+			VK_CHECK(vkCreateComputePipelines(device.GetLogicalDevice(), VK_NULL_HANDLE, 1, &compute_pipeline_info, instance.GetAllocator(), &m_handle));
+
 			DestroyShaderStages(instance, device);
 		}
 
