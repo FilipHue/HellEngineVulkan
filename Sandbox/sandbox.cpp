@@ -1,8 +1,5 @@
 #include "sandbox.h"
 
-// ------------------------------------------------------------
-// ShapeManager geometry implementations
-// ------------------------------------------------------------
 void ShapeManager::CreateCube(f32 size)
 {
 	ShapeData cube{};
@@ -39,17 +36,17 @@ void ShapeManager::CreateUVSphere(f32 radius, u32 sector_count, u32 stack_count)
 {
 	ShapeData sphere{};
 	const glm::vec4 baseColor = RandomColor();
-	const float PI = glm::pi<float>();
+	const f32 PI = glm::pi<f32>();
 
 	for (u32 i = 0; i <= stack_count; ++i)
 	{
-		float v = (float)i / stack_count;
-		float phi = PI * 0.5f - v * PI;
+		f32 v = (f32)i / stack_count;
+		f32 phi = PI * 0.5f - v * PI;
 
 		for (u32 j = 0; j <= sector_count; ++j)
 		{
-			float u = (float)j / sector_count;
-			float theta = u * 2.0f * PI;
+			f32 u = (f32)j / sector_count;
+			f32 theta = u * 2.0f * PI;
 
 			glm::vec3 pos{
 				radius * cos(phi) * cos(theta),
@@ -86,17 +83,17 @@ void ShapeManager::CreateCone(f32 radius, f32 height, u32 sector_count)
 {
 	ShapeData cone{};
 	const glm::vec4 baseColor = RandomColor();
-	const float PI = glm::pi<float>();
-	const float halfH = height * 0.5f;
-	const float ny = radius / height;
+	const f32 PI = glm::pi<f32>();
+	const f32 halfH = height * 0.5f;
+	const f32 ny = radius / height;
 
 	for (u32 i = 0; i <= sector_count; ++i)
 	{
-		float u = (float)i / sector_count;
-		float theta = u * 2.0f * PI;
+		f32 u = (f32)i / sector_count;
+		f32 theta = u * 2.0f * PI;
 
-		float x = radius * cos(theta);
-		float z = radius * sin(theta);
+		f32 x = radius * cos(theta);
+		f32 z = radius * sin(theta);
 
 		glm::vec3 pos(x, -halfH, z);
 		glm::vec3 normal = glm::normalize(glm::vec3(x, ny, z));
@@ -116,11 +113,11 @@ void ShapeManager::CreateCone(f32 radius, f32 height, u32 sector_count)
 	u32 baseRingStart = (u32)cone.vertices.size();
 	for (u32 i = 0; i <= sector_count; ++i)
 	{
-		float u = (float)i / sector_count;
-		float theta = u * 2.0f * PI;
+		f32 u = (f32)i / sector_count;
+		f32 theta = u * 2.0f * PI;
 
-		float x = radius * cos(theta);
-		float z = radius * sin(theta);
+		f32 x = radius * cos(theta);
+		f32 z = radius * sin(theta);
 
 		cone.vertices.emplace_back(
 			glm::vec3(x, -halfH, z),
@@ -142,16 +139,15 @@ void ShapeManager::CreateCone(f32 radius, f32 height, u32 sector_count)
 	shapes.push_back(cone);
 }
 
-// ------------------------------------------------------------
-// SandboxApplication
-// ------------------------------------------------------------
-SandboxApplication::SandboxApplication(ApplicationConfiguration* configuration)
-	: Application(configuration)
+SandboxApplication::SandboxApplication(ApplicationConfiguration* configuration) : Application(configuration)
 {
 	m_cursor_mode = GLFW_CURSOR_NORMAL;
 }
 
-SandboxApplication::~SandboxApplication() {}
+SandboxApplication::~SandboxApplication()
+{
+	NO_OP;
+}
 
 void SandboxApplication::Init()
 {
@@ -164,7 +160,7 @@ void SandboxApplication::Init()
 
 	m_camera = PerspectiveCamera();
 	m_camera.Create(45.0f, (f32)m_window->GetWidth() / (f32)m_window->GetHeight(), 0.001f, 1000.0f);
-	m_camera.SetPosition({ 0.0f, 0.0f, 35.0f });
+	m_camera.SetPosition({ 0.0f, 0.0f, 50.0f });
 
 	m_camera_data.projection = m_camera.GetProjection();
 	m_camera_data.view = m_camera.GetView();
@@ -172,6 +168,8 @@ void SandboxApplication::Init()
 	m_controller = PerspectiveController();
 	m_controller.Init();
 	m_controller.SetCamera(&m_camera);
+
+	m_first_frame = true;
 
 	CreateResources();
 }
@@ -220,27 +218,49 @@ void SandboxApplication::OnRenderBegin()
 	m_backend->SetExtent({ m_window->GetWidth(), m_window->GetHeight() });
 	m_backend->SetClearColor({ 0.0f, 0.0f, 0.0f, 1.0f });
 
-	// Camera UBO update (allowed here)
 	m_backend->UpdateUniformBuffer(m_camera_buffer, &m_camera_data, sizeof(m_camera_data));
 
-	// Cube transform UBO update (allowed here)
 	m_wireframe_cube->UpdateBuffers(m_backend);
 
-	// BVH rebuild + debug VB/IB upload (allowed here, NOT in dynamic rendering)
-	m_physics_world->RebuildBVHAndUploadDebug(m_backend, true);
+	if (m_request_apply_instance_count)
+	{
+		m_request_apply_instance_count = false;
+		m_first_frame = true;
 
-	// If spawn happened (or first frame), upload bodies + initial instance tint (allowed here)
+		m_instances_per_shape_ui = glm::clamp(m_instances_per_shape_ui, m_instances_per_shape_min, m_instances_per_shape_max);
+		m_instances_per_shape_active = m_instances_per_shape_ui;
+
+		m_shape_manager->instance_count = m_instances_per_shape_active;
+
+		m_physics_world->Spawn(m_instances_per_shape_active);
+	}
+
 	m_physics_world->UploadSpawnDataIfNeeded(m_backend, m_shape_manager);
 
-	// Compute step: barriers + dispatch (allowed here, NOT in dynamic rendering)
-	m_physics_world->RunCompute(m_backend, m_wireframe_cube->aabb, m_dt);
+	bool do_sim = !m_simulation_paused || m_use_step_simulation || m_first_frame;
+	if (do_sim)
+	{
+		m_physics_world->RunCompute(m_backend, m_wireframe_cube->aabb, m_dt);
+
+		if (m_use_step_simulation)
+		{
+			m_use_step_simulation = false;
+		}
+
+		if (m_first_frame)
+		{
+			m_first_frame = false;
+		}
+	}
+
+	m_physics_world->SyncBodiesFromMappedGPU();
+	m_physics_world->RebuildBVHAndUploadDebug(m_backend, true);
+
+	m_backend->BeginDynamicRendering();
 }
 
 void SandboxApplication::OnRenderUpdate()
 {
-	// DRAW ONLY
-	m_backend->BeginDynamicRendering();
-
 	m_backend->SetViewport({ { 0.0f, 0.0f, (f32)m_window->GetWidth(), (f32)m_window->GetHeight(), 0.0f, 1.0f } });
 	m_backend->SetScissor({ { { 0, 0 }, { m_window->GetWidth(), m_window->GetHeight()} } });
 
@@ -250,6 +270,14 @@ void SandboxApplication::OnRenderUpdate()
 		m_backend->BindPipeline(pipe);
 		m_backend->BindDescriptorSet(pipe, m_camera_descriptor_wireframe, 0);
 		m_wireframe_cube->Draw(m_backend);
+	}
+
+	// Shapes draw
+	{
+		auto pipe = PipelineManager::GetInstance()->GetPipeline(GRAPHICS_PIPELINE_NAME);
+		m_backend->BindPipeline(pipe);
+		m_backend->BindDescriptorSet(pipe, m_camera_descriptor_graphics, 0);
+		m_shape_manager->Draw(m_backend);
 	}
 
 	// BVH debug draw
@@ -262,24 +290,138 @@ void SandboxApplication::OnRenderUpdate()
 			m_physics_world->DrawDebug(m_backend, m_camera_descriptor_debug_lines);
 		}
 	}
-
-	// Shapes draw (instance transforms were written by compute BEFORE dynamic rendering)
-	{
-		auto pipe = PipelineManager::GetInstance()->GetPipeline(GRAPHICS_PIPELINE_NAME);
-		m_backend->BindPipeline(pipe);
-		m_backend->BindDescriptorSet(pipe, m_camera_descriptor_graphics, 0);
-		m_shape_manager->Draw(m_backend);
-	}
-
-	m_backend->EndDynamicRendering();
 }
 
 void SandboxApplication::OnRenderEnd()
 {
-	// Optional: end-of-frame command recording work here if your engine supports it.
+	m_backend->EndDynamicRendering();
 }
 
-void SandboxApplication::OnUIRender() {}
+void SandboxApplication::OnUIRender()
+{
+	ImGui::Begin("Physics World", nullptr, ImGuiWindowFlags_AlwaysAutoResize);
+
+	ImGui::Separator();
+
+	ImGui::Text("Bodies: %u", (unsigned)m_physics_world->bodies.size());
+
+	ImGui::PushItemWidth(220.0f);
+
+	bool changed = false;
+
+	changed |= ImGui::DragFloat("Separation slop", &m_physics_world->m_params.separation_slop, 0.0001f, 0.0f, 0.1f, "%.6f");
+	ImGui::SameLine();
+	if (ImGui::SmallButton("Reset##slop")) { m_physics_world->m_params.separation_slop = 0.001f; changed = true; }
+
+	changed |= ImGui::DragFloat("Push strength", &m_physics_world->m_params.push_strength, 0.01f, 0.0f, 5.0f, "%.3f");
+	ImGui::SameLine();
+	if (ImGui::SmallButton("Reset##push")) { m_physics_world->m_params.push_strength = 0.85f; changed = true; }
+
+	changed |= ImGui::DragFloat("Damping", &m_physics_world->m_params.damping, 0.001f, 0.0f, 1.0f, "%.4f");
+	ImGui::SameLine();
+	if (ImGui::SmallButton("Reset##damp")) { m_physics_world->m_params.damping = 0.985f; changed = true; }
+
+	ImGui::PopItemWidth();
+
+	ImGui::Spacing();
+	ImGui::Separator();
+	ImGui::Spacing();
+
+	ImGui::SeparatorText("Population");
+
+	ImGui::Text("Active instances/shape: %u", m_instances_per_shape_active);
+	ImGui::Text("Min: %u   Max: %u", m_instances_per_shape_min, m_instances_per_shape_max);
+
+	ImGui::PushItemWidth(220.0f);
+
+	i32 ui_count = (i32)m_instances_per_shape_ui;
+	if (ImGui::SliderInt("Instances / shape", &ui_count, (i32)m_instances_per_shape_min, (i32)m_instances_per_shape_max))
+	{
+		u32 new_value = (u32)ui_count;
+		new_value = glm::clamp(new_value, m_instances_per_shape_min, m_instances_per_shape_max);
+
+		if (new_value != m_instances_per_shape_active)
+		{
+			m_instances_per_shape_ui = new_value;
+			m_request_apply_instance_count = true;
+		}
+	}
+
+	ImGui::PopItemWidth();
+
+	ImGui::Spacing();
+	ImGui::Separator();
+	ImGui::Spacing();
+
+	if (ImGui::Checkbox("Pause simulation", &m_simulation_paused) || m_simulation_paused)
+	{
+		if (ImGui::Button("Step simulation"))
+		{
+			m_use_step_simulation = true;
+		}
+	}
+
+	ImGui::Checkbox("Show BVH debug", &m_show_debug);
+
+	if (ImGui::Button("Restart simulation"))
+	{
+		RestartSimulation();
+	}
+
+	ImGui::Spacing();
+
+	if (ImGui::CollapsingHeader("Presets", ImGuiTreeNodeFlags_DefaultOpen))
+	{
+		if (ImGui::Button("Soft"))
+		{
+			m_physics_world->m_params.separation_slop = 0.0025f;
+			m_physics_world->m_params.push_strength = 0.35f;
+			m_physics_world->m_params.damping = 0.995f;
+			changed = true;
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Default"))
+		{
+			m_physics_world->m_params.separation_slop = 0.001f;
+			m_physics_world->m_params.push_strength = 0.85f;
+			m_physics_world->m_params.damping = 0.985f;
+			changed = true;
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Stiff"))
+		{
+			m_physics_world->m_params.separation_slop = 0.00025f;
+			m_physics_world->m_params.push_strength = 1.75f;
+			m_physics_world->m_params.damping = 0.975f;
+			changed = true;
+		}
+	}
+
+	ImGui::Spacing();
+	ImGui::Separator();
+	ImGui::Spacing();
+
+	f32 cube_size = m_wireframe_cube->aabb.max.x - m_wireframe_cube->aabb.min.x;
+	changed |= ImGui::DragFloat("Spawn volume size", &cube_size, 0.1f, 1.0f, 100.0f, "%.1f");
+	ImGui::SameLine();
+	if (ImGui::SmallButton("Reset##spawn")) { cube_size = 25.0f; changed = true; }
+	if (changed)
+	{
+		m_wireframe_cube->SetScale(glm::vec3(cube_size));
+		m_physics_world->SetSpawnBox(m_wireframe_cube->aabb.min, m_wireframe_cube->aabb.max);
+		m_first_frame = true;
+	}
+
+	ImGui::Spacing();
+	ImGui::Separator();
+	ImGui::Spacing();
+
+	ImGui::Text("Controls:");
+	ImGui::BulletText("WASD to move, right mouse click to look around");
+	ImGui::TextDisabled("Tip: use F1 to toggle camera controls");
+
+	ImGui::End();
+}
 
 b8 SandboxApplication::OnWindowClose(EventContext& event)
 {
@@ -290,7 +432,9 @@ b8 SandboxApplication::OnWindowClose(EventContext& event)
 b8 SandboxApplication::OnWindowResize(EventContext& event)
 {
 	if (event.data.window_resize.width == 0 || event.data.window_resize.height == 0)
+	{
 		return false;
+	}
 
 	m_window->SetSize(event.data.window_resize.width, event.data.window_resize.height);
 
@@ -315,7 +459,6 @@ b8 SandboxApplication::OnKeyPressed(EventContext& event)
 		SetCursorMode(m_cursor_mode);
 	}
 
-	// Resize spawn volume (compute reads new world AABB next frame)
 	if (event.data.key_event.key == KEY_KP_ADD)
 	{
 		m_wireframe_cube->transform = glm::scale(m_wireframe_cube->transform, glm::vec3(1.1f));
@@ -327,16 +470,6 @@ b8 SandboxApplication::OnKeyPressed(EventContext& event)
 		m_wireframe_cube->transform = glm::scale(m_wireframe_cube->transform, glm::vec3(0.9f));
 		m_wireframe_cube->aabb.min *= 0.9f;
 		m_wireframe_cube->aabb.max *= 0.9f;
-	}
-
-	if (event.data.key_event.key == KEY_R)
-	{
-		RestartSimulation();
-	}
-
-	if (event.data.key_event.key == KEY_H)
-	{
-		m_show_debug = !m_show_debug;
 	}
 
 	if (event.data.key_event.key == KEY_ESCAPE)
@@ -353,7 +486,7 @@ void SandboxApplication::RestartSimulation()
 	m_physics_world->SetShapePrototypes(m_shape_prototypes);
 	m_physics_world->Spawn(m_shape_manager->instance_count);
 
-	// Upload will happen next OnRenderBegin() via UploadSpawnDataIfNeeded()
+	m_first_frame = true;
 }
 
 void SandboxApplication::CreateResources()
@@ -367,7 +500,7 @@ void SandboxApplication::CreateResources()
 	m_wireframe_cube->SetScale(glm::vec3(25.0f));
 
 	// Shapes
-	m_shape_manager = new ShapeManager(1000);
+	m_shape_manager = new ShapeManager(10000);
 	m_shape_manager->CreateCube(1.0f);
 	m_shape_manager->CreateUVSphere(0.5f, 36, 18);
 	m_shape_manager->CreateCone(0.5f, 1.0f, 36);
@@ -378,10 +511,10 @@ void SandboxApplication::CreateResources()
 	m_physics_world = new PhysicsWorld();
 	m_physics_world->SetSpawnBox(m_wireframe_cube->aabb.min, m_wireframe_cube->aabb.max);
 
-	// prototypes match shape creation order: cube, sphere, cone
 	m_shape_prototypes.clear();
 	m_shape_prototypes.reserve(3);
 
+	// Cube
 	{
 		Body b{};
 		b.type = Collider_AABB;
@@ -389,6 +522,8 @@ void SandboxApplication::CreateResources()
 		b.inv_mass = 1.0f;
 		m_shape_prototypes.push_back(b);
 	}
+
+	// Sphere
 	{
 		Body b{};
 		b.type = Collider_Sphere;
@@ -396,6 +531,8 @@ void SandboxApplication::CreateResources()
 		b.inv_mass = 1.0f;
 		m_shape_prototypes.push_back(b);
 	}
+
+	// Cone
 	{
 		Body b{};
 		b.type = Collider_ConeSphereApprox;
@@ -405,12 +542,13 @@ void SandboxApplication::CreateResources()
 	}
 
 	m_physics_world->SetShapePrototypes(m_shape_prototypes);
-
-	// Create compute bindings AFTER ShapeManager buffers exist
 	m_physics_world->CreateBuffers(m_backend, m_shape_manager);
 
-	// Spawn bodies (GPU upload happens in OnRenderBegin)
-	m_physics_world->Spawn(m_shape_manager->instance_count);
+	m_instances_per_shape_min = 1;
+	m_instances_per_shape_max = m_shape_manager->instance_count;
+	m_instances_per_shape_active = 1;
+	m_instances_per_shape_ui = m_instances_per_shape_active;
+	m_request_apply_instance_count = true;
 }
 
 void SandboxApplication::CreatePipelines()

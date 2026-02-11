@@ -14,9 +14,9 @@ using namespace math;
 using namespace graphics;
 using namespace resources;
 
-#define SHADER_PATH   "assets/shaders"
-#define TEXTURE_PATH  "assets/textures"
-#define MODEL_PATH    "assets/models"
+constexpr const char* SHADER_PATH   = "assets/shaders";
+constexpr const char* TEXTURE_PATH  = "assets/textures";
+constexpr const char* MODEL_PATH    = "assets/models";
 
 constexpr const char* GRAPHICS_PIPELINE_NAME = "graphics_pipeline";
 constexpr const char* WIREFRAME_PIPELINE_NAME = "wireframe_pipeline";
@@ -28,40 +28,25 @@ constexpr const char* SHADER_WIREFRAME[2] = { "wireframe.vert", "wireframe.frag"
 constexpr const char* SHADER_DEBUG_LINES[2] = { "debug_lines.vert", "debug_lines.frag" };
 constexpr const char* SHADER_PHYSICS_COMPUTE = "physics_collide.comp";
 
-// ------------------------------------------------------------
-// Random helpers
-// ------------------------------------------------------------
 static glm::vec4 RandomColor()
 {
-	static std::mt19937 rng{ std::random_device{}() };
-	static std::uniform_real_distribution<float> dist(0.2f, 1.0f);
-	return glm::vec4(dist(rng), dist(rng), dist(rng), 1.0f);
-}
-
-static std::mt19937& GlobalRng()
-{
-	static std::mt19937 rng{ std::random_device{}() };
-	return rng;
-}
-
-static float RandRange(float a, float b)
-{
-	std::uniform_real_distribution<float> dist(a, b);
-	return dist(GlobalRng());
+	return glm::vec4(
+		Random::GetInRange(0.2f, 1.0f),
+		Random::GetInRange(0.2f, 1.0f),
+		Random::GetInRange(0.2f, 1.0f),
+		1.0f
+	);
 }
 
 static glm::vec3 RandVec3(const glm::vec3& minv, const glm::vec3& maxv)
 {
 	return glm::vec3(
-		RandRange(minv.x, maxv.x),
-		RandRange(minv.y, maxv.y),
-		RandRange(minv.z, maxv.z)
+		Random::GetInRange(minv.x, maxv.x),
+		Random::GetInRange(minv.y, maxv.y),
+		Random::GetInRange(minv.z, maxv.z)
 	);
 }
 
-// ------------------------------------------------------------
-// AABB utilities (CPU)
-// ------------------------------------------------------------
 struct AABB
 {
 	glm::vec3 min;
@@ -69,26 +54,13 @@ struct AABB
 
 	AABB() : min(0.0f), max(0.0f) {}
 	AABB(const glm::vec3& mi, const glm::vec3& ma) : min(mi), max(ma) {}
+
+	glm::vec3 GetCenter() const { return 0.5f * (min + max); }
+	glm::vec3 GetExtents() const { return 0.5f * (max - min); }
+
+	static AABB Union(const AABB& a, const AABB& b) { return AABB(glm::min(a.min, b.min), glm::max(a.max, b.max)); }
 };
 
-static inline AABB AABBUnion(const AABB& a, const AABB& b)
-{
-	return AABB(glm::min(a.min, b.min), glm::max(a.max, b.max));
-}
-
-static inline glm::vec3 AABBCenter(const AABB& b)
-{
-	return 0.5f * (b.min + b.max);
-}
-
-static inline glm::vec3 AABBExtents(const AABB& b)
-{
-	return 0.5f * (b.max - b.min);
-}
-
-// ------------------------------------------------------------
-// Wireframe cube (spawn volume visualization)
-// ------------------------------------------------------------
 struct WireframeCubeData
 {
 	std::vector<VertexFormatBase> vertices;
@@ -159,7 +131,6 @@ struct WireframeCubeData
 		transform_descriptor = nullptr;
 	}
 
-	// MUST be called only in OnRenderBegin/OnRenderEnd (command recording region)
 	void UpdateBuffers(VulkanBackend* backend)
 	{
 		backend->UpdateUniformBuffer(transform_buffer, &transform, sizeof(transform));
@@ -176,13 +147,26 @@ struct WireframeCubeData
 	void SetScale(const glm::vec3& scale)
 	{
 		transform = glm::scale(glm::mat4(1.0f), scale);
-		aabb = AABB(-scale * 0.5f, scale * 0.5f);
+
+		glm::vec3 localCenter(0.0f);
+		glm::vec3 localExtents(0.5f);
+
+		glm::vec3 worldCenter = glm::vec3(transform * glm::vec4(localCenter, 1.0f));
+
+		glm::mat3 A = glm::mat3(transform);
+		glm::mat3 absA(
+			glm::abs(A[0]),
+			glm::abs(A[1]),
+			glm::abs(A[2])
+		);
+
+		glm::vec3 worldExtents = absA * localExtents;
+
+		aabb.min = worldCenter - worldExtents;
+		aabb.max = worldCenter + worldExtents;
 	}
 };
 
-// ------------------------------------------------------------
-// ShapeManager (rendering only)
-// ------------------------------------------------------------
 struct ShapeManager
 {
 	struct ShapeData
@@ -244,7 +228,6 @@ struct ShapeManager
 		transforms_descriptor = nullptr;
 	}
 
-	// Used ONLY for initial tint upload (or respawn tint changes). Must be called in OnRenderBegin/End.
 	void UpdateBuffers(VulkanBackend* backend)
 	{
 		if (!instance_data.empty())
@@ -284,7 +267,7 @@ struct ShapeManager
 			{
 				ShapeInstanceData inst{};
 				inst.tint_color = RandomColor();
-				inst.transform = glm::mat4(1.0f); // compute overwrites
+				inst.transform = glm::mat4(1.0f);
 				instance_data.push_back(inst);
 			}
 		}
@@ -301,9 +284,6 @@ struct ShapeManager
 	std::vector<ShapeData> shapes;
 };
 
-// ------------------------------------------------------------
-// PhysicsWorld (CPU BVH + debug draw + GPU compute collisions)
-// ------------------------------------------------------------
 enum ColliderType : u32
 {
 	Collider_Sphere = 0,
@@ -326,7 +306,9 @@ struct Body
 static inline AABB ComputeBodyAABB(const Body& b)
 {
 	if (b.type == Collider_AABB)
+	{
 		return AABB(b.position - b.half_extents, b.position + b.half_extents);
+	}
 
 	glm::vec3 r(b.radius);
 	return AABB(b.position - r, b.position + r);
@@ -350,8 +332,10 @@ struct BodyGPU
 
 struct PhysicsParams
 {
-	glm::vec3 world_min; f32 dt;
-	glm::vec3 world_max; u32 body_count;
+	glm::vec3 world_min;
+	f32 dt;
+	glm::vec3 world_max; 
+	u32 body_count;
 	f32 separation_slop;
 	f32 push_strength;
 	f32 damping;
@@ -364,20 +348,22 @@ struct PhysicsWorld
 	{
 		debug_pipeline = PipelineManager::GetInstance()->GetPipeline(DEBUG_LINES_PIPELINE_NAME);
 		compute_pipeline = PipelineManager::GetInstance()->GetPipeline(PHYSICS_COMPUTE_PIPELINE_NAME);
+
+		m_params.separation_slop = 0.001f;
+		m_params.push_strength = 0.85f;
+		m_params.damping = 0.985f;
 	}
 
-	// compute resources need ShapeManager instance buffer handle
 	void CreateBuffers(VulkanBackend* backend, ShapeManager* sm)
 	{
-		HE_ASSERT(backend != nullptr, "PhysicsWorld::CreateBuffers: backend null!");
-		HE_ASSERT(sm != nullptr, "PhysicsWorld::CreateBuffers: sm null!");
+		const u32 max_bodies = sm->instance_count * (u32)sm->shapes.size();
 
-		const u32 maxBodies = sm->instance_count * (u32)sm->shapes.size();
+		m_capacity_bodies = max_bodies;
 
-		bodies_buffer = backend->CreateStorageBufferMappedPersistent(sizeof(BodyGPU), maxBodies);
+		bodies_buffer = backend->CreateStorageBufferMappedPersistent(sizeof(BodyGPU), max_bodies);
 		params_buffer = backend->CreateUniformBufferMappedPersistent(sizeof(PhysicsParams), 1);
 
-		// set=0 bodies
+		// set = 0 -> bodies
 		bodies_set = backend->CreateDescriptorSet(compute_pipeline, 0);
 		{
 			DescriptorSetWriteData w{};
@@ -385,12 +371,12 @@ struct PhysicsWorld
 			w.binding = 0;
 			w.data.buffer.buffers = new VkBuffer[1]{ bodies_buffer->GetHandle() };
 			w.data.buffer.offsets = new VkDeviceSize[1]{ 0 };
-			w.data.buffer.ranges = new VkDeviceSize[1]{ sizeof(BodyGPU) * maxBodies };
+			w.data.buffer.ranges = new VkDeviceSize[1]{ sizeof(BodyGPU) * max_bodies };
 			std::vector<DescriptorSetWriteData> writes = { w };
 			backend->WriteDescriptor(&bodies_set, writes);
 		}
 
-		// set=1 instances (same as graphics)
+		// set = 1 -> instances (same as graphics)
 		instances_set = backend->CreateDescriptorSet(compute_pipeline, 1);
 		{
 			DescriptorSetWriteData w{};
@@ -398,12 +384,12 @@ struct PhysicsWorld
 			w.binding = 0;
 			w.data.buffer.buffers = new VkBuffer[1]{ sm->transforms_buffer->GetHandle() };
 			w.data.buffer.offsets = new VkDeviceSize[1]{ 0 };
-			w.data.buffer.ranges = new VkDeviceSize[1]{ sizeof(ShapeManager::ShapeInstanceData) * maxBodies };
+			w.data.buffer.ranges = new VkDeviceSize[1]{ sizeof(ShapeManager::ShapeInstanceData) * max_bodies };
 			std::vector<DescriptorSetWriteData> writes = { w };
 			backend->WriteDescriptor(&instances_set, writes);
 		}
 
-		// set=2 params
+		// set = 2 -> params
 		params_set = backend->CreateDescriptorSet(compute_pipeline, 2);
 		{
 			DescriptorSetWriteData w{};
@@ -415,6 +401,12 @@ struct PhysicsWorld
 			std::vector<DescriptorSetWriteData> writes = { w };
 			backend->WriteDescriptor(&params_set, writes);
 		}
+
+		// reserve CPU staging for capacity to avoid realloc when changing active count
+		bodies_gpu.reserve(m_capacity_bodies);
+		bodies.reserve(m_capacity_bodies);
+		prim_bounds.reserve(m_capacity_bodies);
+		prim_indices.reserve(m_capacity_bodies);
 	}
 
 	void DestroyBuffers(VulkanBackend* backend)
@@ -434,6 +426,8 @@ struct PhysicsWorld
 		bodies_set = nullptr;
 		instances_set = nullptr;
 		params_set = nullptr;
+
+		m_capacity_bodies = 0;
 	}
 
 	void SetSpawnBox(const glm::vec3& min_corner, const glm::vec3& max_corner)
@@ -449,12 +443,19 @@ struct PhysicsWorld
 
 	void Spawn(u32 instances_per_shape)
 	{
+		const u32 per_shape_clamped =
+			(m_capacity_bodies == 0)
+			? instances_per_shape
+			: glm::min(instances_per_shape, m_capacity_bodies / (u32)glm::max<size_t>(1, shape_prototypes.size()));
+
+		active_instances_per_shape = per_shape_clamped;
+
 		bodies.clear();
-		bodies.reserve(instances_per_shape * (u32)shape_prototypes.size());
+		bodies.reserve(active_instances_per_shape * (u32)shape_prototypes.size());
 
 		for (const Body& proto : shape_prototypes)
 		{
-			for (u32 i = 0; i < instances_per_shape; ++i)
+			for (u32 i = 0; i < active_instances_per_shape; ++i)
 			{
 				Body b = proto;
 				b.position = RandVec3(spawn_min, spawn_max);
@@ -462,7 +463,7 @@ struct PhysicsWorld
 			}
 		}
 
-		// build GPU upload array on CPU
+		// build GPU upload array on CPU (size = ACTIVE bodies)
 		bodies_gpu.resize(bodies.size());
 		for (u32 i = 0; i < (u32)bodies.size(); ++i)
 		{
@@ -471,43 +472,44 @@ struct PhysicsWorld
 			g.pos_invMass = glm::vec4(s.position, s.inv_mass);
 			g.vel_type = glm::vec4(s.velocity, (f32)s.type);
 			g.halfExt_radius = glm::vec4(s.half_extents, s.radius);
+
 			bodies_gpu[i] = g;
 		}
 
 		needs_gpu_upload = true;
 	}
 
-	// -----------------------------------------------------------------
-	// MUST be called only in OnRenderBegin/OnRenderEnd (NO dynamic draw)
-	// -----------------------------------------------------------------
 	void UploadSpawnDataIfNeeded(VulkanBackend* backend, ShapeManager* sm)
 	{
 		if (!needs_gpu_upload) return;
+		if (!backend || !sm) return;
 
-		backend->UpdateStorageBuffer(bodies_buffer,
-			bodies_gpu.data(),
-			sizeof(BodyGPU) * (u32)bodies_gpu.size());
+		// Upload ACTIVE bodies only
+		if (!bodies_gpu.empty())
+		{
+			backend->UpdateStorageBuffer(
+				bodies_buffer,
+				bodies_gpu.data(),
+				sizeof(BodyGPU) * (u32)bodies_gpu.size());
+		}
 
-		// tint upload (compute will write transforms)
 		sm->UpdateBuffers(backend);
 
 		needs_gpu_upload = false;
 	}
 
-	// -----------------------------------------------------------------
-	// MUST be called only in OnRenderBegin/OnRenderEnd (NO dynamic draw)
-	// Includes barriers + dispatch.
-	// -----------------------------------------------------------------
 	void RunCompute(VulkanBackend* backend, const AABB& world_bounds, f32 dt)
 	{
+		if (!backend) return;
+
 		PhysicsParams p{};
 		p.world_min = world_bounds.min;
 		p.world_max = world_bounds.max;
 		p.dt = dt;
 		p.body_count = (u32)bodies.size();
-		p.separation_slop = 0.001f;
-		p.push_strength = 0.85f;
-		p.damping = 0.985f;
+		p.separation_slop = m_params.separation_slop;
+		p.push_strength = m_params.push_strength;
+		p.damping = m_params.damping;
 
 		backend->UpdateUniformBuffer(params_buffer, &p, sizeof(PhysicsParams));
 
@@ -530,12 +532,11 @@ struct PhysicsWorld
 
 	void SyncBodiesFromMappedGPU()
 	{
-		// Only valid if bodies_buffer is host-visible + persistently mapped.
-		// Also requires GPU completion + invalidate if non-coherent (handled outside).
 		const u32 N = (u32)bodies.size();
 		if (N == 0) return;
+		if (!bodies_buffer) return;
 
-		const BodyGPU* gpu = (const BodyGPU*)bodies_buffer->GetMappedMemory(); // your function name
+		const BodyGPU* gpu = (const BodyGPU*)bodies_buffer->GetMappedMemory();
 
 		for (u32 i = 0; i < N; ++i)
 		{
@@ -548,10 +549,6 @@ struct PhysicsWorld
 		}
 	}
 
-
-	// -----------------------------------------------------------------
-	// CPU BVH build + GPU debug mesh upload (also must be outside dynamic)
-	// -----------------------------------------------------------------
 	void RebuildBVHAndUploadDebug(VulkanBackend* backend, bool draw_internal_nodes = true)
 	{
 		BuildPrimBounds();
@@ -560,7 +557,6 @@ struct PhysicsWorld
 		UploadDebugMesh(backend);
 	}
 
-	// draw-only (allowed inside dynamic rendering)
 	void DrawDebug(VulkanBackend* backend, DescriptorSet* camera_set0)
 	{
 		if (!debug_vb || !debug_ib) return;
@@ -576,6 +572,7 @@ struct PhysicsWorld
 
 	std::vector<Body> bodies;
 	std::vector<Body> shape_prototypes;
+	PhysicsParams m_params;
 
 	// CPU BVH
 	std::vector<AABB> prim_bounds;
@@ -603,17 +600,25 @@ struct PhysicsWorld
 	std::vector<BodyGPU> bodies_gpu;
 	b8 needs_gpu_upload = false;
 
+	u32 m_capacity_bodies = 0;
+	u32 active_instances_per_shape = 0;
+
 private:
 	void BuildPrimBounds()
 	{
 		const u32 N = (u32)bodies.size();
 		prim_bounds.resize(N);
+
 		for (u32 i = 0; i < N; ++i)
+		{
 			prim_bounds[i] = ComputeBodyAABB(bodies[i]);
+		}
 
 		prim_indices.resize(N);
 		for (u32 i = 0; i < N; ++i)
+		{
 			prim_indices[i] = i;
+		}
 	}
 
 	void BuildBVH()
@@ -631,7 +636,9 @@ private:
 
 		AABB b = prim_bounds[prim_indices[first]];
 		for (u32 i = 1; i < count; ++i)
-			b = AABBUnion(b, prim_bounds[prim_indices[first + i]]);
+		{
+			b = AABB::Union(b, prim_bounds[prim_indices[first + i]]);
+		}
 
 		BVHNode& node = nodes[node_index];
 		node.bounds = b;
@@ -646,7 +653,7 @@ private:
 			return node_index;
 		}
 
-		glm::vec3 e = AABBExtents(b);
+		glm::vec3 e = b.GetExtents();
 		int axis = 0;
 		if (e.y > e.x) axis = 1;
 		if (e.z > (axis == 0 ? e.x : e.y)) axis = 2;
@@ -659,7 +666,7 @@ private:
 			prim_indices.begin() + first + count,
 			[&](u32 a, u32 c)
 			{
-				return AABBCenter(prim_bounds[a])[axis] < AABBCenter(prim_bounds[c])[axis];
+				return prim_bounds[a].GetCenter()[axis] < prim_bounds[c].GetCenter()[axis];
 			}
 		);
 
@@ -730,22 +737,23 @@ private:
 
 	void UploadDebugMesh(VulkanBackend* backend)
 	{
+		if (!backend) return;
+
 		if (debug_vb) backend->DestroyBuffer(debug_vb);
 		if (debug_ib) backend->DestroyBuffer(debug_ib);
 		debug_vb = nullptr;
 		debug_ib = nullptr;
 
 		if (debug_vertices.empty() || debug_indices.empty())
+		{
 			return;
+		}
 
 		debug_vb = backend->CreateVertexBuffer(debug_vertices.data(), (u32)debug_vertices.size());
 		debug_ib = backend->CreateIndexBuffer(debug_indices.data(), (u32)debug_indices.size());
 	}
 };
 
-// ------------------------------------------------------------
-// Application
-// ------------------------------------------------------------
 class SandboxApplication : public Application
 {
 public:
@@ -778,6 +786,14 @@ private:
 private:
 	u32 m_cursor_mode = GLFW_CURSOR_NORMAL;
 	b8 m_show_debug = false;
+	b8 m_simulation_paused = true;
+	b8 m_use_step_simulation = true;
+	b8 m_first_frame = true;
+	u32 m_instances_per_shape_min = 1;
+	u32 m_instances_per_shape_max = 1;
+	u32 m_instances_per_shape_ui  = 1;
+	u32 m_instances_per_shape_active = 1;
+	b8  m_request_apply_instance_count = false;
 
 	f32 m_dt = 0.016f;
 
@@ -795,6 +811,5 @@ private:
 	DescriptorSet* m_camera_descriptor_wireframe = nullptr;
 	DescriptorSet* m_camera_descriptor_debug_lines = nullptr;
 
-	// Stored prototypes for restart
 	std::vector<Body> m_shape_prototypes;
 };
