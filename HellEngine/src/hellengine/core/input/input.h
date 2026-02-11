@@ -18,10 +18,14 @@ namespace hellengine
 		{
 		public:
 			HE_API static b8 IsKeyPressed(keys key);
+			HE_API static b8 IsKeyJustPressed(keys key);
 			HE_API static b8 IsKeyReleased(keys key);
+			HE_API static b8 IsKeyJustReleased(keys key);
 
 			HE_API static b8 IsMouseButtonPressed(mouse_buttons button);
+			HE_API static b8 IsMouseButtonJustPressed(mouse_buttons button);
 			HE_API static b8 IsMouseButtonReleased(mouse_buttons button);
+			HE_API static b8 IsMouseButtonJustReleased(mouse_buttons button);
 
 			HE_API static Tuple<f32, f32> GetMousePosition();
 			HE_API static f32 GetMouseX();

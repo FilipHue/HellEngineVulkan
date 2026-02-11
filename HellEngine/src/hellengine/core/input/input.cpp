@@ -15,9 +15,19 @@ namespace hellengine
 			return m_keys[key];
 		}
 
+		b8 Input::IsKeyJustPressed(keys key)
+		{
+			return m_keys[key] && !m_keys_last_frame[key];
+		}
+
 		b8 Input::IsKeyReleased(keys key)
 		{
 			return !m_keys[key];
+		}
+
+		b8 Input::IsKeyJustReleased(keys key)
+		{
+			return !m_keys[key] && m_keys_last_frame[key];
 		}
 
 		b8 Input::IsMouseButtonPressed(mouse_buttons button)
@@ -25,9 +35,19 @@ namespace hellengine
 			return m_mouse_buttons[button];
 		}
 
+		b8 Input::IsMouseButtonJustPressed(mouse_buttons button)
+		{
+			return m_mouse_buttons[button] && !m_mouse_buttons_last_frame[button];
+		}
+
 		b8 Input::IsMouseButtonReleased(mouse_buttons button)
 		{
 			return !m_mouse_buttons[button];
+		}
+
+		b8 Input::IsMouseButtonJustReleased(mouse_buttons button)
+		{
+			return !m_mouse_buttons[button] && m_mouse_buttons_last_frame[button];
 		}
 
 		Tuple<f32, f32> Input::GetMousePosition()
@@ -73,7 +93,7 @@ namespace hellengine
 
 		void hellengine::core::Input::ProcessMousePosition(f32 x, f32 y)
 		{
-			if (x != m_mouse_x && y != m_mouse_y)
+			if (x != m_mouse_x || y != m_mouse_y)
 			{
 				m_mouse_x_last_frame = m_mouse_x;
 				m_mouse_y_last_frame = m_mouse_y;

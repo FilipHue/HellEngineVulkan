@@ -35,10 +35,10 @@ namespace hellengine
 					f32 delta_time = m_frame_time - m_last_frame_time;
 					m_last_frame_time = m_frame_time;
 
-					Input::Update();
-
 					application.OnProcessUpdate(delta_time);
 					application.m_backend->DrawFrame();
+
+					Input::Update();
 
 					m_frame_count++;
 
