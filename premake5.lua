@@ -51,30 +51,6 @@ project "HellEngine"
         "%{IncludeDirs.VULKAN}"
     }
 
-    links
-    {
-        "%{Library.SPDLOG}",
-
-        -- If static runtime is on, link against glfw3_mt.lib
-        "%{Library.GLFW}",
-
-        "%{Library.ASSIMP}",
-
-        "%{Library.KTX}",
-        
-        "%{Library.Vulkan}"
-    }
-
-    libdirs
-    {
-        "%{LibraryDirectories.SPDLOG}",
-        "%{LibraryDirectories.GLFW}",
-        "%{LibraryDirectories.ASSIMP}",
-        "%{LibraryDirectories.KTX}",
-
-        "%{LibraryDirectories.VulkanSDK}"
-    }
-
     -- If it is a fresh build or you build for static, comment out the post build command
     -- It will give an error since the folder does not exist
     -- postbuildcommands
@@ -133,9 +109,6 @@ project "Editor"
     location "Editor"
     kind "ConsoleApp"
     language "C++"
-
-    -- This is to make sure that the runtime library is linked dynamically
-    -- ON means /MT and OFF means /MD
     staticruntime "off"
 
     targetdir ("%{wks.location}/bin/" .. output_dir .. "/%{prj.name}")
@@ -159,8 +132,16 @@ project "Editor"
         "HellEngine/dependencies/IMGUI",
         "HellEngine/dependencies/IMGUIZMO/include",
         "HellEngine/dependencies/ENTT/include",
-
         "%{IncludeDirs.VULKAN}"
+    }
+
+    libdirs
+    {
+        "%{LibraryDirectories.SPDLOG}",
+        "%{LibraryDirectories.GLFW}",
+        "%{LibraryDirectories.ASSIMP}",
+        "%{LibraryDirectories.KTX}",
+        "%{LibraryDirectories.VulkanSDK}"
     }
 
     links 
@@ -168,46 +149,49 @@ project "Editor"
         "HellEngine"
     }
 
-    -- postbuildcommands
-    -- {
-    --     ("{COPYFILE} %[%{!wks.location}bin/%{output_dir}/HellEngine/HellEngine.dll] %[%{!wks.location}bin/%{output_dir}/Editor/]")
-    -- }
-
     filter "system:windows"
         cppdialect "C++20"
         defines 
         {
             "HE_PLATFORM_WINDOWS",
-            -- "HE_DLL"
         }
-
-        buildoptions
-        {
-            "/Zc:__cplusplus"
-        }
-
-        flags
-        {
-            "MultiProcessorCompile"
-        }
+        buildoptions { "/Zc:__cplusplus" }
+        flags { "MultiProcessorCompile" }
 
     filter "configurations:Debug"
         runtime "Debug"
         defines "HE_DEBUG"
         symbols "On"
+        
+        links
+        {
+            "%{Library.SPDLOG}",
+            "%{Library.GLFW}",
+            "%{Library.ASSIMP}",
+            "%{Library.KTX}",
+            "%{Library.Vulkan}"
+        }
 
     filter "configurations:Release"
         runtime "Release"
         defines {"HE_RELEASE", "NDEBUG"}
         optimize "On"
+        
+        links
+        {
+            "%{Library.SPDLOG}",
+            "%{Library.GLFW}",
+            "%{Library.ASSIMP}",
+            "%{Library.KTX}",
+            "%{Library.Vulkan}"
+        }
+
+    filter {}  -- Reset filter
 
 project "Sandbox"
     location "Sandbox"
     kind "ConsoleApp"
     language "C++"
-
-    -- This is to make sure that the runtime library is linked dynamically
-    -- ON means /MT and OFF means /MD
     staticruntime "off"
 
     targetdir ("%{wks.location}/bin/" .. output_dir .. "/%{prj.name}")
@@ -231,8 +215,16 @@ project "Sandbox"
         "HellEngine/dependencies/IMGUI",
         "HellEngine/dependencies/IMGUIZMO/include",
         "HellEngine/dependencies/ENTT/include",
-
         "%{IncludeDirs.VULKAN}"
+    }
+
+    libdirs
+    {
+        "%{LibraryDirectories.SPDLOG}",
+        "%{LibraryDirectories.GLFW}",
+        "%{LibraryDirectories.ASSIMP}",
+        "%{LibraryDirectories.KTX}",
+        "%{LibraryDirectories.VulkanSDK}"
     }
 
     links 
@@ -240,35 +232,41 @@ project "Sandbox"
         "HellEngine"
     }
 
-    -- postbuildcommands
-    -- {
-    --     ("{COPYFILE} %[%{!wks.location}bin/%{output_dir}/HellEngine/HellEngine.dll] %[%{!wks.location}bin/%{output_dir}/Sandbox/]")
-    -- }
-
     filter "system:windows"
         cppdialect "C++20"
         defines 
         {
             "HE_PLATFORM_WINDOWS",
-            -- "HE_DLL"
         }
-
-        buildoptions
-        {
-            "/Zc:__cplusplus"
-        }
-
-        flags
-        {
-            "MultiProcessorCompile"
-        }
+        buildoptions { "/Zc:__cplusplus" }
+        flags { "MultiProcessorCompile" }
 
     filter "configurations:Debug"
         runtime "Debug"
         defines "HE_DEBUG"
         symbols "On"
 
+        links
+        {
+            "%{Library.SPDLOG}",
+            "%{Library.GLFW}",
+            "%{Library.ASSIMP}",
+            "%{Library.KTX}",
+            "%{Library.Vulkan}"
+        }
+
     filter "configurations:Release"
         runtime "Release"
-        defines "HE_RELEASE"
+        defines {"HE_RELEASE", "NDEBUG"}
         optimize "On"
+
+        links
+        {
+            "%{Library.SPDLOG}",
+            "%{Library.GLFW}",
+            "%{Library.ASSIMP}",
+            "%{Library.KTX}",
+            "%{Library.Vulkan}"
+        }
+
+    filter {}
