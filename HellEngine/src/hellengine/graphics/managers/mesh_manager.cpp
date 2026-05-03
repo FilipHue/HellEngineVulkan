@@ -149,7 +149,7 @@ namespace hellengine
 			auto it = std::find(m_meshes.begin(), m_meshes.end(), mesh);
 			if (it != m_meshes.end())
 			{
-				mesh_index = std::distance(m_meshes.begin(), it);
+				mesh_index = static_cast<u32>(std::distance(m_meshes.begin(), it));
 			}
 
 			allocation->material_info = material != nullptr ? material : mesh->GetMaterialInfo();
@@ -572,7 +572,7 @@ namespace hellengine
 
 				m_backend->DrawIndexedIndirect(
 					m_draw_commands_buffer,
-					indirect_offset,
+					static_cast<u32>(indirect_offset),
 					(u32)m_mesh_instances_allocation.size(),
 					sizeof(VkDrawIndexedIndirectCommand));
 
