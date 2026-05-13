@@ -40,6 +40,8 @@
 #include "hellengine/graphics/camera/multiprojection/multiprojection.h"
 #include "hellengine/graphics/camera/multiprojection/multiprojection_controller.h"
 
+#include "hellengine/graphics/render/render_graph.h"
+
 // UI
 #include "hellengine/ui/ui.h"
 

@@ -1,12 +1,13 @@
 #pragma once
 
+// Internal
+#include "hellengine/core/core.h"
+
+// External
+#include <vulkan/vulkan.h>
+
 // STL
 #include <optional>
-#include <vector>
-
-// Internal  
-#include "../../core/typedefs.h"
-#include "../defines.h"
 
 namespace hellengine
 {

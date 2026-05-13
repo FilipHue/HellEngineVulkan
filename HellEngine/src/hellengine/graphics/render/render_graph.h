@@ -2,7 +2,6 @@
 
 // Internal
 #include "types.h"
-#include "../backend/vulkan_backend.h"
 
 namespace hellengine
 {

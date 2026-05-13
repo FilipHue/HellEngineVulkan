@@ -1,11 +1,5 @@
 #include "hepch.h"
 #include "render_graph.h"
-#include "../backend/vulkan_backend.h"
-
-// STL
-#include <algorithm>
-#include <queue>
-#include <unordered_set>
 
 namespace hellengine
 {

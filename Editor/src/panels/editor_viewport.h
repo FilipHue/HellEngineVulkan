@@ -1,7 +1,6 @@
 #pragma once
 
 #include "hellengine/hellengine.h"
-#include "hellengine/graphics/render/render_graph.h"
 
 #include "../shared.h"
 #include "editor_hierarchy.h"

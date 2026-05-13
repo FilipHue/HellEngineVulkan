@@ -1,5 +1,8 @@
 #pragma once
 
+// Internal
+#include "hellengine/graphics/backend/vulkan_backend.h"
+
 // STL
 #include <string>
 #include <vector>
@@ -7,18 +10,10 @@
 #include <memory>
 #include <unordered_map>
 
-// Internal
-#include "../objects/types.h"
-
 namespace hellengine
 {
     namespace graphics
     {
-        // Forward declarations
-        class RenderGraph;
-        struct RenderResource;
-        class VulkanBackend;
-
         /******************\
         | RESOURCE TYPES  |
         \******************/
