@@ -162,7 +162,10 @@ project "Editor"
         runtime "Debug"
         defines "HE_DEBUG"
         symbols "On"
-        
+
+        -- Ignore conflicting runtime library from external dependencies
+        ignoredefaultlibraries { "msvcrt.lib" }
+
         links
         {
             "%{Library.SPDLOG}",
@@ -245,6 +248,9 @@ project "Sandbox"
         runtime "Debug"
         defines "HE_DEBUG"
         symbols "On"
+
+        -- Ignore conflicting runtime library from external dependencies
+        ignoredefaultlibraries { "msvcrt.lib" }
 
         links
         {

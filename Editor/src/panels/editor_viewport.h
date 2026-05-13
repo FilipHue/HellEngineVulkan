@@ -1,6 +1,7 @@
 #pragma once
 
 #include "hellengine/hellengine.h"
+#include "hellengine/graphics/render/render_graph.h"
 
 #include "../shared.h"
 #include "editor_hierarchy.h"
@@ -39,6 +40,7 @@ public:
 	void CanPick(b8 can_pick) { m_can_pick = can_pick; }
 
 	void SetViewportEditorReferences(MultiProjectionCamera* camera);
+	void SetSceneDescriptor(DescriptorSet* descriptor) { m_scene_descriptor = descriptor; }
 
 	void CreateViewportResources();
 
@@ -50,46 +52,35 @@ public:
 	Texture2D* GetDepthTexture() const { return m_viewport_depth_texture; }
 private:
 	void CreatePipelines();
-	void CreateAttachments();
+	void SetupRenderGraph();
+	void ImportPhysicalResources();
 	void CreateDescriptors();
-
-	void DrawGrid();
 
 private:
 	// Clear values
 	glm::vec4 m_clear_color;
 	glm::vec2 m_depth_color;
 
-	// Viewport
-	DescriptorSet* m_viewport_descriptor;
+	// Render Graph
+	std::unique_ptr<RenderGraph> m_render_graph;
 
+	// Viewport textures (still needed for external access and ImGui)
+	DescriptorSet* m_viewport_descriptor;
 	Texture2D* m_viewport_color_texture;
 	Texture2D* m_viewport_pick_texture;
 	Texture2D* m_viewport_depth_texture;
-
-	DynamicRenderingAttachmentInfo m_viewport_color_attachment;
-	DynamicRenderingAttachmentInfo m_viewport_pick_attachment;
-	DynamicRenderingAttachmentInfo m_viewport_depth_attachment;
-	DynamicRenderingInfo m_viewport_dri;
 
 	b8 m_can_pick;
 
 	// Viewport grid
 	UniformBuffer* m_grid_buffer;
 	DescriptorSet* m_grid_descriptor;
-
-	Texture2D* m_grid_color_texture;
-	Texture2D* m_grid_depth_texture;
-
-	DynamicRenderingAttachmentInfo m_grid_color_attachment;
-	DynamicRenderingAttachmentInfo m_grid_depth_attachment;
-	DynamicRenderingInfo m_grid_dri;
-
 	GridCameraData m_grid_data;
 
 	// Editor references
 	MultiProjectionCamera* m_editor_camera;
 	EditorHierarchy* m_hierarchy_panel;
+	DescriptorSet* m_scene_descriptor;  // PBR global descriptor from Editor
 
 	VulkanBackend* m_backend;
 	VulkanFrontend* m_frontend;

@@ -71,6 +71,9 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>..\HellEngine\dependencies\SPDLOG\spdlogd.lib;..\HellEngine\dependencies\GLFW\lib-vc2022\glfw3.lib;..\HellEngine\dependencies\ASSIMP\lib\assimp-vc143-mtd.lib;..\HellEngine\dependencies\KTX\lib\ktx.lib;C:\VulkanSDK\1.4.328.1\Lib\vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\HellEngine\dependencies\SPDLOG;..\HellEngine\dependencies\GLFW\lib-vc2022;..\HellEngine\dependencies\ASSIMP\lib;..\HellEngine\dependencies\KTX\lib;C:\VulkanSDK\1.4.328.1\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <IgnoreSpecificDefaultLibraries>msvcrt.lib</IgnoreSpecificDefaultLibraries>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -94,6 +97,8 @@
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>..\HellEngine\dependencies\SPDLOG\spdlogd.lib;..\HellEngine\dependencies\GLFW\lib-vc2022\glfw3.lib;..\HellEngine\dependencies\ASSIMP\lib\assimp-vc143-mtd.lib;..\HellEngine\dependencies\KTX\lib\ktx.lib;C:\VulkanSDK\1.4.328.1\Lib\vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\HellEngine\dependencies\SPDLOG;..\HellEngine\dependencies\GLFW\lib-vc2022;..\HellEngine\dependencies\ASSIMP\lib;..\HellEngine\dependencies\KTX\lib;C:\VulkanSDK\1.4.328.1\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

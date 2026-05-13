@@ -2,6 +2,11 @@
 
 // STL
 #include <optional>
+#include <vector>
+
+// Internal  
+#include "../../core/typedefs.h"
+#include "../defines.h"
 
 namespace hellengine
 {

@@ -67,10 +67,8 @@ void Editor::OnRenderBegin()
 
 void Editor::OnRenderUpdate()
 {
-	m_backend->BindPipeline(PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_PBR));
-	m_backend->BindDescriptorSet(PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_PBR), m_pbr_global_descriptor);
-
-	MeshManager::GetInstance()->DrawMeshes(PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_PBR));
+	// Viewport panel now handles rendering via render graph
+	m_viewport_panel->RenderUpdate();
 }
 
 void Editor::OnRenderEnd()
@@ -385,6 +383,7 @@ void Editor::CreateEditorUI()
 	m_viewport_panel->Init(m_backend, m_frontend, m_hierarchy_panel);
 	m_viewport_panel->SetSize(m_window->GetWidth(), m_window->GetHeight());
 	m_viewport_panel->SetViewportEditorReferences(&m_editor_camera);
+	m_viewport_panel->SetSceneDescriptor(m_pbr_global_descriptor);  // Pass PBR descriptor
 	m_viewport_panel->CreateViewportResources();
 
 	m_menu_bar = new EditorMenuBar();
