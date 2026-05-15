@@ -57,7 +57,7 @@
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>HE_PLATFORM_WINDOWS;HE_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>HE_PLATFORM_WINDOWS;HE_DEBUG;HE_EDITOR;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\HellEngine\src;..\HellEngine\dependencies\SPDLOG\include;..\HellEngine\dependencies\GLFW\include;..\HellEngine\dependencies\GLM\include;..\HellEngine\dependencies\STB;..\HellEngine\dependencies\ASSIMP\include;..\HellEngine\dependencies\KTX\include;..\HellEngine\dependencies\IMGUI;..\HellEngine\dependencies\IMGUIZMO\include;..\HellEngine\dependencies\ENTT\include;C:\VulkanSDK\1.4.328.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
@@ -71,13 +71,15 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>..\HellEngine\dependencies\SPDLOG\spdlogd.lib;..\HellEngine\dependencies\GLFW\lib-vc2022\glfw3.lib;..\HellEngine\dependencies\ASSIMP\lib\assimp-vc143-mtd.lib;..\HellEngine\dependencies\KTX\lib\ktx.lib;C:\VulkanSDK\1.4.328.1\Lib\vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\HellEngine\dependencies\SPDLOG;..\HellEngine\dependencies\GLFW\lib-vc2022;..\HellEngine\dependencies\ASSIMP\lib;..\HellEngine\dependencies\KTX\lib;C:\VulkanSDK\1.4.328.1\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>HE_PLATFORM_WINDOWS;HE_RELEASE;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>HE_PLATFORM_WINDOWS;HE_RELEASE;NDEBUG;HE_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\HellEngine\src;..\HellEngine\dependencies\SPDLOG\include;..\HellEngine\dependencies\GLFW\include;..\HellEngine\dependencies\GLM\include;..\HellEngine\dependencies\STB;..\HellEngine\dependencies\ASSIMP\include;..\HellEngine\dependencies\KTX\include;..\HellEngine\dependencies\IMGUI;..\HellEngine\dependencies\IMGUIZMO\include;..\HellEngine\dependencies\ENTT\include;C:\VulkanSDK\1.4.328.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -94,6 +96,8 @@
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>..\HellEngine\dependencies\SPDLOG\spdlogd.lib;..\HellEngine\dependencies\GLFW\lib-vc2022\glfw3.lib;..\HellEngine\dependencies\ASSIMP\lib\assimp-vc143-mtd.lib;..\HellEngine\dependencies\KTX\lib\ktx.lib;C:\VulkanSDK\1.4.328.1\Lib\vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\HellEngine\dependencies\SPDLOG;..\HellEngine\dependencies\GLFW\lib-vc2022;..\HellEngine\dependencies\ASSIMP\lib;..\HellEngine\dependencies\KTX\lib;C:\VulkanSDK\1.4.328.1\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

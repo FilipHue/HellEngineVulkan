@@ -101,7 +101,6 @@ void EditorViewport::CreatePipelines()
 
 	pipeline_info.depth_stencil_info = { true, true };
 
-	//m_grid_pipeline = m_backend->CreatePipeline(pipeline_info, shader_info);
 	PipelineManager::GetInstance()->CreatePipeline(C_PIPELINE_GRID, pipeline_info, shader_info);
 }
 

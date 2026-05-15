@@ -31,7 +31,7 @@ void TestSpecializationConstants::Setup()
 	CreateDescriptorSets();
 
 	LoadResources();
-	m_model->UploadToGPU<VertexFormatBase>();
+	m_model->UploadToGPU<VertexFormatSimple>();
 }
 
 void TestSpecializationConstants::ProcessUpdate(f32 dt)
@@ -218,8 +218,8 @@ void TestSpecializationConstants::CreatePipelines()
 		}
 	};
 
-	pipeline_info.vertex_binding_description = VertexFormatBase::GetBindingDescription();
-	pipeline_info.vertex_attribute_descriptions = VertexFormatBase::GetAttributeDescriptions();
+	pipeline_info.vertex_binding_description = VertexFormatSimple::GetBindingDescription();
+	pipeline_info.vertex_attribute_descriptions = VertexFormatSimple::GetAttributeDescriptions();
 
 	ShaderStageInfo shader_info = {};
 

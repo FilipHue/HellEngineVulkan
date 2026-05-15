@@ -10,3 +10,6 @@ constexpr auto VIEWPORT_DEPTH = "EDITOR_VIEWPORT_DEPTH_ATTACHMENT";
 constexpr auto C_PIPELINE_PBR = "PBR";
 constexpr auto C_PIPELINE_EDITOR = "Editor";
 constexpr auto C_PIPELINE_GRID = "Editor_Grid";
+constexpr auto C_PIPELINE_WIREFRAME = "Editor_Wireframe";
+constexpr auto C_PIPELINE_LIGHT_GIZMO = "Editor_Light_Gizmo";
+constexpr auto C_PIPELINE_SHADOW_DEPTH = "Editor_Shadow_Depth";

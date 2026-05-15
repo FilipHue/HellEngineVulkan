@@ -80,7 +80,7 @@ namespace hellengine
 			}
 		}
 
-		void MeshManager::CreateDescriptors(VulkanPipeline* pipeline, u32 set)
+		void MeshManager::CreateDescriptors(VulkanPipeline* pipeline)
 		{
 			// Create descriptor set for materials
 			{
@@ -196,7 +196,7 @@ namespace hellengine
 			CreatePackedData();
 		}
 
-		template b8 MeshManager::UploadMeshGeometry<VertexFormatBase>(Mesh* mesh);
+		template b8 MeshManager::UploadMeshGeometry<VertexFormatSimple>(Mesh* mesh);
 		template b8 MeshManager::UploadMeshGeometry<VertexFormatTangent>(Mesh* mesh);
 
 		template<typename VertexT>
@@ -393,7 +393,7 @@ namespace hellengine
 					{
 						DescriptorSetWriteData image_data{};
 						image_data.type = DescriptorType_CombinedImageSampler;
-						image_data.binding = 0;
+						image_data.binding = 1;
 						image_data.data.image.image_views = m_descriptor_image_views.data();
 						image_data.data.image.samplers = m_descriptor_image_samplers.data();
 

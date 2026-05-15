@@ -160,7 +160,7 @@ project "Editor"
 
     filter "configurations:Debug"
         runtime "Debug"
-        defines "HE_DEBUG"
+        defines {"HE_DEBUG", "HE_EDITOR"}
         symbols "On"
         
         links
@@ -174,7 +174,7 @@ project "Editor"
 
     filter "configurations:Release"
         runtime "Release"
-        defines {"HE_RELEASE", "NDEBUG"}
+        defines {"HE_RELEASE", "NDEBUG", "HE_DEBUG"}
         optimize "On"
         
         links

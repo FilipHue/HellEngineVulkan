@@ -18,7 +18,7 @@ namespace hellengine
 		constexpr u32 MAX_TEXTURES = 100000;
 		constexpr u32 MAX_VERTICES = 1000000;
 		constexpr u32 MAX_INDICES = MAX_VERTICES * 6;
-		constexpr u64 MIN_MEMORY_ALIGNMENT = lcm_array<2>({ sizeof(VertexFormatBase), sizeof(VertexFormatTangent) });
+		constexpr u64 MIN_MEMORY_ALIGNMENT = lcm_array<2>({ sizeof(VertexFormatSimple), sizeof(VertexFormatTangent) });
 		constexpr u64 MAX_MEMORY_VERTICES = MAX_VERTICES * MIN_MEMORY_ALIGNMENT;
 		constexpr u64 MAX_MEMORY_INDICES = MAX_INDICES * MIN_MEMORY_ALIGNMENT;
 
@@ -90,7 +90,7 @@ namespace hellengine
 			void Init(VulkanBackend* backend);
 			void Shutdown();
 
-			void CreateDescriptors(VulkanPipeline* pipeline, u32 set);
+			void CreateDescriptors(VulkanPipeline* pipeline);
 
 			Mesh* CreateMesh(std::string name, RawVertexData vertices, std::vector<u32> indices, MaterialInfo* material);
 			void CreateMeshInstance(UUID id, Mesh* mesh, MaterialInfo* material = nullptr);
@@ -109,6 +109,7 @@ namespace hellengine
 
 			std::vector<Mesh*>& GetAllMeshes() { return m_meshes; }
 			const std::vector<Mesh*>& GetAllMeshes() const { return m_meshes; }
+			VulkanDescriptorSet* GetTexturesDescriptor() const { return m_textures_descriptor; }
 
 			void SetMeshInstanceFilter(UUID id, Mesh* mesh);
 

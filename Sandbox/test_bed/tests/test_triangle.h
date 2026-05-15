@@ -56,7 +56,7 @@ private:
     UniformBuffer m_triangle_buffer;
 
     // Triangle
-    std::vector<VertexFormatBase> m_vertices;
+    std::vector<VertexFormatSimple> m_vertices;
     std::vector<u32> m_indices;
     Buffer m_vertex_buffer;
     Buffer m_index_buffer;

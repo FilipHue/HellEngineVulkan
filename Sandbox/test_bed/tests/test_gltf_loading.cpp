@@ -28,7 +28,7 @@ void TestGltfLoading::Setup()
 	CreatePipelines();
 	CreateDescriptorSets();
 
-	m_model->UploadToGPU<VertexFormatBase>();
+	m_model->UploadToGPU<VertexFormatSimple>();
 	m_model->GenerateDescriptorSets(m_lit_pipeline, 2);
 	m_model->GenerateDescriptorSets(m_wireframe_pipeline, 2);
 }
@@ -171,8 +171,8 @@ void TestGltfLoading::CreatePipelines()
 	PipelineCreateInfo pipeline_info = {};
 	pipeline_info.dynamic_states = { PipelineDynamicState_Viewport, PipelineDynamicState_Scissor };
 
-	pipeline_info.vertex_binding_description = VertexFormatBase::GetBindingDescription();
-	pipeline_info.vertex_attribute_descriptions = VertexFormatBase::GetAttributeDescriptions();
+	pipeline_info.vertex_binding_description = VertexFormatSimple::GetBindingDescription();
+	pipeline_info.vertex_attribute_descriptions = VertexFormatSimple::GetAttributeDescriptions();
 	pipeline_info.topology = PipelinePrimitiveTopology_TriangleList;
 	pipeline_info.cull_mode = PipelineCullMode_Back;
 	pipeline_info.front_face = PipelineFrontFace_CounterClockwise;

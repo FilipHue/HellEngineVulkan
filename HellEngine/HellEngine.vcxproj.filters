@@ -196,6 +196,9 @@
     <Filter Include="src\hellengine\graphics\objects">
       <UniqueIdentifier>{70A2F8C2-DC85-0703-E588-353F51EBCD53}</UniqueIdentifier>
     </Filter>
+    <Filter Include="src\hellengine\graphics\render">
+      <UniqueIdentifier>{46C77562-32ED-3FC9-1B33-C59407F86495}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src\hellengine\math">
       <UniqueIdentifier>{B0CD8AAD-1C2F-68BB-A59C-AE6D11FD9E7A}</UniqueIdentifier>
     </Filter>
@@ -1845,6 +1848,9 @@
     <ClInclude Include="src\hellengine\core\typedefs.h">
       <Filter>src\hellengine\core</Filter>
     </ClInclude>
+    <ClInclude Include="src\hellengine\core\uuid\rid.h">
+      <Filter>src\hellengine\core\uuid</Filter>
+    </ClInclude>
     <ClInclude Include="src\hellengine\core\uuid\uuid.h">
       <Filter>src\hellengine\core\uuid</Filter>
     </ClInclude>
@@ -1861,6 +1867,9 @@
       <Filter>src\hellengine\ecs\component</Filter>
     </ClInclude>
     <ClInclude Include="src\hellengine\ecs\component\components\id.h">
+      <Filter>src\hellengine\ecs\component\components</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\ecs\component\components\light.h">
       <Filter>src\hellengine\ecs\component\components</Filter>
     </ClInclude>
     <ClInclude Include="src\hellengine\ecs\component\components\mesh_filter.h">
@@ -1986,6 +1995,12 @@
     <ClInclude Include="src\hellengine\graphics\objects\vulkan_texture.h">
       <Filter>src\hellengine\graphics\objects</Filter>
     </ClInclude>
+    <ClInclude Include="src\hellengine\graphics\render\render_graph.h">
+      <Filter>src\hellengine\graphics\render</Filter>
+    </ClInclude>
+    <ClInclude Include="src\hellengine\graphics\render\types.h">
+      <Filter>src\hellengine\graphics\render</Filter>
+    </ClInclude>
     <ClInclude Include="src\hellengine\graphics\vulkan_core.h">
       <Filter>src\hellengine\graphics</Filter>
     </ClInclude>
@@ -2058,10 +2073,6 @@
     <ClInclude Include="src\hepch.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="src\hellengine\graphics\render\render_graph.h" />
-    <ClInclude Include="src\hellengine\graphics\render\types.h" />
-    <ClInclude Include="src\hellengine\core\uuid\rid.h" />
-    <ClInclude Include="src\hellengine\ecs\component\components\light.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dependencies\GLM\include\glm\detail\glm.cpp">
@@ -2220,6 +2231,9 @@
     <ClCompile Include="src\hellengine\graphics\objects\vulkan_texture.cpp">
       <Filter>src\hellengine\graphics\objects</Filter>
     </ClCompile>
+    <ClCompile Include="src\hellengine\graphics\render\render_graph.cpp">
+      <Filter>src\hellengine\graphics\render</Filter>
+    </ClCompile>
     <ClCompile Include="src\hellengine\math\random\random.cpp">
       <Filter>src\hellengine\math\random</Filter>
     </ClCompile>
@@ -2256,7 +2270,6 @@
     <ClCompile Include="src\hepch.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\hellengine\graphics\render\render_graph.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="dependencies\ASSIMP\include\assimp\config.h.in">

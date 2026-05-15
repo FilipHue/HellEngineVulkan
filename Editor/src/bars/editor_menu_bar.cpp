@@ -19,6 +19,8 @@ void EditorMenuBar::Draw()
 		GameObjectMenu(style);
 		ImGui::SetNextWindowSize(ImVec2(400.0f, 0.0f), ImGuiCond_Always);
 		ComponentMenu(style);
+		ImGui::SetNextWindowSize(ImVec2(400.0f, 0.0f), ImGuiCond_Always);
+		SettingsMenu(style);
 
 		ImGui::EndMenuBar();
 	}
@@ -128,6 +130,38 @@ void EditorMenuBar::ComponentMenu(ImGuiStyle& style)
 				ImGui::CloseCurrentPopup();
 			}
 
+			ImGui::EndMenu();
+		}
+
+		ImGui::PopStyleVar();
+		ImGui::EndMenu();
+	}
+}
+
+void EditorMenuBar::SettingsMenu(ImGuiStyle& style)
+{
+	if (ImGui::BeginMenu("Settings"))
+	{
+		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(style.ItemSpacing.x, style.ItemSpacing.y * 3.0f));
+
+		// Editor Settings
+		if (ImGui::BeginMenu("Editor"))
+		{
+			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(style.ItemSpacing.x, style.ItemSpacing.y * 3.0f));
+			ImGui::Checkbox("Show Grid", &m_settings.show_grid);
+			ImGui::PopStyleVar();
+			ImGui::EndMenu();
+		}
+
+		// Render Settings
+		if (ImGui::BeginMenu("Render"))
+		{
+			const char* mode_names[] = { "Normal", "Wireframe", "UVs", "Normals", "Shadow Map" };
+			int current_mode = static_cast<int>(m_settings.render_mode);
+			if (ImGui::Combo("Render Mode", &current_mode, mode_names, EditorRenderMode_Count))
+			{
+				m_settings.render_mode = static_cast<EditorRenderMode>(current_mode);
+			}
 			ImGui::EndMenu();
 		}
 

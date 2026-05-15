@@ -21,7 +21,7 @@ namespace hellengine
 			HE_API void Shutdown();
 
 			// Mesh
-			HE_API b8 CreateMesh(std::string name, std::vector<VertexFormatBase> vertices, std::vector<u32> indices);
+			HE_API b8 CreateMesh(std::string name, std::vector<VertexFormatSimple> vertices, std::vector<u32> indices);
 			HE_API void DrawMesh(std::string name, u32 instance_count = 1);
 
 			// Pipeline
