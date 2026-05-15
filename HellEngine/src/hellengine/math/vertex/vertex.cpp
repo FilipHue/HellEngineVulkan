@@ -58,7 +58,7 @@ namespace hellengine
 		std::vector<VkVertexInputAttributeDescription> VertexFormatTangent::GetAttributeDescriptions()
 		{
 			std::vector<VkVertexInputAttributeDescription> attribute_descriptions = {};
-			attribute_descriptions.resize(5);
+			attribute_descriptions.resize(6);
 
 			attribute_descriptions[0].binding = 0;
 			attribute_descriptions[0].location = 0;
@@ -84,6 +84,11 @@ namespace hellengine
 			attribute_descriptions[4].location = 4;
 			attribute_descriptions[4].format = VK_FORMAT_R32G32B32_SFLOAT;
 			attribute_descriptions[4].offset = offsetof(VertexFormatTangent, tangent);
+
+			attribute_descriptions[5].binding = 0;
+			attribute_descriptions[5].location = 5;
+			attribute_descriptions[5].format = VK_FORMAT_R32G32B32_SFLOAT;
+			attribute_descriptions[5].offset = offsetof(VertexFormatTangent, bitangent);
 
 			return attribute_descriptions;
 		}

@@ -346,6 +346,16 @@ namespace hellengine
 					info.lightmap_index = material_info->Get(TextureType_Lightmap & types);
 					info.reflection_index = material_info->Get(TextureType_Reflection & types);
 
+					info.base_color_index = material_info->Get(TextureType_BaseColor & types);
+					info.normal_camera_index = material_info->Get(TextureType_NormalCamera & types);
+					info.emission_color_index = material_info->Get(TextureType_EmissionColor & types);
+					info.metalness_index = material_info->Get(TextureType_Metalness & types);
+					info.diffuse_roughness_index = material_info->Get(TextureType_DiffuseRoughness & types);
+					info.ambient_occlusion_index = material_info->Get(TextureType_AmbientOcclusion & types);
+					info.sheen_index = material_info->Get(TextureType_Sheen & types);
+					info.clearcoat_index = material_info->Get(TextureType_Clearcoat & types);
+					info.transmission_index = material_info->Get(TextureType_Transmission & types);
+
 					m_mesh_gpu_info.push_back(info);
 				}
 

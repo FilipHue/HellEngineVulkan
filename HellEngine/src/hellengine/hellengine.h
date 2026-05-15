@@ -20,6 +20,7 @@
 #include "hellengine/core/time/timer.h"
 
 #include "hellengine/core/uuid/uuid.h"
+#include "hellengine/core/uuid/rid.h"
 
 #include "hellengine/core/engine/engine.h"
 #include "hellengine/core/application/application.h"

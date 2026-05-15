@@ -19,7 +19,11 @@ namespace hellengine
 			HE_GRAPHICS_INFO("Loading asset: {0}", file.GetRelativePath());
 
 			Assimp::Importer* importer = new Assimp::Importer();
-			u32 import_options = aiProcess_Triangulate | aiProcess_OptimizeMeshes | aiProcess_JoinIdenticalVertices | aiProcess_FlipUVs;
+			u32 import_options = aiProcess_Triangulate | 
+								 aiProcess_OptimizeMeshes | 
+								 aiProcess_JoinIdenticalVertices | 
+								 aiProcess_FlipUVs | 
+								 aiProcess_CalcTangentSpace;
 			const aiScene* scene = importer->ReadFile(file.GetRelativePath(), import_options);
 			if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 			{
@@ -135,6 +139,29 @@ namespace hellengine
 				}
 			}
 
+			// BaseColor fallback: Use diffuse texture if base_color missing
+			if (!mesh_mat_info->Uses(TextureType_BaseColor) && mesh_mat_info->Uses(TextureType_Diffuse)) {
+				mesh_mat_info->Set(TextureType_BaseColor, mesh_mat_info->Get(TextureType_Diffuse));
+			}
+
+			// Normal fallback: Use legacy normal if normal_camera missing
+			if (!mesh_mat_info->Uses(TextureType_NormalCamera) && mesh_mat_info->Uses(TextureType_Normals)) {
+				mesh_mat_info->Set(TextureType_NormalCamera, mesh_mat_info->Get(TextureType_Normals));
+			}
+
+			// Emission fallback: Use legacy emissive if emission_color missing
+			if (!mesh_mat_info->Uses(TextureType_EmissionColor) && mesh_mat_info->Uses(TextureType_Emissive)) {
+				mesh_mat_info->Set(TextureType_EmissionColor, mesh_mat_info->Get(TextureType_Emissive));
+			}
+
+			// AO fallback: Use ambient texture if AO missing (approximation)
+			if (!mesh_mat_info->Uses(TextureType_AmbientOcclusion) && mesh_mat_info->Uses(TextureType_Ambient)) {
+				mesh_mat_info->Set(TextureType_AmbientOcclusion, mesh_mat_info->Get(TextureType_Ambient));
+			}
+
+			// Note: Metalness and Roughness have no legacy equivalents, will use shader fallbacks
+			// Specular-to-roughness conversion happens in shader (1.0 - specular)
+
 			Entity entity = SceneManager::GetInstance()
 				->GetActiveScene()
 				->CreateGameObject(ai_mesh->mName.C_Str(), parent_entity);
@@ -144,7 +171,7 @@ namespace hellengine
 			UUID uuid = entity.GetComponent<IDComponent>().id;
 
 			Mesh* mesh = MeshManager::GetInstance()->CreateMesh(ai_mesh->mName.C_Str(), verticies, indices, mesh_mat_info);
-			MeshManager::GetInstance()->UploadMeshGeometry<VertexFormatBase>(mesh);
+			MeshManager::GetInstance()->UploadMeshGeometry<VertexFormatTangent>(mesh);
 			MeshManager::GetInstance()->CreateMeshInstance(uuid, mesh);
 
 			entity.AddComponent<MeshFilterComponent>().mesh = mesh;
