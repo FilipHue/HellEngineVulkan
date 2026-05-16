@@ -1,4 +1,8 @@
+#include "hepch.h"
 #include "editor_viewport.h"
+
+// Internal
+#include "../bars/editor_menu_bar.h"
 
 EditorViewport::EditorViewport() : Viewport("Viewport")
 {
@@ -40,7 +44,10 @@ void EditorViewport::RenderEnd()
 {
 	m_backend->EndDynamicRenderingWithAttachments(m_viewport_dri);
 
-	DrawGrid();
+	if (m_editor_settings && m_editor_settings->show_grid)
+	{
+		DrawGrid();
+	}
 }
 
 void EditorViewport::SetViewportClearColor(const glm::vec4& color)
@@ -53,9 +60,10 @@ void EditorViewport::SetViewportClearDepth(const glm::vec2& depth)
 	m_depth_color = depth;
 }
 
-void EditorViewport::SetViewportEditorReferences(MultiProjectionCamera* camera)
+void EditorViewport::SetViewportEditorReferences(MultiProjectionCamera* camera, EditorSettings* editor_settings)
 {
 	m_editor_camera = camera;
+	m_editor_settings = editor_settings;
 }
 
 void EditorViewport::CreateViewportResources()

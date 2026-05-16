@@ -14,6 +14,7 @@ using namespace math;
 using namespace resources;
 using namespace tools;
 
+struct EditorSettings;
 struct GridCameraData
 {
 	glm::mat4 proj;
@@ -38,7 +39,7 @@ public:
 
 	void CanPick(b8 can_pick) { m_can_pick = can_pick; }
 
-	void SetViewportEditorReferences(MultiProjectionCamera* camera);
+	void SetViewportEditorReferences(MultiProjectionCamera* camera, EditorSettings* editor_settings);
 
 	void CreateViewportResources();
 
@@ -90,6 +91,7 @@ private:
 	// Editor references
 	MultiProjectionCamera* m_editor_camera;
 	EditorHierarchy* m_hierarchy_panel;
+	EditorSettings* m_editor_settings;
 
 	VulkanBackend* m_backend;
 	VulkanFrontend* m_frontend;

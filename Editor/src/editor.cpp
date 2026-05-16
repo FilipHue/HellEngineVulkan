@@ -789,6 +789,10 @@ void Editor::CreateDescriptors()
 
 void Editor::CreateEditorUI()
 {
+	m_menu_bar = new EditorMenuBar();
+	m_menu_bar->Init(m_hierarchy_panel);
+	m_editor_settings = m_menu_bar->GetSettings();
+
 	m_inspector_panel = new EditorInspector();
 	m_inspector_panel->Init();
 
@@ -798,12 +802,8 @@ void Editor::CreateEditorUI()
 	m_viewport_panel = new EditorViewport();
 	m_viewport_panel->Init(m_backend, m_frontend, m_hierarchy_panel);
 	m_viewport_panel->SetSize(m_window->GetWidth(), m_window->GetHeight());
-	m_viewport_panel->SetViewportEditorReferences(&m_editor_camera);
+	m_viewport_panel->SetViewportEditorReferences(&m_editor_camera, m_editor_settings);
 	m_viewport_panel->CreateViewportResources();
-
-	m_menu_bar = new EditorMenuBar();
-	m_menu_bar->Init(m_hierarchy_panel);
-	m_editor_settings = m_menu_bar->GetSettings();
 }
 
 void Editor::DrawToSwapchain()
