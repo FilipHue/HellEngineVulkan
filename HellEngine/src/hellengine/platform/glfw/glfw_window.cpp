@@ -170,7 +170,10 @@ namespace hellengine
 		{
 			glfwSetKeyCallback(m_handle, [](GLFWwindow* window, int key, int scancode, int action, int mods)
 				{
-					ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
+					if (glfwGetInputMode(window, GLFW_CURSOR) != GLFW_CURSOR_DISABLED)
+					{
+						ImGui_ImplGlfw_KeyCallback(window, key, scancode, action, mods);
+					}
 
 					EventContext event;
 					event.data.key_event.key = (keys)key;
@@ -203,7 +206,10 @@ namespace hellengine
 
 			glfwSetCharCallback(m_handle, [](GLFWwindow* window, unsigned int unicode_key)
 				{
-					ImGui_ImplGlfw_CharCallback(window, unicode_key);
+					if (glfwGetInputMode(window, GLFW_CURSOR) != GLFW_CURSOR_DISABLED)
+					{
+						ImGui_ImplGlfw_CharCallback(window, unicode_key);
+					}
 
 					EventContext event;
 					event.type = EventType_KeyTyped;
@@ -216,7 +222,10 @@ namespace hellengine
 		{
 			glfwSetMouseButtonCallback(m_handle, [](GLFWwindow* window, int button, int action, int mods)
 				{
-					ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
+					if (glfwGetInputMode(window, GLFW_CURSOR) != GLFW_CURSOR_DISABLED)
+					{
+						ImGui_ImplGlfw_MouseButtonCallback(window, button, action, mods);
+					}
 
 					EventContext event;
 					event.data.mouse_button_event.button = (mouse_buttons)button;
@@ -249,7 +258,10 @@ namespace hellengine
 
 			glfwSetCursorPosCallback(m_handle, [](GLFWwindow* window, double xpos, double ypos)
 				{
-					ImGui_ImplGlfw_CursorPosCallback(window, xpos, ypos);
+					if (glfwGetInputMode(window, GLFW_CURSOR) != GLFW_CURSOR_DISABLED)
+					{
+						ImGui_ImplGlfw_CursorPosCallback(window, xpos, ypos);
+					}
 
 					EventContext event;
 					event.type = EventType_MouseMoved;
@@ -262,7 +274,10 @@ namespace hellengine
 
 			glfwSetScrollCallback(m_handle, [](GLFWwindow* window, double xoffset, double yoffset)
 				{
-					ImGui_ImplGlfw_ScrollCallback(window, xoffset, yoffset);
+					if (glfwGetInputMode(window, GLFW_CURSOR) != GLFW_CURSOR_DISABLED)
+					{
+						ImGui_ImplGlfw_ScrollCallback(window, xoffset, yoffset);
+					}
 
 					EventContext event;
 					event.type = EventType_MouseScrolled;

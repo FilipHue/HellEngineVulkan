@@ -310,19 +310,28 @@ b8 Editor::OnEventMouseButtonPressed(EventContext& event)
 {
 	if (event.data.mouse_button_event.button == MOUSE_BUTTON_RIGHT && m_viewport_panel->IsHovered())
 	{
+		// Force viewport focus so other editor windows don't keep keyboard focus while freelook is active
+		ImGui::SetWindowFocus("Viewport");
+
+		// Hard-disable ImGui interactions while freelook camera is active
+		ImGuiIO& io = ImGui::GetIO();
+		io.ConfigFlags |= ImGuiConfigFlags_NoMouse;
+		io.ConfigFlags |= ImGuiConfigFlags_NavNoCaptureKeyboard;
+
 		m_editor_camera_controller.SetActive(true);
 		m_window->SetCursorMode(GLFW_CURSOR_DISABLED);
+		m_viewport_panel->CanPick(false);
+		return true;
 	}
 
-	if (event.data.mouse_button_event.button == MOUSE_BUTTON_RIGHT && m_hierarchy_panel->IsHovered())
+	if (event.data.mouse_button_event.button == MOUSE_BUTTON_LEFT && m_viewport_panel->IsHovered() && SceneManager::GetInstance()->GetActiveScene())
 	{
-		m_editor_camera_controller.SetActive(false);
-		m_window->SetCursorMode(GLFW_CURSOR_NORMAL);
-	}
-
-	if (event.data.mouse_button_event.button == MOUSE_BUTTON_LEFT && m_viewport_panel->IsFocused() && m_viewport_panel->IsHovered() && SceneManager::GetInstance()->GetActiveScene())
-	{
-		m_viewport_panel->OnMouseButtonPressed();
+		// Don't pick while freelook camera is active or while manipulating gizmo
+		if (!m_editor_camera_controller.IsActive() && !ImGuizmo::IsOver() && !ImGuizmo::IsUsing())
+		{
+			m_viewport_panel->OnMouseButtonPressed();
+			return true;
+		}
 	}
 
 	return false;
@@ -334,6 +343,14 @@ b8 Editor::OnEventMouseButtonReleased(EventContext& event)
 	{
 		m_editor_camera_controller.SetActive(false);
 		m_window->SetCursorMode(GLFW_CURSOR_NORMAL);
+		m_viewport_panel->CanPick(true);
+
+		// Restore ImGui interactions after freelook ends
+		ImGuiIO& io = ImGui::GetIO();
+		io.ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
+		io.ConfigFlags &= ~ImGuiConfigFlags_NavNoCaptureKeyboard;
+
+		return true;
 	}
 
 	return false;
