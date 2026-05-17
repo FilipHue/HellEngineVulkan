@@ -1,3 +1,4 @@
+// Common GLSL definitions and utility functions for the editor shaders
 #ifndef COMMON_GLSL
 #define COMMON_GLSL
 
@@ -14,16 +15,20 @@ const float INV_PI = 0.31830988618;
 // ================================
 
 struct CameraData {
-	mat4 view;
-	mat4 projection;
-	vec3 position;
-	float _pad0;
+	mat4 view;          // View matrix
+	mat4 projection;    // Projection matrix
+	vec3 position;      // Camera world position
+};
+
+struct WorldData {
+    vec4 time;                      // x = total time, y = delta time
+    vec4 ambient_color_intensity;   // xyz = color, w = intensity
 };
 
 struct PerObjectData {
-    mat4 model;
-    uint material_index;
-    int  entity_id;
+    mat4 model;             // Model matrix
+    uint material_index;    // Index into material array
+    int  entity_id;         // Entity ID for picking
 };
 
 struct MaterialInfo {

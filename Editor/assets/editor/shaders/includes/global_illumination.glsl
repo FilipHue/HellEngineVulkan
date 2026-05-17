@@ -1,3 +1,4 @@
+// Global Illumination settings structure for shaders
 #ifndef GLOBAL_ILLUMINATION_GLSL
 #define GLOBAL_ILLUMINATION_GLSL
 

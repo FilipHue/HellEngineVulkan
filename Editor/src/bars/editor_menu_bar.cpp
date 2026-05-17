@@ -1,55 +1,84 @@
 #include "editor_menu_bar.h"
 
-void EditorMenuBar::Init(EditorHierarchy* hierarchy)
+void EditorMenuBar::Init(EditorHierarchy* hierarchy, EditorWindowSettings* window_settings, EditorSettings* settings)
 {
 	m_hierarchy_panel = hierarchy;
+	m_window_settings = window_settings;
+	m_settings = settings;
 }
 
 void EditorMenuBar::Draw()
 {
 	ImGuiStyle& style = ImGui::GetStyle();
-	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { style.ItemSpacing.x * 2.0f, style.ItemSpacing.y });
+
+	ImGui::PushStyleVar(
+		ImGuiStyleVar_ItemSpacing,
+		ImVec2(
+			style.ItemSpacing.x * MENU_BAR_ITEM_SPACING_X_MULTIPLIER,
+			style.ItemSpacing.y
+		)
+	);
 
 	if (ImGui::BeginMenuBar())
 	{
 		FileMenu(style);
-		ImGui::SetNextWindowSize(ImVec2(400.0f, 0.0f), ImGuiCond_Always);
-		AssetMenu(style);
-		ImGui::SetNextWindowSize(ImVec2(400.0f, 0.0f), ImGuiCond_Always);
+		EditMenu(style);
 		GameObjectMenu(style);
-		ImGui::SetNextWindowSize(ImVec2(400.0f, 0.0f), ImGuiCond_Always);
 		ComponentMenu(style);
-		ImGui::SetNextWindowSize(ImVec2(400.0f, 0.0f), ImGuiCond_Always);
-		SettingsMenu(style);
+		AssetsMenu(style);
+		WindowMenu(style);
+		HelpMenu(style);
 
 		ImGui::EndMenuBar();
 	}
 
 	ImGui::PopStyleVar();
+
+	ShowEditorSettings();
+	ShowRenderSettings();
+	ShowGISettings();
+	ShowShadowSettings();
+	ShowAboutWindow();
+}
+
+void EditorMenuBar::SetImportAssetCallback(const std::function<void()>& callback)
+{
+	m_import_asset_callback = callback;
+}
+
+void EditorMenuBar::SetCreateEmptyGameObjectCallback(const std::function<void()>& callback)
+{
+	m_create_empty_gameobject_callback = callback;
 }
 
 void EditorMenuBar::FileMenu(ImGuiStyle& style)
 {
-	ImGui::SetNextWindowSize(ImVec2(400.0f, 0.0f), ImGuiCond_Always);
 	if (ImGui::BeginMenu("File"))
 	{
-		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(style.ItemSpacing.x, style.ItemSpacing.y * 3.0f));
-		if (ImGui::MenuItem("	New Scene", "Ctrl + N"))
+		MenuSpacing(style);
+
+		if (ImGui::MenuItem("New Scene", "Ctrl+N"))
 		{
 			SceneManager::GetInstance()->CreateScene("Untitled");
 		}
 
-		if (ImGui::MenuItem("	Open Scene", "Ctrl + O"))
+		if (ImGui::MenuItem("Open Scene...", "Ctrl+O"))
 		{
 		}
 
 		ImGui::Separator();
 
-		if (ImGui::MenuItem("	Save", "Ctrl + S"))
+		if (ImGui::MenuItem("Save", "Ctrl+S"))
 		{
 		}
 
-		if (ImGui::MenuItem("	Save As", "Ctrl + Shift + S"))
+		if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S"))
+		{
+		}
+
+		ImGui::Separator();
+
+		if (ImGui::MenuItem("Exit"))
 		{
 		}
 
@@ -58,28 +87,52 @@ void EditorMenuBar::FileMenu(ImGuiStyle& style)
 	}
 }
 
-void EditorMenuBar::AssetMenu(ImGuiStyle& style)
+void EditorMenuBar::EditMenu(ImGuiStyle& style)
 {
-	if (ImGui::BeginMenu("Assets"))
+	if (ImGui::BeginMenu("Edit"))
 	{
-		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(style.ItemSpacing.x, style.ItemSpacing.y * 3.0f));
+		MenuSpacing(style);
+
+		ImGui::MenuItem("Undo", "Ctrl+Z");
+		ImGui::MenuItem("Redo", "Ctrl+Y");
 
 		ImGui::Separator();
 
-		if (ImGui::MenuItem("	Import New Asset"))
-		{
-			if (SceneManager::GetInstance()->GetActiveScene() == nullptr)
-			{
-				SceneManager::GetInstance()->CreateScene("Untitled");
-			}
+		ImGui::MenuItem("Duplicate", "Ctrl+D");
+		ImGui::MenuItem("Delete", "Del");
 
-			File file = FileManager::OpenFile("Model Files (*.gltf)\0*.gltf\0Model Files (*.glb)\0*.glb\0All Files (*.*)\0*.*\0");
-			if (FileManager::Exists(file.GetAbsolutePath()))
+		ImGui::Separator();
+
+		ImGui::MenuItem("Project Settings");
+
+		ImGui::PopStyleVar();
+		ImGui::EndMenu();
+	}
+}
+
+void EditorMenuBar::AssetsMenu(ImGuiStyle& style)
+{
+	if (ImGui::BeginMenu("Assets"))
+	{
+		MenuSpacing(style);
+
+		if (ImGui::MenuItem("Import Model..."))
+		{
+			if (m_import_asset_callback)
 			{
-				AssetManager::LoadModel(file);
-				MeshManager::GetInstance()->UploadToGpu(TextureType_Diffuse | TextureType_Ambient | TextureType_Specular);
+				m_import_asset_callback();
+			}
+			else
+			{
+				HE_CORE_WARN("Import Asset callback not set!");
 			}
 		}
+
+		ImGui::SeparatorText("Create");
+
+		ImGui::MenuItem("Material");
+		ImGui::MenuItem("Shader");
+		ImGui::MenuItem("Scene");
 
 		ImGui::PopStyleVar();
 		ImGui::EndMenu();
@@ -90,16 +143,31 @@ void EditorMenuBar::GameObjectMenu(ImGuiStyle& style)
 {
 	if (ImGui::BeginMenu("GameObject"))
 	{
-		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(style.ItemSpacing.x, style.ItemSpacing.y * 3.0f));
-		if (ImGui::MenuItem("	Create Empty", "Ctrl + Shift + N"))
-		{
-			if (SceneManager::GetInstance()->GetActiveScene() == nullptr)
-			{
-				SceneManager::GetInstance()->CreateScene("Untitled");
-			}
+		MenuSpacing(style);
 
-			SceneManager::GetInstance()->GetActiveScene()->CreateGameObject("GameObject", m_hierarchy_panel->GetSelectedGameObject());
+		if (ImGui::MenuItem("Create Empty", "Ctrl+Shift+N"))
+		{
+			if (m_create_empty_gameobject_callback)
+			{
+				m_create_empty_gameobject_callback();
+			}
+			else
+			{
+				HE_CORE_WARN("Create Empty GameObject callback not set!");
+			}
 		}
+
+		ImGui::SeparatorText("3D Objects");
+
+		ImGui::MenuItem("Cube");
+		ImGui::MenuItem("Sphere");
+		ImGui::MenuItem("Plane");
+
+		ImGui::SeparatorText("Lights");
+
+		ImGui::MenuItem("Directional Light");
+		ImGui::MenuItem("Point Light");
+		ImGui::MenuItem("Spot Light");
 
 		ImGui::PopStyleVar();
 		ImGui::EndMenu();
@@ -110,27 +178,75 @@ void EditorMenuBar::ComponentMenu(ImGuiStyle& style)
 {
 	if (ImGui::BeginMenu("Component"))
 	{
-		if (ImGui::MenuItem("	Add", "Ctrl + Shift + A", nullptr, m_hierarchy_panel->GetSelectedGameObject() != NULL_ENTITY))
+		MenuSpacing(style);
+
+		Entity selected = m_hierarchy_panel->GetSelectedGameObject();
+
+		const bool has_selection = selected != NULL_ENTITY;
+
+		ImGui::BeginDisabled(!has_selection);
+
+		if (ImGui::MenuItem("Mesh Filter"))
+		{
+			selected.AddComponent<MeshFilterComponent>();
+		}
+
+		ImGui::EndDisabled();
+
+		ImGui::PopStyleVar();
+		ImGui::EndMenu();
+	}
+}
+
+void EditorMenuBar::WindowMenu(ImGuiStyle& style)
+{
+	if (ImGui::BeginMenu("Window"))
+	{
+		MenuSpacing(style);
+
+		ImGui::MenuItem("Hierarchy", nullptr, &m_window_settings->show_hierarchy);
+		ImGui::MenuItem("Inspector", nullptr, &m_window_settings->show_inspector);
+
+		ImGui::SeparatorText("Editor");
+
+		ImGui::MenuItem("Editor Settings", nullptr, &m_window_settings->show_editor_settings);
+
+		ImGui::SeparatorText("Rendering");
+
+		ImGui::MenuItem("Render Settings", nullptr, &m_window_settings->show_render_settings);
+		ImGui::MenuItem("GI Settings", nullptr, &m_window_settings->show_gi_settings);
+		ImGui::MenuItem("Shadow Settings", nullptr, &m_window_settings->show_shadow_settings);
+
+		ImGui::PopStyleVar();
+		ImGui::EndMenu();
+	}
+}
+
+void EditorMenuBar::HelpMenu(ImGuiStyle& style)
+{
+	if (ImGui::BeginMenu("Help"))
+	{
+		MenuSpacing(style);
+
+		if (ImGui::MenuItem("Documentation"))
+		{
+		}
+
+		if (ImGui::MenuItem("Keyboard Shortcuts"))
 		{
 		}
 
 		ImGui::Separator();
 
-		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(style.ItemSpacing.x, style.ItemSpacing.y * 3.0f));
-
-		if (ImGui::BeginMenu("Mesh"))
+		if (ImGui::MenuItem("Report Issue"))
 		{
-			Entity selected = m_hierarchy_panel->GetSelectedGameObject();
-			const b8 hasSelection = (selected != NULL_ENTITY);
+		}
 
-			b8 enabled = hasSelection && !selected.HasComponent<MeshFilterComponent>();
-			if (ImGui::MenuItem("	Mesh Filter", nullptr, false, enabled))
-			{
-				selected.AddComponent<MeshFilterComponent>();
-				ImGui::CloseCurrentPopup();
-			}
+		ImGui::SeparatorText("About");
 
-			ImGui::EndMenu();
+		if (ImGui::MenuItem("About HellEngine"))
+		{
+			m_window_settings->show_about_window = true;
 		}
 
 		ImGui::PopStyleVar();
@@ -138,34 +254,309 @@ void EditorMenuBar::ComponentMenu(ImGuiStyle& style)
 	}
 }
 
-void EditorMenuBar::SettingsMenu(ImGuiStyle& style)
+void EditorMenuBar::ShowEditorSettings()
 {
-	if (ImGui::BeginMenu("Settings"))
+	if (!m_window_settings->show_editor_settings)
 	{
-		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(style.ItemSpacing.x, style.ItemSpacing.y * 3.0f));
-
-		// Editor Settings
-		if (ImGui::BeginMenu("Editor"))
-		{
-			ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(style.ItemSpacing.x, style.ItemSpacing.y * 3.0f));
-			ImGui::Checkbox("Show Grid", &m_settings.show_grid);
-			ImGui::PopStyleVar();
-			ImGui::EndMenu();
-		}
-
-		// Render Settings
-		if (ImGui::BeginMenu("Render"))
-		{
-			const char* mode_names[] = { "Normal", "Wireframe", "UVs", "Normals", "Shadow Map" };
-			int current_mode = static_cast<int>(m_settings.render_mode);
-			if (ImGui::Combo("Render Mode", &current_mode, mode_names, EditorRenderMode_Count))
-			{
-				m_settings.render_mode = static_cast<EditorRenderMode>(current_mode);
-			}
-			ImGui::EndMenu();
-		}
-
-		ImGui::PopStyleVar();
-		ImGui::EndMenu();
+		return;
 	}
+
+	ImGuiWindowFlags flags = ImGuiWindowFlags_AlwaysAutoResize;
+
+	const bool visible = ImGui::Begin(
+		"Editor Settings",
+		nullptr,
+		flags
+	);
+
+	if (visible)
+	{
+		ImGui::SeparatorText("Scene View");
+
+		ImGui::Checkbox("Show Grid", &m_settings->show_grid);
+	}
+
+	ImGui::End();
+}
+
+void EditorMenuBar::ShowRenderSettings()
+{
+	if (!m_window_settings->show_render_settings)
+	{
+		return;
+	}
+
+	ImGuiWindowFlags flags = ImGuiWindowFlags_AlwaysAutoResize;
+
+	const bool visible = ImGui::Begin(
+		"Render Settings",
+		nullptr,
+		flags
+	);
+
+	if (visible)
+	{
+		ImGui::SeparatorText("Render Mode");
+
+		const char* mode_names[] =
+		{
+			"Normal",
+			"Wireframe",
+			"UVs",
+			"Normals",
+			"Shadow Map"
+		};
+
+		i32 current_mode = static_cast<i32>(m_settings->render_mode);
+
+		if (ImGui::Combo(
+			"Mode",
+			&current_mode,
+			mode_names,
+			EditorRenderMode_Count))
+		{
+			m_settings->render_mode =
+				static_cast<EditorRenderMode>(current_mode);
+		}
+	}
+
+	ImGui::End();
+}
+
+void EditorMenuBar::ShowGISettings()
+{
+	if (!m_window_settings->show_gi_settings)
+	{
+		return;
+	}
+
+	ImGuiWindowFlags flags = ImGuiWindowFlags_AlwaysAutoResize;
+
+	const bool visible = ImGui::Begin(
+		"GI Settings",
+		nullptr,
+		flags
+	);
+
+	if (visible)
+	{
+		bool gi_enabled =
+			static_cast<bool>(m_settings->gi_settings.enabled);
+
+		if (ImGui::Checkbox("Enable GI", &gi_enabled))
+		{
+			m_settings->gi_settings.enabled = gi_enabled ? 1 : 0;
+		}
+
+		if (m_settings->gi_settings.enabled)
+		{
+			i32 sample_count =
+				static_cast<i32>(m_settings->gi_settings.sample_count);
+
+			if (ImGui::DragInt(
+				"Samples",
+				&sample_count,
+				1.0f,
+				GI_SAMPLE_COUNT_MIN,
+				GI_SAMPLE_COUNT_MAX))
+			{
+				m_settings->gi_settings.sample_count =
+					static_cast<u32>(sample_count);
+			}
+
+			ImGui::DragFloat(
+				"Intensity##GI",
+				&m_settings->gi_settings.intensity,
+				GI_INTENSITY_STEP,
+				GI_INTENSITY_MIN,
+				GI_INTENSITY_MAX,
+				"%.2f"
+			);
+
+			ImGui::DragFloat(
+				"Ray Distance",
+				&m_settings->gi_settings.ray_distance,
+				GI_RAY_DISTANCE_STEP,
+				GI_RAY_DISTANCE_MIN,
+				GI_RAY_DISTANCE_MAX,
+				"%.2f"
+			);
+
+			ImGui::DragFloat(
+				"Thickness",
+				&m_settings->gi_settings.thickness,
+				GI_THICKNESS_STEP,
+				GI_THICKNESS_MIN,
+				GI_THICKNESS_MAX,
+				"%.2f"
+			);
+
+			ImGui::DragFloat(
+				"Falloff",
+				&m_settings->gi_settings.falloff,
+				GI_FALLOFF_STEP,
+				GI_FALLOFF_MIN,
+				GI_FALLOFF_MAX,
+				"%.2f"
+			);
+		}
+	}
+
+	ImGui::End();
+}
+
+void EditorMenuBar::ShowShadowSettings()
+{
+	if (!m_window_settings->show_shadow_settings)
+	{
+		return;
+	}
+
+	ImGuiWindowFlags flags = ImGuiWindowFlags_AlwaysAutoResize;
+
+	const bool visible = ImGui::Begin(
+		"Shadow Settings",
+		nullptr,
+		flags
+	);
+
+	if (visible)
+	{
+		bool shadows_enabled =
+			static_cast<bool>(m_settings->shadow_settings.enabled);
+
+		if (ImGui::Checkbox("Enable Shadows", &shadows_enabled))
+		{
+			m_settings->shadow_settings.enabled = shadows_enabled;
+		}
+
+		if (m_settings->shadow_settings.enabled)
+		{
+			const u32 shadow_map_sizes[] =
+			{
+				SHADOW_MAP_SIZE_512,
+				SHADOW_MAP_SIZE_1024,
+				SHADOW_MAP_SIZE_2048,
+				SHADOW_MAP_SIZE_4096
+			};
+
+			const char* shadow_map_size_names[] =
+			{
+				"512",
+				"1024",
+				"2048",
+				"4096"
+			};
+
+			i32 current_shadow_map_size_index = 0;
+
+			for (i32 i = 0; i < IM_ARRAYSIZE(shadow_map_sizes); i++)
+			{
+				if (m_settings->shadow_settings.shadow_map_size == shadow_map_sizes[i])
+				{
+					current_shadow_map_size_index = i;
+					break;
+				}
+			}
+
+			if (ImGui::Combo(
+				"Shadow Map Size",
+				&current_shadow_map_size_index,
+				shadow_map_size_names,
+				IM_ARRAYSIZE(shadow_map_size_names)))
+			{
+				m_settings->shadow_settings.shadow_map_size =
+					shadow_map_sizes[current_shadow_map_size_index];
+			}
+
+			ImGui::DragFloat(
+				"Min Bias",
+				&m_settings->shadow_settings.min_bias,
+				SHADOW_MIN_BIAS_STEP,
+				SHADOW_MIN_BIAS_MIN,
+				SHADOW_MIN_BIAS_MAX,
+				"%.4f"
+			);
+
+			ImGui::DragFloat(
+				"Max Bias",
+				&m_settings->shadow_settings.max_bias,
+				SHADOW_MAX_BIAS_STEP,
+				SHADOW_MAX_BIAS_MIN,
+				SHADOW_MAX_BIAS_MAX,
+				"%.4f"
+			);
+
+			ImGui::DragFloat(
+				"Normal Offset",
+				&m_settings->shadow_settings.normal_offset,
+				SHADOW_NORMAL_OFFSET_STEP,
+				SHADOW_NORMAL_OFFSET_MIN,
+				SHADOW_NORMAL_OFFSET_MAX,
+				"%.2f"
+			);
+
+			i32 pcf_samples =
+				static_cast<i32>(m_settings->shadow_settings.pcf_samples);
+
+			if (ImGui::DragInt(
+				"PCF Samples",
+				&pcf_samples,
+				SHADOW_PCF_SAMPLES_STEP,
+				SHADOW_PCF_SAMPLES_MIN,
+				SHADOW_PCF_SAMPLES_MAX))
+			{
+				m_settings->shadow_settings.pcf_samples =
+					static_cast<u32>(pcf_samples);
+			}
+
+			ImGui::DragFloat(
+				"Softness",
+				&m_settings->shadow_settings.softness,
+				SHADOW_SOFTNESS_STEP,
+				SHADOW_SOFTNESS_MIN,
+				SHADOW_SOFTNESS_MAX,
+				"%.2f"
+			);
+		}
+	}
+
+	ImGui::End();
+}
+
+void EditorMenuBar::ShowAboutWindow()
+{
+	if (!m_window_settings->show_about_window)
+	{
+		return;
+	}
+
+	ImGuiWindowFlags flags = ImGuiWindowFlags_AlwaysAutoResize;
+
+	const bool visible = ImGui::Begin(
+		"About HellEngine",
+		&m_window_settings->show_about_window,
+		flags
+	);
+
+	if (visible)
+	{
+		ImGui::Text("HellEngine");
+		ImGui::Separator();
+		ImGui::Text("Custom real-time game engine editor.");
+		ImGui::Text("Version: 0.1.0");
+	}
+
+	ImGui::End();
+}
+
+void EditorMenuBar::MenuSpacing(ImGuiStyle& style)
+{
+	ImGui::PushStyleVar(
+		ImGuiStyleVar_ItemSpacing,
+		ImVec2(
+			style.ItemSpacing.x,
+			style.ItemSpacing.y * MENU_ITEM_SPACING_Y_MULTIPLIER
+		)
+	);
 }

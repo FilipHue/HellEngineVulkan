@@ -6,6 +6,32 @@
 #endif
 #include <vulkan/vulkan.h>
 
+constexpr auto MIN_BUFFER_OFFSET_ALIGNMENT = 64U;
+
+/*
+* std140 layout rules for uniform buffers:
+* - Scalars (float, int, uint, bool) have a base alignment of 4 bytes.
+* - vec2 has a base alignment of 8 bytes.
+* - vec3 and vec4 have a base alignment of 16 bytes.
+* - Arrays of scalars or vectors have a base alignment equal to the base alignment of a single element, rounded up to the next multiple of 16 bytes.
+* - Structs have a base alignment equal to the largest base alignment of any of their members, rounded up to the next multiple of 16 bytes.
+* - The offset of a member within a struct must be a multiple of the base alignment of that member.
+* - The total size of a struct must be a multiple of the base alignment of its largest member.
+*/
+constexpr auto LAYOUT_STD140_ALIGNMENT = 16U;
+
+/*
+* std430 layout rules for storage buffers:
+* - Scalars (float, int, uint, bool) have a base alignment of 4 bytes.
+* - vec2 has a base alignment of 8 bytes.
+* - vec3 and vec4 have a base alignment of 16 bytes.
+* - Arrays of scalars or vectors have a base alignment equal to the base alignment of a single element, without rounding up.
+* - Structs have a base alignment equal to the largest base alignment of any of their members, without rounding up.
+* - The offset of a member within a struct must be a multiple of the base alignment of that member.
+* - The total size of a struct must be a multiple of the base alignment of its largest member.
+*/
+constexpr auto LAYOUT_STD430_ALIGNMENT = 16U;
+
 namespace hellengine
 {
 

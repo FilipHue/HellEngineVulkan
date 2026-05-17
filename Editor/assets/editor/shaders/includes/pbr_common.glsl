@@ -1,3 +1,4 @@
+// Common functions for Physically Based Rendering (PBR) in GLSL
 #ifndef PBR_COMMON_GLSL
 #define PBR_COMMON_GLSL
 

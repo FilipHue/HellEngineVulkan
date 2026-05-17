@@ -1,6 +1,3 @@
-// ================================
-// Light Gizmo Vertex Shader
-// ================================
 #version 460
 
 // Input vertex attributes

@@ -1,3 +1,4 @@
+// Light calculations for PBR shading
 #ifndef LIGHT_GLSL
 #define LIGHT_GLSL
 

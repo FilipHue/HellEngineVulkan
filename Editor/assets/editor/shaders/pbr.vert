@@ -1,5 +1,7 @@
 #version 460
 
+#include "includes/common.glsl"
+
 #extension GL_ARB_shader_draw_parameters : require
 
 layout(location = 0) in vec3 inPosition;
@@ -17,30 +19,21 @@ layout(location = 4) out vec3 vTangentWS;
 layout(location = 5) out vec3 vBitangentWS;
 layout(location = 6) out flat int vObjectIndex;
 
-layout(set = 0, binding = 0) uniform GlobalUBO {
-    mat4 proj;
-    mat4 view;
-    vec3 camera_position;
-    float _pad0;
-    vec4 ambient_color_intensity;  // xyz = color, w = intensity
-} ubo;
-
-struct PerObjectData {
-    mat4 model;
-    uint material_index;
-    int  entity_id;
-};
+layout(set = 0, binding = 0) uniform GlobalData {
+    CameraData camera;
+    WorldData world;
+} ubo_globalData;
 
 layout(set = 2, binding = 0, std430) readonly buffer PerObjectSSBO {
-    PerObjectData obj[];
-};
+    PerObjectData data[];
+} ssbo_objects;
 
 void main()
 {
     uint objectIndex = gl_DrawIDARB;
     vObjectIndex = int(objectIndex);
 
-    PerObjectData pd = obj[objectIndex];
+    PerObjectData pd = ssbo_objects.data[objectIndex];
 
     // World-space position
     vec4 posWS = pd.model * vec4(inPosition, 1.0);
@@ -63,5 +56,5 @@ void main()
     vUV = inUV;
 
     // Clip-space position
-    gl_Position = ubo.proj * ubo.view * posWS;
+    gl_Position = ubo_globalData.camera.projection * ubo_globalData.camera.view * posWS;
 }

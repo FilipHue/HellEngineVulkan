@@ -1,3 +1,4 @@
+// Shadow settings structure for use in shaders
 #ifndef SHADOW_GLSL
 #define SHADOW_GLSL
 

@@ -131,8 +131,9 @@ namespace hellengine
 					aiString path;
 					if (ai_material->GetTexture(aiType, 0, &path) == AI_SUCCESS) {
 						TextureType textureType = GetTextureType(aiType);
-
-						i32 index = TextureManager::GetInstance()->GetTexture2DIndex(path.C_Str());
+						
+						File texture_file = FileManager::ReadFile(file.GetRelativeDirectory() + "/" + std::string(path.C_Str()));
+						i32 index = TextureManager::GetInstance()->GetTexture2DIndex(texture_file.GetName());
 
 						mesh_mat_info->Set(textureType, index);
 					}

@@ -3,6 +3,8 @@
 // Internal
 #include "hellengine/hellengine.h"
 
+#include "../types.h"
+
 using namespace hellengine;
 using namespace core;
 using namespace ecs;

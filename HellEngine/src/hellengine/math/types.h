@@ -27,13 +27,14 @@ namespace hellengine
 			HE_API static std::vector<VkVertexInputAttributeDescription> GetAttributeDescriptions();
 		};
 
-		ALIGN_AS(64) struct CameraData
+		ALIGN_AS(16) struct CameraData
 		{
 			glm::mat4 view;
 			glm::mat4 projection;
+			glm::vec4 position;
 		};
 
-		ALIGN_AS(64) struct ObjectData
+		ALIGN_AS(16) struct ObjectData
 		{
 			glm::mat4 model;
 		};

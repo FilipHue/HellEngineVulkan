@@ -24,6 +24,8 @@ namespace hellengine
 			HE_API static b8 Exists(const char* path);
 			HE_API static b8 Exists(const std::string& path);
 
+			HE_API static std::string GetAbsolutePath(const char* path);
+
 		private:
 			FileManager() = delete;
 		};

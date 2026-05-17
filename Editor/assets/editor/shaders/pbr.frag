@@ -26,7 +26,7 @@ layout(location = 1) out uint outPickId;
 // Global data
 layout(set = 0, binding = 0) uniform GlobalData {
     CameraData camera;
-    vec4 ambient_color_intensity;
+    WorldData world;
 } ubo_globalData;
 
 // Light data
@@ -78,9 +78,6 @@ vec4 SampleTexture(int index, vec2 uv)
     return texture(textures[nonuniformEXT(uint(index))], uv);
 }
 
-// DEBUG: Global variable to store shadow debug info
-vec3 g_shadowDebug = vec3(0.0);
-
 // Calculate shadow factor for a light (0.0 = fully shadowed, 1.0 = fully lit)
 float CalculateShadow(LightInfo light, vec3 worldPos, vec3 normal, uint lightIndex)
 {
@@ -95,15 +92,10 @@ float CalculateShadow(LightInfo light, vec3 worldPos, vec3 normal, uint lightInd
     vec3 projCoords = lightSpacePos.xyz / lightSpacePos.w;
 
     // Transform to [0,1] range
-    projCoords = projCoords * 0.5 + 0.5;
+    projCoords.xy = projCoords.xy * 0.5 + 0.5;
 
     // Sample shadow map
     float shadowMapDepth = texture(shadowMaps[lightIndex], projCoords.xy).r;
-
-    // DEBUG: Store debug info
-    g_shadowDebug.r = shadowMapDepth;           // Shadow map depth (red channel)
-    g_shadowDebug.g = projCoords.z;             // Current fragment depth (green channel)
-    g_shadowDebug.b = (projCoords.x + projCoords.y) * 0.5;  // UV coords (blue channel)
 
     // Outside shadow map bounds - no shadow
     if (projCoords.x < 0.0 || projCoords.x > 1.0 ||
@@ -159,7 +151,7 @@ vec3 ComputeGlobalIllumination(vec3 worldPos, vec3 normal, vec3 albedo, float ao
 
         // For now, use ambient as indirect light approximation
         // In full SSGI, you'd sample screen-space color/depth buffers
-        vec3 indirectLight = ubo_globalData.ambient_color_intensity.xyz * ubo_globalData.ambient_color_intensity.w;
+        vec3 indirectLight = ubo_globalData.world.ambient_color_intensity.xyz * ubo_globalData.world.ambient_color_intensity.w;
 
         // Apply falloff
         float distFactor = 1.0 / (1.0 + pow(sampleDist / ubo_giData.settings.ray_distance, ubo_giData.settings.falloff));
@@ -361,11 +353,6 @@ void main()
         // Calculate shadow factor
         float shadowFactor = CalculateShadow(light, vPosWS, N, i);
 
-        // DEBUG: Visualize shadow factor - uncomment to see shadow values
-        // If this shows all white = shadow calculation is returning 1.0 (no shadow)
-        // If this shows all black = shadow calculation is returning 0.0 (full shadow)
-        // color = vec3(shadowFactor); return;
-
         // Add to outgoing radiance (modulated by shadow)
         float NdotL = max(dot(N, L), 0.0);
         Lo += (diffuse + specular) * radiance * NdotL * shadowFactor;
@@ -375,8 +362,8 @@ void main()
     // Ambient Lighting (world/environment light)
     // ================================
 
-    vec3 ambientColor = ubo_globalData.ambient_color_intensity.xyz;
-    float ambientIntensity = ubo_globalData.ambient_color_intensity.w;
+    vec3 ambientColor = ubo_globalData.world.ambient_color_intensity.xyz;
+    float ambientIntensity = ubo_globalData.world.ambient_color_intensity.w;
     vec3 ambient = ambientColor * ambientIntensity * albedo * ao;
 
     // ================================
@@ -455,15 +442,6 @@ void main()
                     }
                 }
             }
-        }
-        // DEBUG: Show shadow debug info when shadows are active
-        // This will override the normal color to help diagnose shadow issues
-        if (ubo_shadowData.settings.enabled != 0u && g_shadowDebug != vec3(0.0))
-        {
-            // Uncomment one of these lines to visualize different shadow data:
-            // color = vec3(g_shadowDebug.r);  // Shadow map depth (red)
-            // color = vec3(g_shadowDebug.g);  // Current fragment depth (green)
-            // color = g_shadowDebug;          // All debug channels
         }
     }
 
