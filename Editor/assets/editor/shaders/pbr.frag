@@ -49,6 +49,9 @@ layout(set = 0, binding = 3) uniform ShadowData {
     ShadowSettings settings;
 } ubo_shadowData;
 
+// Global illumination data
+layout(set = 0, binding = 4) uniform sampler2D globalIlluminationTexture;
+
 // Material data
 layout(set = 1, binding = 0, std430) readonly buffer MaterialSSBO {
     MaterialInfo data[];
@@ -62,6 +65,7 @@ layout(set = 2, binding = 0, std430) readonly buffer PerObjectSSBO {
 // Texture samplers
 layout(set = 3, binding = 0) uniform sampler2D shadowMaps[MAX_LIGHTS];
 layout(set = 3, binding = 1) uniform sampler2D textures[];
+
 
 layout(constant_id = 0) const uint HELLENGINE_EDITOR = 0;
 
@@ -126,43 +130,6 @@ float CalculateShadow(LightInfo light, vec3 worldPos, vec3 normal, uint lightInd
     float shadow = (currentDepth - bias) > shadowMapDepth ? 0.0 : 1.0;
 
     return shadow;
-}
-
-// Simple screen-space ray march for GI (placeholder - simplified version)
-vec3 ComputeGlobalIllumination(vec3 worldPos, vec3 normal, vec3 albedo, float ao)
-{
-    if (ubo_giData.settings.enabled == 0u) return vec3(0.0);
-
-    vec3 giContribution = vec3(0.0);
-
-    // Very simple approximation: sample hemisphere based on normal
-    // In a full implementation, you'd ray-march in screen space or use voxels
-    float samples = float(ubo_giData.settings.sample_count);
-
-    for (uint i = 0u; i < ubo_giData.settings.sample_count; ++i)
-    {
-        // Generate random direction in hemisphere
-        vec2 seed = vUV * float(i + 1) + vPosWS.xy;
-        vec3 rayDir = RandomHemisphereDirection(normal, seed);
-
-        // Simple distance-based falloff (placeholder)
-        float sampleDist = ubo_giData.settings.ray_distance * 0.5;
-        vec3 samplePos = worldPos + rayDir * sampleDist;
-
-        // For now, use ambient as indirect light approximation
-        // In full SSGI, you'd sample screen-space color/depth buffers
-        vec3 indirectLight = ubo_globalData.world.ambient_color_intensity.xyz * ubo_globalData.world.ambient_color_intensity.w;
-
-        // Apply falloff
-        float distFactor = 1.0 / (1.0 + pow(sampleDist / ubo_giData.settings.ray_distance, ubo_giData.settings.falloff));
-
-        giContribution += indirectLight * distFactor;
-    }
-
-    giContribution /= samples;
-    giContribution *= albedo * ao * ubo_giData.settings.intensity;
-
-    return giContribution;
 }
 
 // ================================
@@ -252,110 +219,76 @@ void main()
         LightInfo light = ubo_lightData.lights[i];
 
         // Skip disabled lights
-        if (light.cone_attenuation.w < 0.5) continue;
+        if (light.cone_attenuation.w < 0.5)
+        {
+            continue;
+        }
 
         uint lightType = uint(light.position_type.w);
-        vec3 lightPos = light.position_type.xyz;
-        vec3 lightColor = light.color_intensity.xyz;
-        float lightIntensity = light.color_intensity.w;
 
-        vec3 L;
-        float attenuation = 1.0;
-
-        // Light type: 0 = point, 1 = directional, 2 = spot
-        if (lightType == 0u) {
-            // Point light
-            vec3 lightDir = lightPos - vPosWS;
-            float distance = length(lightDir);
-            L = normalize(lightDir);  // Direction from surface to light
-
-            float range = light.direction_range.w;
-            float customAttenuation = light.cone_attenuation.z;
-
-            // Inverse-square falloff with range limit
-            attenuation = lightIntensity / (distance * distance * customAttenuation + 1.0);
-
-            // Smooth falloff at range boundary (starts fading at 75% of max range)
-            if (distance > range) {
-                attenuation = 0.0;
-            } else if (distance > range * 0.75) {
-                float falloff = 1.0 - (distance - range * 0.75) / (range * 0.25);
-                attenuation *= falloff * falloff;
-            }
-        }
-        else if (lightType == 1u) {
-            // Directional light (like the sun - parallel rays)
-            L = normalize(-lightPos);  // position field stores the light direction
-            attenuation = lightIntensity;
-        }
-        else if (lightType == 2u) {
-            // Spot light
-            vec3 lightDir = lightPos - vPosWS;
-            float distance = length(lightDir);
-            L = normalize(lightDir);
-
-            // Direction from light to fragment
-            vec3 lightToFragment = -L;
-            vec3 spotDirection = normalize(light.direction_range.xyz);
-
-            // Angle between spot direction and light-to-fragment direction
-            float theta = dot(lightToFragment, spotDirection);
-
-            float innerCone = light.cone_attenuation.x;  // cos(inner_angle)
-            float outerCone = light.cone_attenuation.y;  // cos(outer_angle)
-
-            // Calculate smooth spot intensity (smoothstep between outer and inner cone)
-            float epsilon = innerCone - outerCone;
-            float spotIntensity = 0.0;
-            if (epsilon > 0.0001) {
-                spotIntensity = clamp((theta - outerCone) / epsilon, 0.0, 1.0);
-            } else {
-                // Fallback if cones are too similar
-                spotIntensity = theta >= outerCone ? 1.0 : 0.0;
-            }
-
-            float range = light.direction_range.w;
-            float customAttenuation = light.cone_attenuation.z;
-
-            // Distance attenuation with inverse-square law
-            attenuation = (lightIntensity * spotIntensity) / (distance * distance * customAttenuation + 1.0);
-
-            // Smooth falloff at range boundary
-            if (distance > range) {
-                attenuation = 0.0;
-            } else if (distance > range * 0.75) {
-                float falloff = 1.0 - (distance - range * 0.75) / (range * 0.25);
-                attenuation *= falloff * falloff;
-            }
-        }
-
-        vec3 H = normalize(V + L);
-        vec3 radiance = lightColor * attenuation;
-
-        // Cook-Torrance BRDF
-        float NDF = DistributionGGX(N, H, roughness);
-        float G = GeometrySmith(N, V, L, roughness);
-        vec3 F = FresnelSchlick(max(dot(H, V), 0.0), F0);
-
-        // Specular contribution
-        vec3 numerator = NDF * G * F;
-        float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0);
-        vec3 specular = numerator / max(denominator, EPSILON);
-
-        // Energy conservation: kS + kD = 1.0
-        vec3 kS = F;  // Specular reflection coefficient
-        vec3 kD = vec3(1.0) - kS;  // Diffuse reflection coefficient
-        kD *= 1.0 - metallic; // Metals have no diffuse lighting
-
-        // Lambert diffuse
-        vec3 diffuse = kD * albedo / PI;
-
-        // Calculate shadow factor
         float shadowFactor = CalculateShadow(light, vPosWS, N, i);
 
-        // Add to outgoing radiance (modulated by shadow)
-        float NdotL = max(dot(N, L), 0.0);
-        Lo += (diffuse + specular) * radiance * NdotL * shadowFactor;
+        // Point light
+        if (lightType == 0u)
+        {
+            PointLight pointLight;
+            pointLight.position = light.position_type.xyz;
+            pointLight.color = light.color_intensity.xyz;
+            pointLight.intensity = light.color_intensity.w;
+            pointLight.radius = light.direction_range.w;
+
+            Lo += CalculatePointLight(
+                pointLight,
+                N,
+                V,
+                vPosWS,
+                albedo,
+                metallic,
+                roughness,
+                F0
+            ) * shadowFactor;
+        }
+        // Directional light
+        else if (lightType == 1u)
+        {
+            DirectionalLight directionalLight;
+            directionalLight.position = light.position_type.xyz;
+            directionalLight.color = light.color_intensity.xyz;
+            directionalLight.intensity = light.color_intensity.w;
+            directionalLight.direction = light.position_type.xyz;
+
+            Lo += CalculateDirectionalLight(
+                directionalLight,
+                N,
+                V,
+                albedo,
+                metallic,
+                roughness,
+                F0
+            ) * shadowFactor;
+        }
+        // Spot light
+        else if (lightType == 2u)
+        {
+            SpotLight spotLight;
+            spotLight.position = light.position_type.xyz;
+            spotLight.color = light.color_intensity.xyz;
+            spotLight.intensity = light.color_intensity.w;
+            spotLight.direction = light.direction_range.xyz;
+            spotLight.innerCutoff = light.cone_attenuation.x;
+            spotLight.outerCutoff = light.cone_attenuation.y;
+
+            Lo += CalculateSpotLight(
+                spotLight,
+                N,
+                V,
+                vPosWS,
+                albedo,
+                metallic,
+                roughness,
+                F0
+            ) * shadowFactor;
+        }
     }
 
     // ================================
@@ -366,11 +299,8 @@ void main()
     float ambientIntensity = ubo_globalData.world.ambient_color_intensity.w;
     vec3 ambient = ambientColor * ambientIntensity * albedo * ao;
 
-    // ================================
-    // Global Illumination (SSGI)
-    // ================================
-
-    vec3 gi = ComputeGlobalIllumination(vPosWS, N, albedo, ao);
+    vec2 screenUV = gl_FragCoord.xy / vec2(textureSize(globalIlluminationTexture, 0));
+    vec3 gi = texture(globalIlluminationTexture, screenUV).rgb;
 
     // Final color
     vec3 color = ambient + Lo + gi + emission;

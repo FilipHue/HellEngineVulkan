@@ -49,7 +49,8 @@ void main()
 
     // Gram-Schmidt orthogonalization to ensure perpendicularity
     vTangentWS = normalize(vTangentWS - dot(vTangentWS, vNormalWS) * vNormalWS);
-    vBitangentWS = cross(vNormalWS, vTangentWS);
+    float handedness = dot(cross(vNormalWS, vTangentWS), vBitangentWS) < 0.0 ? -1.0 : 1.0;
+    vBitangentWS = normalize(cross(vNormalWS, vTangentWS) * handedness);
 
     // Pass-through
     vColor = inColor;

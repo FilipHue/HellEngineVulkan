@@ -432,6 +432,7 @@ namespace hellengine
 			u32 draw_id = 0;
 			while (current_pool < (u32)m_pools.size())
 			{
+				m_pools[current_pool].number_of_instances = 0;
 				while (current_instance < (u32)m_mesh_instances_allocation.size())
 				{
 					MeshInstanceAllocation* instance = m_mesh_instances_allocation[current_instance];
@@ -440,6 +441,7 @@ namespace hellengine
 						break;
 					}
 
+					m_pools[current_pool].number_of_instances++;
 					VkDrawIndexedIndirectCommand command{};
 					command.indexCount = instance->buffer_allocation->index_count;
 					command.instanceCount = 1;
@@ -570,8 +572,8 @@ namespace hellengine
 			}
 
 			m_backend->BindDescriptorSet(pipeline, m_materials_descriptor);
-			m_backend->BindDescriptorSet(pipeline, m_textures_descriptor);
 			m_backend->BindDescriptorSet(pipeline, m_per_draw_data_descriptor);
+			m_backend->BindDescriptorSet(pipeline, m_textures_descriptor);
 
 			VkDeviceSize indirect_offset = 0;
 
@@ -583,10 +585,10 @@ namespace hellengine
 				m_backend->DrawIndexedIndirect(
 					m_draw_commands_buffer,
 					static_cast<u32>(indirect_offset),
-					(u32)m_mesh_instances_allocation.size(),
+					pool.number_of_instances,
 					sizeof(VkDrawIndexedIndirectCommand));
 
-				indirect_offset += sizeof(VkDrawIndexedIndirectCommand) * (u32)m_mesh_instances_allocation.size();
+				indirect_offset += sizeof(VkDrawIndexedIndirectCommand) * pool.number_of_instances;
 			}
 		}
 
@@ -602,6 +604,7 @@ namespace hellengine
 			pool.index_buffer = m_backend->CreateIndexBufferEmpty(MAX_MEMORY_INDICES);
 			pool.vertex_count = 0;
 			pool.index_count = 0;
+			pool.number_of_instances = 0;
 
 			m_pools.push_back(pool);
 		}

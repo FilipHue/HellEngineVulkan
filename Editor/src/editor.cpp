@@ -2,7 +2,38 @@
 
 Editor::Editor(ApplicationConfiguration* configuration) : Application(configuration)
 {
-	NO_OP;
+	/* Editor UI */
+	m_hierarchy_panel = nullptr;
+	m_inspector_panel = nullptr;
+	m_viewport_panel = nullptr;
+	m_menu_bar = nullptr;
+
+	/* Graphics resources */
+	// PBR
+	m_pbr_descriptor = nullptr;
+	m_pbr_gi_descriptor = nullptr;
+	m_pbr_global_data_ubo = nullptr;
+	m_pbr_lights_data_ubo = nullptr;
+	m_pbr_gi_data_ubo = nullptr;
+	m_pbr_shadow_data_ubo = nullptr;
+
+	// GBuffer
+	m_gbuffer_position = nullptr;
+	m_gbuffer_normal = nullptr;
+	m_gbuffer_albedo_ao = nullptr;
+	m_gbuffer_depth = nullptr;
+
+	// Global Illumination
+	m_gi_descriptor = nullptr;
+	m_gi_texture = nullptr;
+
+	// Shadow Maps
+	m_shadow_maps = {};
+	m_textures_descriptor = nullptr;
+
+	// Debug Visualization
+	m_gizmo_vb = nullptr;
+	m_gizmo_ib = nullptr;
 }
 
 void Editor::Init()
@@ -28,6 +59,14 @@ void Editor::Init()
 	CreateDescriptors();
 
 	CreateEditorUI();
+
+	CreatePBRResources();
+	CreateGBufferResources();
+	CreateGIResources();
+
+	CreatePBRDescriptors();
+	CreateGBufferDescriptors();
+	CreateGIDescriptors();
 
 	m_viewport_last_size = m_viewport_panel->GetSize();
 }
@@ -56,38 +95,49 @@ void Editor::OnProcessUpdate(f32 delta_time)
 void Editor::OnRenderBegin()
 {
 	glm::uvec2& viewport_current_size = m_viewport_panel->GetSize();
+
 	if (viewport_current_size != m_viewport_last_size && viewport_current_size.x && viewport_current_size.y)
 	{
-		m_viewport_last_size = m_viewport_panel->GetSize();
+		m_viewport_last_size = viewport_current_size;
+
 		m_editor_camera.SetAspect((f32)m_viewport_last_size.x, (f32)m_viewport_last_size.y);
 		m_global_data.camera.projection = m_editor_camera.GetProjection();
 
 		m_viewport_panel->UpdateGridCameraData();
 		m_viewport_panel->OnViewportResize();
+
+		DestroyGBufferResources();
+		DestroyGIResources();
+
+		CreateGBufferResources();
+		CreateGIResources();
+
+		UpdateGBufferDescriptors();
+		UpdateGIDescriptors();
 	}
 
-	m_backend->UpdateUniformBuffer(m_pbr_global_ubo, &m_global_data, sizeof(GlobalData));
-
 	UpdateLights();
-	m_backend->UpdateUniformBuffer(m_pbr_lights_ubo, &m_lights_data, sizeof(LightsUBOData));
 
-	m_backend->UpdateUniformBuffer(m_global_illumination_ubo, &m_editor_settings.gi_settings, sizeof(GlobalIlluminationSettings));
-
-	m_backend->UpdateUniformBuffer(m_shadow_ubo, &m_editor_settings.shadow_settings, sizeof(ShadowSettings));
+	m_backend->UpdateUniformBuffer(m_pbr_global_data_ubo, &m_global_data, sizeof(GlobalData));
+	m_backend->UpdateUniformBuffer(m_pbr_lights_data_ubo, &m_lights_data, sizeof(LightsUBOData));
+	m_backend->UpdateUniformBuffer(m_pbr_gi_data_ubo, &m_editor_settings.gi_settings, sizeof(GlobalIlluminationSettings));
+	m_backend->UpdateUniformBuffer(m_pbr_shadow_data_ubo, &m_editor_settings.shadow_settings, sizeof(ShadowSettings));
 
 	RenderShadowMaps();
+	RenderGBuffer();
+	RenderGI();
 
 	m_viewport_panel->RenderBegin();
 }
 
 void Editor::OnRenderUpdate()
 {
-	RenderDebugMode();
+	RenderPBR();
 
 	if (m_show_gizmos)
 	{
 		UpdateGizmos();
-		RenderGizmos();
+		RenderDebug();
 	}
 }
 
@@ -101,7 +151,7 @@ void Editor::OnUIRender()
 {
 	m_ui->BeginDocking();
 
-	if (m_window_settings.show_hierarchy &&m_hierarchy_panel->Begin())
+	if (m_window_settings.show_hierarchy && m_hierarchy_panel->Begin())
 	{
 		m_hierarchy_panel->Draw();
 		m_hierarchy_panel->End();
@@ -161,19 +211,6 @@ void Editor::OnUIRender()
 
 void Editor::Shutdown()
 {
-	// Cleanup shadow maps
-	for (size_t i = 0; i < m_shadow_maps.size(); ++i)
-	{
-		std::string name = "ShadowMap_" + std::to_string(i);
-		TextureManager::GetInstance()->DestroyTexture2D(name);
-	}
-	m_shadow_maps.clear();
-
-	m_backend->DestroyBuffer(m_pbr_global_ubo);
-	m_backend->DestroyBuffer(m_pbr_lights_ubo);
-	m_backend->DestroyBuffer(m_global_illumination_ubo);
-	m_backend->DestroyBuffer(m_shadow_ubo);
-
 	if (m_gizmo_vb)
 	{
 		m_backend->DestroyBuffer(m_gizmo_vb);
@@ -188,6 +225,8 @@ void Editor::Shutdown()
 	delete m_inspector_panel;
 	delete m_viewport_panel;
 	delete m_menu_bar;
+
+	DestroyResources();
 }
 
 b8 Editor::OnEventWindowClose(EventContext& event)
@@ -328,16 +367,16 @@ void Editor::ImportAsset()
 	}
 
 	TextureType material_texture_types =
-		TextureType_Diffuse			|
-		TextureType_Specular		|
-		TextureType_Ambient			|
-		TextureType_Emissive		|
-		TextureType_Height			|
-		TextureType_Normals			|
-		TextureType_Shininess		|
-		TextureType_Opacity			|
-		TextureType_Displacement	|
-		TextureType_Lightmap		|
+		TextureType_Diffuse |
+		TextureType_Specular |
+		TextureType_Ambient |
+		TextureType_Emissive |
+		TextureType_Height |
+		TextureType_Normals |
+		TextureType_Shininess |
+		TextureType_Opacity |
+		TextureType_Displacement |
+		TextureType_Lightmap |
 		TextureType_Reflection;
 	File file = FileManager::OpenFile("All Supported\0*.fbx;*.obj;*.gltf;*.glb\0FBX Files\0*.fbx\0OBJ Files\0*.obj\0GLTF Files\0*.gltf;*.glb\0");
 	if (FileManager::Exists(file.GetAbsolutePath()))
@@ -359,40 +398,47 @@ void Editor::CreateEmptyGameObject()
 
 void Editor::CreateDefaultSettings()
 {
-	m_window_settings = {};
+	// TODO : These settings should be loaded/saved from/to a config file
+	{
+		// Window settings
+		m_window_settings = {};
 
-	m_window_settings.show_hierarchy = true;
-	m_window_settings.show_inspector = true;
-	m_window_settings.show_editor_settings = false;
-	m_window_settings.show_render_settings = false;
-	m_window_settings.show_gi_settings = false;
-	m_window_settings.show_shadow_settings = false;
-	m_window_settings.show_about_window = false;
+		m_window_settings.show_hierarchy = true;
+		m_window_settings.show_inspector = true;
+		m_window_settings.show_editor_settings = false;
+		m_window_settings.show_render_settings = false;
+		m_window_settings.show_gi_settings = false;
+		m_window_settings.show_shadow_settings = false;
+		m_window_settings.show_about_window = false;
+	}
 
-	m_editor_settings = {};
+	// Editor settings
+	{
+		m_editor_settings = {};
 
-	// Initialize Shadow settings
-	m_editor_settings.shadow_settings.enabled = 1;                  // Enabled by default
-	m_editor_settings.shadow_settings.shadow_map_size = 2048;       // 2048x2048 shadow maps
-	m_editor_settings.shadow_settings.cascade_split_lambda = 0.75f; // CSM split
-	m_editor_settings.shadow_settings.min_bias = 0.001f;            // Min bias
-	m_editor_settings.shadow_settings.max_bias = 0.01f;             // Max bias
-	m_editor_settings.shadow_settings.normal_offset = 0.1f;         // Normal offset
-	m_editor_settings.shadow_settings.pcf_samples = 1;              // 3x3 PCF
-	m_editor_settings.shadow_settings.softness = 1.0f;              // Shadow softness
-	m_editor_settings.shadow_settings.cascade_distances = glm::vec4(10.0f, 30.0f, 80.0f, 200.0f);  // Cascade distances
+		// Initialize Global Illumination settings
+		m_editor_settings.gi_settings = {};
+		m_editor_settings.gi_settings.enabled = 0;              // Disabled by default
+		m_editor_settings.gi_settings.sample_count = 16;        // 16 samples per pixel
+		m_editor_settings.gi_settings.ray_distance = 5.0f;      // 5 units maximum ray distance
+		m_editor_settings.gi_settings.intensity = 1.0f;         // 100% intensity
+		m_editor_settings.gi_settings.thickness = 0.5f;         // Surface thickness
+		m_editor_settings.gi_settings.falloff = 2.0f;           // Quadratic falloff
+		m_editor_settings.gi_settings.bias = 0.05f;             // Small bias to avoid self-occlusion
+		m_editor_settings.gi_settings.temporal_weight = 0.95f;  // 95% temporal accumulation
+		m_editor_settings.gi_settings.debug_visualization = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);  // No debug
 
-	// Initialize Global Illumination settings
-	m_editor_settings.gi_settings = {};
-	m_editor_settings.gi_settings.enabled = 0;              // Disabled by default
-	m_editor_settings.gi_settings.sample_count = 16;        // 16 samples per pixel
-	m_editor_settings.gi_settings.ray_distance = 5.0f;      // 5 units maximum ray distance
-	m_editor_settings.gi_settings.intensity = 1.0f;         // 100% intensity
-	m_editor_settings.gi_settings.thickness = 0.5f;         // Surface thickness
-	m_editor_settings.gi_settings.falloff = 2.0f;           // Quadratic falloff
-	m_editor_settings.gi_settings.bias = 0.05f;             // Small bias to avoid self-occlusion
-	m_editor_settings.gi_settings.temporal_weight = 0.95f;  // 95% temporal accumulation
-	m_editor_settings.gi_settings.debug_visualization = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);  // No debug
+		// Initialize Shadow settings
+		m_editor_settings.shadow_settings.enabled = 1;                  // Enabled by default
+		m_editor_settings.shadow_settings.shadow_map_size = 2048;       // 2048x2048 shadow maps
+		m_editor_settings.shadow_settings.cascade_split_lambda = 0.75f; // CSM split
+		m_editor_settings.shadow_settings.min_bias = 0.001f;            // Min bias
+		m_editor_settings.shadow_settings.max_bias = 0.01f;             // Max bias
+		m_editor_settings.shadow_settings.normal_offset = 0.1f;         // Normal offset
+		m_editor_settings.shadow_settings.pcf_samples = 1;              // 3x3 PCF
+		m_editor_settings.shadow_settings.softness = 1.0f;              // Shadow softness
+		m_editor_settings.shadow_settings.cascade_distances = glm::vec4(10.0f, 30.0f, 80.0f, 200.0f);  // Cascade distances
+	}
 }
 
 void Editor::CreateResources()
@@ -420,120 +466,20 @@ void Editor::CreateResources()
 	m_gizmo_ib = nullptr;
 
 	m_editor_data.show_debug_info = true;
+
+	CreateEditorResources();
+
+	CreateShadowResources();
 }
 
 void Editor::CreatePipelines()
 {
-	// PBR Pipeline
-	{
-		PipelineCreateInfo pipeline_info = {};
-		pipeline_info.type = PipelineType_Graphics;
-		pipeline_info.topology = PipelinePrimitiveTopology_TriangleList;
-		pipeline_info.polygon_mode = PipelinePolygonMode_Fill;
-		pipeline_info.cull_mode = PipelineCullMode_None;
-		pipeline_info.front_face = PipelineFrontFace_CounterClockwise;
-		pipeline_info.line_width = 1.0f;
+	CreateEditorPipeline();
 
-		pipeline_info.dynamic_states = { PipelineDynamicState_Viewport, PipelineDynamicState_Scissor };
-		pipeline_info.layout = {
-			{
-				{
-					{ 0, DescriptorType_UniformBuffer, 1, ShaderStage_Vertex | ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },	// Global data
-					{ 1, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },						// Lights data
-					{ 2, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },						// GI settings
-					{ 3, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind }						// Shadow settings
-				},
-				DescriptorSetFlags_UpdateAfterBindPool
-			},
-			{
-				{
-					{ 0, DescriptorType_StorageBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind }	// Per-draw data
-				},
-				DescriptorSetFlags_UpdateAfterBindPool
-			},
-			{
-				{
-					{ 0, DescriptorType_StorageBuffer, 1, ShaderStage_Vertex | ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },	// Per-object data
-				},
-				DescriptorSetFlags_UpdateAfterBindPool
-			},
-			{
-				{
-					{ 0, DescriptorType_CombinedImageSampler, MAX_LIGHTS, ShaderStage_Fragment, DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind },											// Shadow maps
-					{ 1, DescriptorType_CombinedImageSampler, MAX_TEXTURES, ShaderStage_Fragment, DescriptorBindingFlags_VariableCount | DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind }	// Material textures
-				},
-				DescriptorSetFlags_UpdateAfterBindPool
-			}
-		};
-
-		pipeline_info.vertex_binding_description = VertexFormatTangent::GetBindingDescription();
-		pipeline_info.vertex_attribute_descriptions = VertexFormatTangent::GetAttributeDescriptions();
-
-		pipeline_info.push_constant_ranges = {
-			{ ShaderStage_Fragment, 0, sizeof(u32) }
-		};
-		pipeline_info.depth_stencil_info = { true, true };
-
-		pipeline_info.dynamic_rendering_info = { 
-			false, 
-			{ VK_FORMAT_R16G16B16A16_SFLOAT, VK_FORMAT_R32_UINT },
-			VK_FORMAT_D32_SFLOAT
-		};
-
-		ShaderStageInfo shader_info = {};
-		shader_info.sources[ShaderType_Vertex] = CONCAT_PATHS(EDITOR_SHADER_PATH, "pbr.vert");
-		shader_info.sources[ShaderType_Fragment] = CONCAT_PATHS(EDITOR_SHADER_PATH, "pbr.frag");
-
-		shader_info.specialization_infos.push_back({
-			ShaderStage_Fragment,
-			sizeof(m_editor_data),
-			&m_editor_data,
-			{
-				{ 0, sizeof(m_editor_data.show_debug_info), offsetof(EditorSpecificData, show_debug_info) }
-			}
-		});
-
-		m_pbr_pipeline = PipelineManager::GetInstance()->CreatePipeline(C_PIPELINE_PBR, pipeline_info, shader_info);
-		MeshManager::GetInstance()->CreateDescriptors(PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_PBR));
-	}
-
-	// Editor Pipeline
-	{
-		PipelineCreateInfo pipeline_info = {};
-
-		pipeline_info.type = PipelineType_Graphics;
-		pipeline_info.topology = PipelinePrimitiveTopology_TriangleList;
-		pipeline_info.polygon_mode = PipelinePolygonMode_Fill;
-		pipeline_info.cull_mode = PipelineCullMode_None;
-		pipeline_info.front_face = PipelineFrontFace_CounterClockwise;
-		pipeline_info.line_width = 1.0f;
-
-		pipeline_info.dynamic_states = { PipelineDynamicState_Viewport, PipelineDynamicState_Scissor };
-		pipeline_info.layout = {
-			{
-				{ { 0, DescriptorType_CombinedImageSampler, 1, ShaderStage_Fragment, DescriptorBindingFlags_None } },	// Full-screen texture
-				DescriptorSetFlags_None
-			}
-		};
-		pipeline_info.vertex_binding_description = {};
-		pipeline_info.vertex_attribute_descriptions = {};
-
-		pipeline_info.push_constant_ranges = {};
-		pipeline_info.depth_stencil_info = { true, true, false };
-
-		pipeline_info.dynamic_rendering_info = {
-			false,
-			{ VK_FORMAT_B8G8R8A8_UNORM },
-			VK_FORMAT_D32_SFLOAT_S8_UINT
-		};
-
-		ShaderStageInfo shader_info = {};
-		shader_info.sources[ShaderType_Vertex] = CONCAT_PATHS(EDITOR_SHADER_PATH, "full_screen.vert");
-		shader_info.sources[ShaderType_Fragment] = CONCAT_PATHS(EDITOR_SHADER_PATH, "full_screen.frag");
-
-		PipelineManager::GetInstance()->CreatePipeline(C_PIPELINE_EDITOR, pipeline_info, shader_info);
-		m_backend->InitImGuiForDynamicRendering(PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_EDITOR)->GetRenderingCreateInfo());
-	}
+	CreatePBRPipeline();
+	CreateGBufferPipeline();
+	CreateGIPipeline();
+	CreateShadowPipeline();
 
 	// Debug Wireframe Pipeline
 	{
@@ -549,10 +495,11 @@ void Editor::CreatePipelines()
 		pipeline_info.layout = {
 			{
 				{
-					{ 0, DescriptorType_UniformBuffer, 1, ShaderStage_Vertex | ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },	// Global data
-					{ 1, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },						// Lights data
-					{ 2, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },						// GI settings
-					{ 3, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind }						// Shadow settings
+					{ 0, DescriptorType_UniformBuffer, 1, ShaderStage_Vertex | ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
+					{ 1, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
+					{ 2, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
+					{ 3, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
+					{ 4, DescriptorType_CombinedImageSampler, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind }
 				},
 				DescriptorSetFlags_UpdateAfterBindPool
 			},
@@ -570,8 +517,8 @@ void Editor::CreatePipelines()
 			},
 			{
 				{
-					{ 0, DescriptorType_CombinedImageSampler, MAX_LIGHTS, ShaderStage_Fragment, DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind },											// Shadow maps
-					{ 1, DescriptorType_CombinedImageSampler, MAX_TEXTURES, ShaderStage_Fragment, DescriptorBindingFlags_VariableCount | DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind }	// Material textures
+					{ 0, DescriptorType_CombinedImageSampler, MAX_LIGHTS, ShaderStage_Fragment, DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind },
+					{ 1, DescriptorType_CombinedImageSampler, MAX_TEXTURES, ShaderStage_Fragment, DescriptorBindingFlags_VariableCount | DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind }
 				},
 				DescriptorSetFlags_UpdateAfterBindPool
 			}
@@ -602,7 +549,7 @@ void Editor::CreatePipelines()
 			{
 				{ 0, sizeof(m_editor_data.show_debug_info), offsetof(EditorSpecificData, show_debug_info) }
 			}
-		});
+			});
 
 		PipelineManager::GetInstance()->CreatePipeline(C_PIPELINE_WIREFRAME, pipeline_info, shader_info);
 	}
@@ -638,163 +585,521 @@ void Editor::CreatePipelines()
 		shader_info.sources[ShaderType_Vertex] = CONCAT_PATHS(EDITOR_SHADER_PATH, "gizmo.vert");
 		shader_info.sources[ShaderType_Fragment] = CONCAT_PATHS(EDITOR_SHADER_PATH, "gizmo.frag");
 
-		PipelineManager::GetInstance()->CreatePipeline(C_PIPELINE_LIGHT_GIZMO, pipeline_info, shader_info);
-	}
-
-	// ShadowMap Pipeline
-	{
-		PipelineCreateInfo pipeline_info = {};
-		pipeline_info.type = PipelineType_Graphics;
-		pipeline_info.topology = PipelinePrimitiveTopology_TriangleList;
-		pipeline_info.polygon_mode = PipelinePolygonMode_Fill;
-		pipeline_info.cull_mode = PipelineCullMode_Front;
-		pipeline_info.front_face = PipelineFrontFace_CounterClockwise;
-		pipeline_info.line_width = 1.0f;
-
-		pipeline_info.dynamic_states = { PipelineDynamicState_Viewport, PipelineDynamicState_Scissor };
-		pipeline_info.layout = {
-			{
-				{
-					{ 0, DescriptorType_UniformBuffer, 1, ShaderStage_Vertex | ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },	// Global data
-					{ 1, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },						// Lights data
-					{ 2, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },						// GI settings
-					{ 3, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind }						// Shadow settings
-				},
-				DescriptorSetFlags_UpdateAfterBindPool
-			},
-			{
-				{
-					{ 0, DescriptorType_StorageBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind }	// Per-draw data
-				},
-				DescriptorSetFlags_UpdateAfterBindPool
-			},
-			{
-				{
-					{ 0, DescriptorType_StorageBuffer, 1, ShaderStage_Vertex | ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },	// Per-object data
-				},
-				DescriptorSetFlags_UpdateAfterBindPool
-			},
-			{
-				{
-					{ 0, DescriptorType_CombinedImageSampler, MAX_LIGHTS, ShaderStage_Fragment, DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind },											// Shadow maps
-					{ 1, DescriptorType_CombinedImageSampler, MAX_TEXTURES, ShaderStage_Fragment, DescriptorBindingFlags_VariableCount | DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind }	// Material textures
-				},
-				DescriptorSetFlags_UpdateAfterBindPool
-			}
-		};
-
-		pipeline_info.vertex_binding_description = VertexFormatTangent::GetBindingDescription();
-		pipeline_info.vertex_attribute_descriptions = VertexFormatTangent::GetAttributeDescriptions();
-
-		pipeline_info.push_constant_ranges = { { ShaderStage_Vertex, 0, sizeof(glm::mat4) } };
-		pipeline_info.depth_stencil_info = { true, true, false, PipelineDethStencilCompareOp_Less };
-
-		pipeline_info.dynamic_rendering_info = { false, {}, VK_FORMAT_D32_SFLOAT };
-
-		ShaderStageInfo shader_info = {};
-		shader_info.sources[ShaderType_Vertex] = CONCAT_PATHS(EDITOR_SHADER_PATH, "shadow_depth.vert");
-		shader_info.sources[ShaderType_Fragment] = CONCAT_PATHS(EDITOR_SHADER_PATH, "shadow_depth.frag");
-
-		m_shadow_pipeline = PipelineManager::GetInstance()->CreatePipeline(C_PIPELINE_SHADOW_DEPTH, pipeline_info, shader_info);
+		PipelineManager::GetInstance()->CreatePipeline(C_PIPELINE_GIZMO, pipeline_info, shader_info);
 	}
 }
 
 void Editor::CreateDescriptors()
 {
-	// PBR Global Descriptor Set
+	MeshManager::GetInstance()->CreateDescriptors(PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_PBR));
+
+	CreateEditorDescriptors();
+
+	CreateShadowDescriptors();
+}
+
+void Editor::DestroyResources()
+{
+	DestroyEditorResources();
+
+	DestroyPBRResources();
+	DestroyGBufferResources();
+	DestroyGIResources();
+	DestroyShadowResources();
+}
+
+void Editor::CreateEditorPipeline()
+{
+	PipelineCreateInfo pipeline_info = {};
+
+	pipeline_info.type = PipelineType_Graphics;
+	pipeline_info.topology = PipelinePrimitiveTopology_TriangleList;
+	pipeline_info.polygon_mode = PipelinePolygonMode_Fill;
+	pipeline_info.cull_mode = PipelineCullMode_None;
+	pipeline_info.front_face = PipelineFrontFace_CounterClockwise;
+	pipeline_info.line_width = 1.0f;
+
+	pipeline_info.dynamic_states = { PipelineDynamicState_Viewport, PipelineDynamicState_Scissor };
+	pipeline_info.layout = {
+		{
+			{ { 0, DescriptorType_CombinedImageSampler, 1, ShaderStage_Fragment, DescriptorBindingFlags_None } },	// Full-screen texture
+			DescriptorSetFlags_None
+		}
+	};
+	pipeline_info.vertex_binding_description = {};
+	pipeline_info.vertex_attribute_descriptions = {};
+
+	pipeline_info.push_constant_ranges = {};
+	pipeline_info.depth_stencil_info = { true, true, false };
+
+	pipeline_info.dynamic_rendering_info = {
+		false,
+		{ VK_FORMAT_B8G8R8A8_UNORM },
+		VK_FORMAT_D32_SFLOAT_S8_UINT
+	};
+
+	ShaderStageInfo shader_info = {};
+	shader_info.sources[ShaderType_Vertex] = CONCAT_PATHS(EDITOR_SHADER_PATH, "full_screen.vert");
+	shader_info.sources[ShaderType_Fragment] = CONCAT_PATHS(EDITOR_SHADER_PATH, "full_screen.frag");
+
+	PipelineManager::GetInstance()->CreatePipeline(C_PIPELINE_EDITOR, pipeline_info, shader_info);
+	m_backend->InitImGuiForDynamicRendering(PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_EDITOR)->GetRenderingCreateInfo());
+}
+
+void Editor::CreateEditorResources()
+{
+}
+
+void Editor::DestroyEditorResources()
+{
+}
+
+void Editor::CreateEditorDescriptors()
+{
+}
+
+void Editor::UpdateEditorDescriptors()
+{
+}
+
+void Editor::RenderEditor()
+{
+}
+
+void Editor::CreateGBufferPipeline()
+{
+	PipelineCreateInfo pipeline_info = {};
+	pipeline_info.type = PipelineType_Graphics;
+	pipeline_info.topology = PipelinePrimitiveTopology_TriangleList;
+	pipeline_info.polygon_mode = PipelinePolygonMode_Fill;
+	pipeline_info.cull_mode = PipelineCullMode_None;
+	pipeline_info.front_face = PipelineFrontFace_CounterClockwise;
+	pipeline_info.line_width = 1.0f;
+
+	pipeline_info.dynamic_states = {
+		PipelineDynamicState_Viewport,
+		PipelineDynamicState_Scissor
+	};
+
+	pipeline_info.layout = {
+		{
+			{
+				{ 0, DescriptorType_UniformBuffer, 1, ShaderStage_Vertex | ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
+				{ 1, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
+				{ 2, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
+				{ 3, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
+				{ 4, DescriptorType_CombinedImageSampler, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind }
+			},
+			DescriptorSetFlags_UpdateAfterBindPool
+		},
+		{
+			{
+				{ 0, DescriptorType_StorageBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind }
+			},
+			DescriptorSetFlags_UpdateAfterBindPool
+		},
+		{
+			{
+				{ 0, DescriptorType_StorageBuffer, 1, ShaderStage_Vertex | ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind }
+			},
+			DescriptorSetFlags_UpdateAfterBindPool
+		},
+		{
+			{
+				{ 0, DescriptorType_CombinedImageSampler, MAX_LIGHTS, ShaderStage_Fragment, DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind },
+				{ 1, DescriptorType_CombinedImageSampler, MAX_TEXTURES, ShaderStage_Fragment, DescriptorBindingFlags_VariableCount | DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind }
+			},
+			DescriptorSetFlags_UpdateAfterBindPool
+		}
+	};
+
+	pipeline_info.vertex_binding_description = VertexFormatTangent::GetBindingDescription();
+	pipeline_info.vertex_attribute_descriptions = VertexFormatTangent::GetAttributeDescriptions();
+	pipeline_info.depth_stencil_info = { true, true };
+
+	pipeline_info.dynamic_rendering_info = {
+		false,
+		{
+			VK_FORMAT_R16G16B16A16_SFLOAT,
+			VK_FORMAT_R16G16B16A16_SFLOAT,
+			VK_FORMAT_R16G16B16A16_SFLOAT
+		},
+		VK_FORMAT_D32_SFLOAT
+	};
+
+	ShaderStageInfo shader_info = {};
+	shader_info.sources[ShaderType_Vertex] = CONCAT_PATHS(EDITOR_SHADER_PATH, "pbr.vert");
+	shader_info.sources[ShaderType_Fragment] = CONCAT_PATHS(EDITOR_SHADER_PATH, "gbuffer.frag");
+
+	PipelineManager::GetInstance()->CreatePipeline(C_PIPELINE_GBUFFER, pipeline_info, shader_info);
+}
+
+void Editor::CreateGBufferResources()
+{
+	u32 width = m_viewport_panel->GetSize().x;
+	u32 height = m_viewport_panel->GetSize().y;
+
+	if (width == 0 || height == 0)
 	{
-		m_pbr_global_descriptor = m_backend->CreateDescriptorSet(PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_PBR), 0);
-
-		// Initialize global data (camera + world)
-		m_global_data = {};
-		m_global_data.camera.projection = m_editor_camera.GetProjection();
-		m_global_data.camera.view = m_editor_camera.GetView();
-		m_global_data.camera.position = glm::vec4(m_editor_camera.GetPosition(), 0.0f);
-
-		m_global_data.world.time = glm::vec4(0.0f);
-		m_global_data.world.ambient_color_intensity = glm::vec4(1.0f, 1.0f, 1.0f, 0.03f);
-
-		m_pbr_global_ubo = m_backend->CreateUniformBufferMappedPersistent(sizeof(GlobalData), 1);
-
-		// Initialize lights UBO with default data
-		m_lights_data = {};
-		m_lights_data.light_count = 0;
-		m_pbr_lights_ubo = m_backend->CreateUniformBufferMappedPersistent(sizeof(LightsUBOData), 1);
-
-		m_global_illumination_ubo = m_backend->CreateUniformBufferMappedPersistent(sizeof(GlobalIlluminationSettings), 1);
-		m_shadow_ubo = m_backend->CreateUniformBufferMappedPersistent(sizeof(ShadowSettings), 1);
-
-		DescriptorSetWriteData data1{};
-		data1.type = DescriptorType_UniformBuffer;
-		data1.binding = 0;
-		data1.data.buffer.buffers = new VkBuffer(m_pbr_global_ubo->GetHandle());
-		data1.data.buffer.offsets = new VkDeviceSize(0);
-		data1.data.buffer.ranges = new VkDeviceSize(sizeof(GlobalData));
-
-		DescriptorSetWriteData data2{};
-		data2.type = DescriptorType_UniformBuffer;
-		data2.binding = 1;
-		data2.data.buffer.buffers = new VkBuffer(m_pbr_lights_ubo->GetHandle());
-		data2.data.buffer.offsets = new VkDeviceSize(0);
-		data2.data.buffer.ranges = new VkDeviceSize(sizeof(LightsUBOData));
-
-		DescriptorSetWriteData data3{};
-		data3.type = DescriptorType_UniformBuffer;
-		data3.binding = 2;
-		data3.data.buffer.buffers = new VkBuffer(m_global_illumination_ubo->GetHandle());
-		data3.data.buffer.offsets = new VkDeviceSize(0);
-		data3.data.buffer.ranges = new VkDeviceSize(sizeof(GlobalIlluminationSettings));
-
-		DescriptorSetWriteData data4{};
-		data4.type = DescriptorType_UniformBuffer;
-		data4.binding = 3;
-		data4.data.buffer.buffers = new VkBuffer(m_shadow_ubo->GetHandle());
-		data4.data.buffer.offsets = new VkDeviceSize(0);
-		data4.data.buffer.ranges = new VkDeviceSize(sizeof(ShadowSettings));
-
-		std::vector<DescriptorSetWriteData> write_data = { data1, data2, data3, data4 };
-		m_backend->WriteDescriptor(&m_pbr_global_descriptor, write_data);
+		return;
 	}
 
-	// Shadow map descriptors
+	m_gbuffer_position = TextureManager::GetInstance()->CreateTexture2D(
+		"GBuffer_Position",
+		VK_FORMAT_R16G16B16A16_SFLOAT,
+		width,
+		height
+	);
+
+	m_gbuffer_normal = TextureManager::GetInstance()->CreateTexture2D(
+		"GBuffer_Normal",
+		VK_FORMAT_R16G16B16A16_SFLOAT,
+		width,
+		height
+	);
+
+	m_gbuffer_albedo_ao = TextureManager::GetInstance()->CreateTexture2D(
+		"GBuffer_AlbedoAO",
+		VK_FORMAT_R16G16B16A16_SFLOAT,
+		width,
+		height
+	);
+
+	m_gbuffer_depth = TextureManager::GetInstance()->CreateTexture2D(
+		"GBuffer_Depth",
+		VK_FORMAT_D32_SFLOAT,
+		width,
+		height
+	);
+}
+
+void Editor::DestroyGBufferResources()
+{
+	TextureManager::GetInstance()->DestroyTexture2D("GBuffer_Position");
+	TextureManager::GetInstance()->DestroyTexture2D("GBuffer_Normal");
+	TextureManager::GetInstance()->DestroyTexture2D("GBuffer_AlbedoAO");
+	TextureManager::GetInstance()->DestroyTexture2D("GBuffer_Depth");
+
+	m_gbuffer_position = nullptr;
+	m_gbuffer_normal = nullptr;
+	m_gbuffer_albedo_ao = nullptr;
+	m_gbuffer_depth = nullptr;
+}
+
+void Editor::CreateGBufferDescriptors()
+{
+}
+
+void Editor::UpdateGBufferDescriptors()
+{
+}
+
+void Editor::RenderGBuffer()
+{
+	Pipeline* gbufferPipeline =
+		PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_GBUFFER);
+
+	if (!gbufferPipeline || !m_gbuffer_position || !m_gbuffer_normal || !m_gbuffer_albedo_ao || !m_gbuffer_depth)
 	{
-		m_shadow_maps.clear();
-		u32 shadowMapSize = m_editor_settings.shadow_settings.shadow_map_size;
-
-		for (u32 i = 0; i < MAX_LIGHTS; ++i)
-		{
-			std::string shadowMapName = "ShadowMap_" + std::to_string(i);
-			VulkanTexture2D* shadowMap = TextureManager::GetInstance()->CreateTexture2D(
-				shadowMapName,
-				VK_FORMAT_D32_SFLOAT,
-				shadowMapSize,
-				shadowMapSize
-			);
-			m_shadow_maps.push_back(shadowMap);
-		}
-
-		m_textures_descriptor = MeshManager::GetInstance()->GetTexturesDescriptor();
-
-		std::vector<VkImageView> shadowMapViewValues;
-		std::vector<VkSampler> shadowMapSamplerValues;
-		for (auto* shadowMap : m_shadow_maps)
-		{
-			shadowMapViewValues.push_back(shadowMap->GetImageView());
-			shadowMapSamplerValues.push_back(shadowMap->GetSampler());
-		}
-
-		DescriptorSetWriteData shadowMapWrite{};
-		shadowMapWrite.type = DescriptorType_CombinedImageSampler;
-		shadowMapWrite.binding = 0;
-		shadowMapWrite.data.image.image_views = shadowMapViewValues.data();
-		shadowMapWrite.data.image.samplers = shadowMapSamplerValues.data();
-
-		std::vector<DescriptorSetWriteData> shadowMapWrites = { shadowMapWrite };
-		if (m_textures_descriptor)
-		{
-			m_backend->WriteDescriptorVariable(&m_textures_descriptor, shadowMapWrites, static_cast<u32>(m_shadow_maps.size()), 0);
-		}
+		return;
 	}
+
+	DynamicRenderingAttachmentInfo positionAttachment{};
+	positionAttachment.image = m_gbuffer_position->GetHandle();
+	positionAttachment.image_view = m_gbuffer_position->GetImageView();
+	positionAttachment.format = VK_FORMAT_R16G16B16A16_SFLOAT;
+	positionAttachment.image_layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+	positionAttachment.load_op = VK_ATTACHMENT_LOAD_OP_CLEAR;
+	positionAttachment.store_op = VK_ATTACHMENT_STORE_OP_STORE;
+	positionAttachment.clear_value.color = { 0.0f, 0.0f, 0.0f, 0.0f };
+	positionAttachment.initial_layout = VK_IMAGE_LAYOUT_UNDEFINED;
+	positionAttachment.final_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+	DynamicRenderingAttachmentInfo normalAttachment = positionAttachment;
+	normalAttachment.image = m_gbuffer_normal->GetHandle();
+	normalAttachment.image_view = m_gbuffer_normal->GetImageView();
+	normalAttachment.clear_value.color = { 0.5f, 0.5f, 1.0f, 1.0f };
+
+	DynamicRenderingAttachmentInfo albedoAOAttachment = positionAttachment;
+	albedoAOAttachment.image = m_gbuffer_albedo_ao->GetHandle();
+	albedoAOAttachment.image_view = m_gbuffer_albedo_ao->GetImageView();
+	albedoAOAttachment.clear_value.color = { 0.0f, 0.0f, 0.0f, 1.0f };
+
+	DynamicRenderingAttachmentInfo depthAttachment{};
+	depthAttachment.image = m_gbuffer_depth->GetHandle();
+	depthAttachment.image_view = m_gbuffer_depth->GetImageView();
+	depthAttachment.format = VK_FORMAT_D32_SFLOAT;
+	depthAttachment.image_layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+	depthAttachment.load_op = VK_ATTACHMENT_LOAD_OP_CLEAR;
+	depthAttachment.store_op = VK_ATTACHMENT_STORE_OP_STORE;
+	depthAttachment.clear_value.depthStencil = { 1.0f, 0 };
+	depthAttachment.initial_layout = VK_IMAGE_LAYOUT_UNDEFINED;
+	depthAttachment.final_layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+
+	DynamicRenderingInfo dri{};
+	dri.extent = { m_viewport_last_size.x, m_viewport_last_size.y };
+	dri.color_attachments = {
+		positionAttachment,
+		normalAttachment,
+		albedoAOAttachment
+	};
+	dri.depth_attachment = depthAttachment;
+
+	m_backend->BeginDynamicRenderingWithAttachments(dri);
+
+	m_backend->SetViewport({
+		{ 0.0f, 0.0f, (f32)m_viewport_last_size.x, (f32)m_viewport_last_size.y, 0.0f, 1.0f }
+		});
+
+	m_backend->SetScissor({
+		{ { 0, 0 }, { m_viewport_last_size.x, m_viewport_last_size.y } }
+		});
+
+	m_backend->BindPipeline(gbufferPipeline);
+	m_backend->BindDescriptorSet(gbufferPipeline, m_pbr_descriptor);
+
+	MeshManager::GetInstance()->DrawMeshes(gbufferPipeline);
+
+	m_backend->EndDynamicRenderingWithAttachments(dri);
+}
+
+void Editor::CreateGIPipeline()
+{
+	PipelineCreateInfo pipeline_info = {};
+	pipeline_info.type = PipelineType_Graphics;
+	pipeline_info.topology = PipelinePrimitiveTopology_TriangleList;
+	pipeline_info.polygon_mode = PipelinePolygonMode_Fill;
+	pipeline_info.cull_mode = PipelineCullMode_None;
+	pipeline_info.front_face = PipelineFrontFace_CounterClockwise;
+	pipeline_info.line_width = 1.0f;
+
+	pipeline_info.dynamic_states = {
+		PipelineDynamicState_Viewport,
+		PipelineDynamicState_Scissor
+	};
+
+	pipeline_info.layout = {
+		{
+			{
+				{ 0, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
+				{ 1, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
+				{ 2, DescriptorType_CombinedImageSampler, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
+				{ 3, DescriptorType_CombinedImageSampler, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
+				{ 4, DescriptorType_CombinedImageSampler, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
+				{ 5, DescriptorType_CombinedImageSampler, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind }
+			},
+			DescriptorSetFlags_UpdateAfterBindPool
+		}
+	};
+
+	pipeline_info.vertex_binding_description = {};
+	pipeline_info.vertex_attribute_descriptions = {};
+	pipeline_info.depth_stencil_info = { false, false };
+
+	pipeline_info.dynamic_rendering_info = {
+		false,
+		{ VK_FORMAT_R16G16B16A16_SFLOAT },
+		VK_FORMAT_UNDEFINED
+	};
+
+	ShaderStageInfo shader_info = {};
+	shader_info.sources[ShaderType_Vertex] = CONCAT_PATHS(EDITOR_SHADER_PATH, "full_screen.vert");
+	shader_info.sources[ShaderType_Fragment] = CONCAT_PATHS(EDITOR_SHADER_PATH, "global_illumination.frag");
+
+	PipelineManager::GetInstance()->CreatePipeline(C_PIPELINE_GLOBAL_ILLUMINATION, pipeline_info, shader_info);
+}
+
+void Editor::CreateGIResources()
+{
+	u32 width = m_viewport_panel->GetSize().x;
+	u32 height = m_viewport_panel->GetSize().y;
+
+	if (width == 0 || height == 0)
+	{
+		return;
+	}
+
+	m_gi_texture = TextureManager::GetInstance()->CreateTexture2D(
+		"GlobalIllumination",
+		VK_FORMAT_R16G16B16A16_SFLOAT,
+		width,
+		height
+	);
+}
+
+void Editor::DestroyGIResources()
+{
+	TextureManager::GetInstance()->DestroyTexture2D("GlobalIllumination");
+
+	m_gi_texture = nullptr;
+}
+
+void Editor::CreateGIDescriptors()
+{
+	Pipeline* giPipeline =
+		PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_GLOBAL_ILLUMINATION);
+
+	if (!giPipeline)
+	{
+		return;
+	}
+
+	m_gi_descriptor = m_backend->CreateDescriptorSet(giPipeline, 0);
+
+	DescriptorSetWriteData globalWrite{};
+	globalWrite.type = DescriptorType_UniformBuffer;
+	globalWrite.binding = 0;
+	globalWrite.data.buffer.buffers = new VkBuffer(m_pbr_global_data_ubo->GetHandle());
+	globalWrite.data.buffer.offsets = new VkDeviceSize(0);
+	globalWrite.data.buffer.ranges = new VkDeviceSize(sizeof(GlobalData));
+
+	DescriptorSetWriteData giSettingsWrite{};
+	giSettingsWrite.type = DescriptorType_UniformBuffer;
+	giSettingsWrite.binding = 1;
+	giSettingsWrite.data.buffer.buffers = new VkBuffer(m_pbr_gi_data_ubo->GetHandle());
+	giSettingsWrite.data.buffer.offsets = new VkDeviceSize(0);
+	giSettingsWrite.data.buffer.ranges = new VkDeviceSize(sizeof(GlobalIlluminationSettings));
+
+	DescriptorSetWriteData positionWrite{};
+	positionWrite.type = DescriptorType_CombinedImageSampler;
+	positionWrite.binding = 2;
+	positionWrite.data.image.image_views = new VkImageView(m_gbuffer_position->GetImageView());
+	positionWrite.data.image.samplers = new VkSampler(m_gbuffer_position->GetSampler());
+
+	DescriptorSetWriteData normalWrite{};
+	normalWrite.type = DescriptorType_CombinedImageSampler;
+	normalWrite.binding = 3;
+	normalWrite.data.image.image_views = new VkImageView(m_gbuffer_normal->GetImageView());
+	normalWrite.data.image.samplers = new VkSampler(m_gbuffer_normal->GetSampler());
+
+	DescriptorSetWriteData albedoAOWrite{};
+	albedoAOWrite.type = DescriptorType_CombinedImageSampler;
+	albedoAOWrite.binding = 4;
+	albedoAOWrite.data.image.image_views = new VkImageView(m_gbuffer_albedo_ao->GetImageView());
+	albedoAOWrite.data.image.samplers = new VkSampler(m_gbuffer_albedo_ao->GetSampler());
+
+	DescriptorSetWriteData depthWrite{};
+	depthWrite.type = DescriptorType_CombinedImageSampler;
+	depthWrite.binding = 5;
+	depthWrite.data.image.image_views = new VkImageView(m_gbuffer_depth->GetImageView());
+	depthWrite.data.image.samplers = new VkSampler(m_gbuffer_depth->GetSampler());
+
+	std::vector<DescriptorSetWriteData> writes = {
+		globalWrite,
+		giSettingsWrite,
+		positionWrite,
+		normalWrite,
+		albedoAOWrite,
+		depthWrite
+	};
+
+	m_backend->WriteDescriptor(&m_gi_descriptor, writes);
+}
+
+void Editor::UpdateGIDescriptors()
+{
+	if (!m_gi_texture)
+	{
+		return;
+	}
+
+	DescriptorSetWriteData giWrite{};
+	giWrite.type = DescriptorType_CombinedImageSampler;
+	giWrite.binding = 4;
+	giWrite.data.image.image_views = new VkImageView(m_gi_texture->GetImageView());
+	giWrite.data.image.samplers = new VkSampler(m_gi_texture->GetSampler());
+
+	std::vector<DescriptorSetWriteData> writes = { giWrite };
+	m_backend->WriteDescriptor(&m_pbr_descriptor, writes);
+}
+
+void Editor::RenderGI()
+{
+	if (!m_editor_settings.gi_settings.enabled || !m_gi_texture)
+	{
+		return;
+	}
+
+	Pipeline* giPipeline =
+		PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_GLOBAL_ILLUMINATION);
+
+	if (!giPipeline)
+	{
+		return;
+	}
+
+	DynamicRenderingAttachmentInfo giAttachment{};
+	giAttachment.image = m_gi_texture->GetHandle();
+	giAttachment.image_view = m_gi_texture->GetImageView();
+	giAttachment.format = VK_FORMAT_R16G16B16A16_SFLOAT;
+	giAttachment.image_layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+	giAttachment.load_op = VK_ATTACHMENT_LOAD_OP_CLEAR;
+	giAttachment.store_op = VK_ATTACHMENT_STORE_OP_STORE;
+	giAttachment.clear_value.color = { 0.0f, 0.0f, 0.0f, 1.0f };
+	giAttachment.initial_layout = VK_IMAGE_LAYOUT_UNDEFINED;
+	giAttachment.final_layout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+	DynamicRenderingInfo dri{};
+	dri.extent = { m_viewport_last_size.x, m_viewport_last_size.y };
+	dri.color_attachments = { giAttachment };
+
+	m_backend->BeginDynamicRenderingWithAttachments(dri);
+
+	m_backend->SetViewport({
+		{ 0.0f, 0.0f, (f32)m_viewport_last_size.x, (f32)m_viewport_last_size.y, 0.0f, 1.0f }
+		});
+
+	m_backend->SetScissor({
+		{ { 0, 0 }, { m_viewport_last_size.x, m_viewport_last_size.y } }
+		});
+
+	m_backend->BindPipeline(giPipeline);
+	m_backend->BindDescriptorSet(giPipeline, m_gi_descriptor);
+
+	m_backend->Draw(3, 1, 0, 0);
+
+	m_backend->EndDynamicRenderingWithAttachments(dri);
+}
+
+void Editor::CreateDebugPipeline()
+{
+}
+
+void Editor::CreateDebugResources()
+{
+}
+
+void Editor::DestroyDebugResources()
+{
+}
+
+void Editor::CreateDebugDescriptors()
+{
+}
+
+void Editor::UpdateDebugDescriptors()
+{
+}
+
+void Editor::RenderDebug()
+{
+	if (!m_gizmo_vb || !m_gizmo_ib)
+	{
+		return;
+	}
+
+	Pipeline* gizmoPipeline = PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_GIZMO);
+	if (!gizmoPipeline) return;
+
+	m_backend->BindPipeline(gizmoPipeline);
+
+	glm::mat4 vp = m_editor_camera.GetProjection() * m_editor_camera.GetView();
+	m_backend->BindPushConstants(gizmoPipeline, ShaderStage_Vertex, 0, sizeof(glm::mat4), &vp);
+
+	m_backend->BindVertexBuffer(m_gizmo_vb, 0);
+	m_backend->BindIndexBuffer(m_gizmo_ib, 0);
+
+	m_backend->DrawIndexed(static_cast<u32>(m_gizmo_indices.size()), 1, 0, 0, 0);
 }
 
 void Editor::CreateEditorUI()
@@ -804,6 +1109,7 @@ void Editor::CreateEditorUI()
 
 	m_hierarchy_panel = new EditorHierarchy();
 	m_hierarchy_panel->Init(m_inspector_panel);
+
 	m_menu_bar = new EditorMenuBar();
 
 	m_viewport_panel = new EditorViewport();
@@ -815,6 +1121,390 @@ void Editor::CreateEditorUI()
 	m_menu_bar->Init(m_hierarchy_panel, &m_window_settings, &m_editor_settings);
 	m_menu_bar->SetImportAssetCallback([this]() { ImportAsset(); });
 	m_menu_bar->SetCreateEmptyGameObjectCallback([this]() { CreateEmptyGameObject(); });
+}
+
+void Editor::CreatePBRPipeline()
+{
+	PipelineCreateInfo pipeline_info = {};
+	pipeline_info.type = PipelineType_Graphics;
+	pipeline_info.topology = PipelinePrimitiveTopology_TriangleList;
+	pipeline_info.polygon_mode = PipelinePolygonMode_Fill;
+	pipeline_info.cull_mode = PipelineCullMode_None;
+	pipeline_info.front_face = PipelineFrontFace_CounterClockwise;
+	pipeline_info.line_width = 1.0f;
+
+	pipeline_info.dynamic_states = { PipelineDynamicState_Viewport, PipelineDynamicState_Scissor };
+	pipeline_info.layout = {
+		{
+			{
+				{ 0, DescriptorType_UniformBuffer, 1, ShaderStage_Vertex | ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
+				{ 1, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
+				{ 2, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
+				{ 3, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
+				{ 4, DescriptorType_CombinedImageSampler, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind }
+			},
+			DescriptorSetFlags_UpdateAfterBindPool
+		},
+		{
+			{
+				{ 0, DescriptorType_StorageBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind }	// Per-draw data
+			},
+			DescriptorSetFlags_UpdateAfterBindPool
+		},
+		{
+			{
+				{ 0, DescriptorType_StorageBuffer, 1, ShaderStage_Vertex | ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },	// Per-object data
+			},
+			DescriptorSetFlags_UpdateAfterBindPool
+		},
+		{
+			{
+				{ 0, DescriptorType_CombinedImageSampler, MAX_LIGHTS, ShaderStage_Fragment, DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind },
+				{ 1, DescriptorType_CombinedImageSampler, MAX_TEXTURES, ShaderStage_Fragment, DescriptorBindingFlags_VariableCount | DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind }
+			},
+			DescriptorSetFlags_UpdateAfterBindPool
+		}
+	};
+
+	pipeline_info.vertex_binding_description = VertexFormatTangent::GetBindingDescription();
+	pipeline_info.vertex_attribute_descriptions = VertexFormatTangent::GetAttributeDescriptions();
+
+	pipeline_info.push_constant_ranges = {
+		{ ShaderStage_Fragment, 0, sizeof(u32) }
+	};
+	pipeline_info.depth_stencil_info = { true, true };
+
+	pipeline_info.dynamic_rendering_info = {
+		false,
+		{ VK_FORMAT_R16G16B16A16_SFLOAT, VK_FORMAT_R32_UINT },
+		VK_FORMAT_D32_SFLOAT
+	};
+
+	ShaderStageInfo shader_info = {};
+	shader_info.sources[ShaderType_Vertex] = CONCAT_PATHS(EDITOR_SHADER_PATH, "pbr.vert");
+	shader_info.sources[ShaderType_Fragment] = CONCAT_PATHS(EDITOR_SHADER_PATH, "pbr.frag");
+
+	shader_info.specialization_infos.push_back({
+		ShaderStage_Fragment,
+		sizeof(m_editor_data),
+		&m_editor_data,
+		{
+			{ 0, sizeof(m_editor_data.show_debug_info), offsetof(EditorSpecificData, show_debug_info) }
+		}
+		});
+
+	PipelineManager::GetInstance()->CreatePipeline(C_PIPELINE_PBR, pipeline_info, shader_info);
+}
+
+void Editor::CreatePBRResources()
+{
+	// Initialize global data (camera + world)
+	m_global_data = {};
+	m_global_data.camera.projection = m_editor_camera.GetProjection();
+	m_global_data.camera.view = m_editor_camera.GetView();
+	m_global_data.camera.position = glm::vec4(m_editor_camera.GetPosition(), 0.0f);
+
+	m_global_data.world.time = glm::vec4(0.0f);
+	m_global_data.world.ambient_color_intensity = glm::vec4(1.0f, 1.0f, 1.0f, 0.03f);
+
+	m_pbr_global_data_ubo = m_backend->CreateUniformBufferMappedPersistent(sizeof(GlobalData), 1);
+
+	// Initialize lights UBO with default data
+	m_lights_data = {};
+	m_lights_data.light_count = 0;
+
+	m_pbr_lights_data_ubo = m_backend->CreateUniformBufferMappedPersistent(sizeof(LightsUBOData), 1);
+
+	// Initialize GI settings UBO with default data
+	m_pbr_gi_data_ubo = m_backend->CreateUniformBufferMappedPersistent(sizeof(GlobalIlluminationSettings), 1);
+	
+	// Initialize shadow settings UBO with default data
+	m_pbr_shadow_data_ubo = m_backend->CreateUniformBufferMappedPersistent(sizeof(ShadowSettings), 1);
+}
+
+void Editor::DestroyPBRResources()
+{
+	m_backend->DestroyBuffer(m_pbr_global_data_ubo);
+	m_backend->DestroyBuffer(m_pbr_lights_data_ubo);
+	m_backend->DestroyBuffer(m_pbr_gi_data_ubo);
+	m_backend->DestroyBuffer(m_pbr_shadow_data_ubo);
+}
+
+void Editor::CreatePBRDescriptors()
+{
+	m_pbr_descriptor = m_backend->CreateDescriptorSet(PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_PBR), 0);
+
+	DescriptorSetWriteData data1{};
+	data1.type = DescriptorType_UniformBuffer;
+	data1.binding = 0;
+	data1.data.buffer.buffers = new VkBuffer(m_pbr_global_data_ubo->GetHandle());
+	data1.data.buffer.offsets = new VkDeviceSize(0);
+	data1.data.buffer.ranges = new VkDeviceSize(sizeof(GlobalData));
+
+	DescriptorSetWriteData data2{};
+	data2.type = DescriptorType_UniformBuffer;
+	data2.binding = 1;
+	data2.data.buffer.buffers = new VkBuffer(m_pbr_lights_data_ubo->GetHandle());
+	data2.data.buffer.offsets = new VkDeviceSize(0);
+	data2.data.buffer.ranges = new VkDeviceSize(sizeof(LightsUBOData));
+
+	DescriptorSetWriteData data3{};
+	data3.type = DescriptorType_UniformBuffer;
+	data3.binding = 2;
+	data3.data.buffer.buffers = new VkBuffer(m_pbr_gi_data_ubo->GetHandle());
+	data3.data.buffer.offsets = new VkDeviceSize(0);
+	data3.data.buffer.ranges = new VkDeviceSize(sizeof(GlobalIlluminationSettings));
+
+	DescriptorSetWriteData data4{};
+	data4.type = DescriptorType_UniformBuffer;
+	data4.binding = 3;
+	data4.data.buffer.buffers = new VkBuffer(m_pbr_shadow_data_ubo->GetHandle());
+	data4.data.buffer.offsets = new VkDeviceSize(0);
+	data4.data.buffer.ranges = new VkDeviceSize(sizeof(ShadowSettings));
+
+	DescriptorSetWriteData data5{};
+	data5.type = DescriptorType_CombinedImageSampler;
+	data5.binding = 4;
+	data5.data.image.image_views = new VkImageView(m_gi_texture->GetImageView());
+	data5.data.image.samplers = new VkSampler(m_gi_texture->GetSampler());
+
+	std::vector<DescriptorSetWriteData> write_data = {
+		data1,
+		data2,
+		data3,
+		data4,
+		data5
+	};
+
+	m_backend->WriteDescriptor(&m_pbr_descriptor, write_data);
+}
+
+void Editor::UpdatePBRDescriptors()
+{
+}
+
+void Editor::RenderPBR()
+{
+	Pipeline* activePipeline = PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_PBR);
+	u32 debugViewMode = static_cast<u32>(m_editor_settings.render_mode);
+
+	if (m_editor_settings.render_mode == EditorRenderMode_Wireframe)
+	{
+		activePipeline = PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_WIREFRAME);
+	}
+
+	m_backend->BindPipeline(activePipeline);
+	m_backend->BindPushConstants(activePipeline, ShaderStage_Fragment, 0, sizeof(u32), &debugViewMode);
+
+	m_backend->BindDescriptorSet(activePipeline, m_pbr_descriptor);
+
+	MeshManager::GetInstance()->DrawMeshes(activePipeline);
+}
+
+void Editor::CreateShadowPipeline()
+{
+	PipelineCreateInfo pipeline_info = {};
+	pipeline_info.type = PipelineType_Graphics;
+	pipeline_info.topology = PipelinePrimitiveTopology_TriangleList;
+	pipeline_info.polygon_mode = PipelinePolygonMode_Fill;
+	pipeline_info.cull_mode = PipelineCullMode_Front;
+	pipeline_info.front_face = PipelineFrontFace_CounterClockwise;
+	pipeline_info.line_width = 1.0f;
+
+	pipeline_info.dynamic_states = { PipelineDynamicState_Viewport, PipelineDynamicState_Scissor };
+	pipeline_info.layout = {
+		{
+			{
+				{ 0, DescriptorType_UniformBuffer, 1, ShaderStage_Vertex | ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },	// Global data
+				{ 1, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },						// Lights data
+				{ 2, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },						// GI settings
+				{ 3, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind }						// Shadow settings
+			},
+			DescriptorSetFlags_UpdateAfterBindPool
+		},
+		{
+			{
+				{ 0, DescriptorType_StorageBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind }	// Per-draw data
+			},
+			DescriptorSetFlags_UpdateAfterBindPool
+		},
+		{
+			{
+				{ 0, DescriptorType_StorageBuffer, 1, ShaderStage_Vertex | ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },	// Per-object data
+			},
+			DescriptorSetFlags_UpdateAfterBindPool
+		},
+		{
+			{
+				{ 0, DescriptorType_CombinedImageSampler, MAX_LIGHTS, ShaderStage_Fragment, DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind },
+				{ 1, DescriptorType_CombinedImageSampler, MAX_TEXTURES, ShaderStage_Fragment, DescriptorBindingFlags_VariableCount | DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind }
+			},
+			DescriptorSetFlags_UpdateAfterBindPool
+		}
+	};
+
+	pipeline_info.vertex_binding_description = VertexFormatTangent::GetBindingDescription();
+	pipeline_info.vertex_attribute_descriptions = VertexFormatTangent::GetAttributeDescriptions();
+
+	pipeline_info.push_constant_ranges = { { ShaderStage_Vertex, 0, sizeof(glm::mat4) } };
+	pipeline_info.depth_stencil_info = { true, true, false, PipelineDethStencilCompareOp_Less };
+
+	pipeline_info.dynamic_rendering_info = { false, {}, VK_FORMAT_D32_SFLOAT };
+
+	ShaderStageInfo shader_info = {};
+	shader_info.sources[ShaderType_Vertex] = CONCAT_PATHS(EDITOR_SHADER_PATH, "shadow_depth.vert");
+	shader_info.sources[ShaderType_Fragment] = CONCAT_PATHS(EDITOR_SHADER_PATH, "shadow_depth.frag");
+
+	PipelineManager::GetInstance()->CreatePipeline(C_PIPELINE_SHADOW_DEPTH, pipeline_info, shader_info);
+}
+
+void Editor::CreateShadowResources()
+{
+	// Cleanup old shadow maps before recreating them.
+	for (size_t i = 0; i < m_shadow_maps.size(); ++i)
+	{
+		std::string name = "ShadowMap_" + std::to_string(i);
+		TextureManager::GetInstance()->DestroyTexture2D(name);
+	}
+	m_shadow_maps.clear();
+
+	u32 shadowMapSize = m_editor_settings.shadow_settings.shadow_map_size;
+
+	for (u32 i = 0; i < MAX_LIGHTS; ++i)
+	{
+		std::string shadowMapName = "ShadowMap_" + std::to_string(i);
+		VulkanTexture2D* shadowMap = TextureManager::GetInstance()->CreateTexture2D(
+			shadowMapName,
+			VK_FORMAT_D32_SFLOAT,
+			shadowMapSize,
+			shadowMapSize
+		);
+		m_shadow_maps.push_back(shadowMap);
+	}
+}
+
+void Editor::DestroyShadowResources()
+{
+	for (size_t i = 0; i < m_shadow_maps.size(); ++i)
+	{
+		std::string name = "ShadowMap_" + std::to_string(i);
+		TextureManager::GetInstance()->DestroyTexture2D(name);
+	}
+	m_shadow_maps.clear();
+}
+
+void Editor::CreateShadowDescriptors()
+{
+	m_textures_descriptor = MeshManager::GetInstance()->GetTexturesDescriptor();
+
+	if (!m_textures_descriptor || m_shadow_maps.empty())
+	{
+		return;
+	}
+
+	std::vector<VkImageView> shadowMapViewValues;
+	std::vector<VkSampler> shadowMapSamplerValues;
+	shadowMapViewValues.reserve(m_shadow_maps.size());
+	shadowMapSamplerValues.reserve(m_shadow_maps.size());
+
+	for (auto* shadowMap : m_shadow_maps)
+	{
+		shadowMapViewValues.push_back(shadowMap->GetImageView());
+		shadowMapSamplerValues.push_back(shadowMap->GetSampler());
+	}
+
+	DescriptorSetWriteData shadowMapWrite{};
+	shadowMapWrite.type = DescriptorType_CombinedImageSampler;
+	shadowMapWrite.binding = 0;
+	shadowMapWrite.data.image.image_views = shadowMapViewValues.data();
+	shadowMapWrite.data.image.samplers = shadowMapSamplerValues.data();
+
+	std::vector<DescriptorSetWriteData> shadowMapWrites = { shadowMapWrite };
+	m_backend->WriteDescriptorVariable(&m_textures_descriptor, shadowMapWrites, static_cast<u32>(m_shadow_maps.size()), 0);
+}
+
+void Editor::UpdateShadowDescriptors()
+{
+}
+
+void Editor::RenderShadowMaps()
+{
+	if (!m_editor_settings.shadow_settings.enabled) return;
+
+	Scene* scene = SceneManager::GetInstance()->GetActiveScene();
+	if (!scene) return;
+
+	Pipeline* shadowPipeline = PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_SHADOW_DEPTH);
+	if (!shadowPipeline) return;
+
+	u32 shadowMapSize = m_editor_settings.shadow_settings.shadow_map_size;
+
+	// Iterate through all lights in the scene using registry view
+	auto view = scene->GetRegistry().view<LightComponent, TransformComponent>();
+
+	u32 lightIndex = 0;  // Index in the lights UBO (matches UpdateLights logic)
+	for (auto entity : view)
+	{
+		auto& lightComp = view.get<LightComponent>(entity);
+		auto& transformComp = view.get<TransformComponent>(entity);
+
+		// Skip disabled lights (must match UpdateLights() logic)
+		if (!lightComp.enabled)
+		{
+			continue;  // Don't increment lightIndex
+		}
+
+		if (lightIndex >= MAX_LIGHTS) break;
+
+		// Skip if light doesn't cast shadows
+		if (!lightComp.cast_shadows)
+		{
+			lightIndex++;
+			continue;
+		}
+
+		// Get the shadow matrix for this light (already computed in UpdateLights)
+		glm::mat4 lightViewProj = m_lights_data.lights[lightIndex].shadow_matrix;
+
+		// Get shadow map texture for this light
+		VulkanTexture2D* shadowMap = m_shadow_maps[lightIndex];
+
+		// Begin rendering to shadow map (depth-only pass)
+		DynamicRenderingAttachmentInfo depthAttachment{};
+		depthAttachment.image = shadowMap->GetHandle();
+		depthAttachment.image_view = shadowMap->GetImageView();
+		depthAttachment.format = VK_FORMAT_D32_SFLOAT;
+		depthAttachment.image_layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+		depthAttachment.load_op = VK_ATTACHMENT_LOAD_OP_CLEAR;
+		depthAttachment.store_op = VK_ATTACHMENT_STORE_OP_STORE;
+		depthAttachment.clear_value.depthStencil = { 1.0f, 0 };  // Clear depth to far plane
+		depthAttachment.initial_layout = VK_IMAGE_LAYOUT_UNDEFINED;
+		depthAttachment.final_layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+
+		DynamicRenderingInfo shadowDRI{};
+		shadowDRI.extent = { shadowMapSize, shadowMapSize };
+		shadowDRI.depth_attachment = depthAttachment;
+		shadowDRI.flags = 0;
+
+		m_backend->BeginDynamicRenderingWithAttachments(shadowDRI);
+
+		// Set viewport and scissor for shadow map resolution
+		m_backend->SetViewport({ { 0.0f, 0.0f, (f32)shadowMapSize, (f32)shadowMapSize, 0.0f, 1.0f } });
+		m_backend->SetScissor({ { { 0, 0 }, { shadowMapSize, shadowMapSize } } });
+
+		// Bind shadow pipeline
+		m_backend->BindPipeline(shadowPipeline);
+
+		// Push light view-projection matrix
+		m_backend->BindPushConstants(shadowPipeline, ShaderStage_Vertex, 0, sizeof(glm::mat4), &lightViewProj);
+
+		// Render all meshes from light's perspective (depth-only, no material/texture descriptors)
+		MeshManager::GetInstance()->DrawMeshes(shadowPipeline);
+
+		m_backend->EndDynamicRenderingWithAttachments(shadowDRI);
+
+		lightIndex++;
+	}
 }
 
 void Editor::DrawToSwapchain()
@@ -1193,124 +1883,4 @@ void Editor::UpdateGizmos()
 		m_backend->UpdateVertexBuffer(m_gizmo_vb, 0, m_gizmo_vertices.data(), vb_size);
 		m_backend->UpdateIndexBuffer(m_gizmo_ib, 0, m_gizmo_indices.data(), ib_size);
 	}
-}
-
-void Editor::RenderGizmos()
-{
-	if (!m_show_gizmos || !m_gizmo_vb || !m_gizmo_ib)
-		return;
-
-	Pipeline* gizmoPipeline = PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_LIGHT_GIZMO);
-	if (!gizmoPipeline) return;
-
-	m_backend->BindPipeline(gizmoPipeline);
-
-	// MVP matrix (no model transform needed, vertices are in world space)
-	glm::mat4 vp = m_editor_camera.GetProjection() * m_editor_camera.GetView();
-	m_backend->BindPushConstants(gizmoPipeline, ShaderStage_Vertex, 0, sizeof(glm::mat4), &vp);
-
-	m_backend->BindVertexBuffer(m_gizmo_vb, 0);
-	m_backend->BindIndexBuffer(m_gizmo_ib, 0);
-	m_backend->DrawIndexed(static_cast<u32>(m_gizmo_indices.size()), 1, 0, 0, 0);
-}
-
-void Editor::RenderShadowMaps()
-{
-	if (!m_editor_settings.shadow_settings.enabled) return;
-
-	Scene* scene = SceneManager::GetInstance()->GetActiveScene();
-	if (!scene) return;
-
-	Pipeline* shadowPipeline = PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_SHADOW_DEPTH);
-	if (!shadowPipeline) return;
-
-	u32 shadowMapSize = m_editor_settings.shadow_settings.shadow_map_size;
-
-	// Iterate through all lights in the scene using registry view
-	auto view = scene->GetRegistry().view<LightComponent, TransformComponent>();
-
-	u32 lightIndex = 0;  // Index in the lights UBO (matches UpdateLights logic)
-	for (auto entity : view)
-	{
-		auto& lightComp = view.get<LightComponent>(entity);
-		auto& transformComp = view.get<TransformComponent>(entity);
-
-		// Skip disabled lights (must match UpdateLights() logic)
-		if (!lightComp.enabled)
-		{
-			continue;  // Don't increment lightIndex
-		}
-
-		if (lightIndex >= MAX_LIGHTS) break;
-
-		// Skip if light doesn't cast shadows
-		if (!lightComp.cast_shadows)
-		{
-			lightIndex++;
-			continue;
-		}
-
-		// Get the shadow matrix for this light (already computed in UpdateLights)
-		glm::mat4 lightViewProj = m_lights_data.lights[lightIndex].shadow_matrix;
-
-		// Get shadow map texture for this light
-		VulkanTexture2D* shadowMap = m_shadow_maps[lightIndex];
-
-		// Begin rendering to shadow map (depth-only pass)
-		DynamicRenderingAttachmentInfo depthAttachment{};
-		depthAttachment.image = shadowMap->GetHandle();
-		depthAttachment.image_view = shadowMap->GetImageView();
-		depthAttachment.format = VK_FORMAT_D32_SFLOAT;
-		depthAttachment.image_layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-		depthAttachment.load_op = VK_ATTACHMENT_LOAD_OP_CLEAR;
-		depthAttachment.store_op = VK_ATTACHMENT_STORE_OP_STORE;
-		depthAttachment.clear_value.depthStencil = { 1.0f, 0 };  // Clear depth to far plane
-		depthAttachment.initial_layout = VK_IMAGE_LAYOUT_UNDEFINED;
-		depthAttachment.final_layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
-
-		DynamicRenderingInfo shadowDRI{};
-		shadowDRI.extent = { shadowMapSize, shadowMapSize };
-		shadowDRI.depth_attachment = depthAttachment;
-		shadowDRI.flags = 0;
-
-		m_backend->BeginDynamicRenderingWithAttachments(shadowDRI);
-
-		// Set viewport and scissor for shadow map resolution
-		m_backend->SetViewport({ { 0.0f, 0.0f, (f32)shadowMapSize, (f32)shadowMapSize, 0.0f, 1.0f } });
-		m_backend->SetScissor({ { { 0, 0 }, { shadowMapSize, shadowMapSize } } });
-
-		// Bind shadow pipeline
-		m_backend->BindPipeline(shadowPipeline);
-
-		// Push light view-projection matrix
-		m_backend->BindPushConstants(shadowPipeline, ShaderStage_Vertex, 0, sizeof(glm::mat4), &lightViewProj);
-
-		// Render all meshes from light's perspective (depth-only, no material/texture descriptors)
-		MeshManager::GetInstance()->DrawMeshes(shadowPipeline);
-
-		m_backend->EndDynamicRenderingWithAttachments(shadowDRI);
-
-		lightIndex++;
-	}
-}
-
-void Editor::RenderDebugMode()
-{
-	Pipeline* activePipeline = m_pbr_pipeline;
-	u32 debugViewMode = static_cast<u32>(m_editor_settings.render_mode);
-
-	if (m_editor_settings.render_mode == EditorRenderMode_Wireframe)
-	{
-		activePipeline = PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_WIREFRAME);
-	}
-
-	if (!activePipeline) return;
-
-	m_backend->BindPipeline(activePipeline);
-
-	m_backend->BindPushConstants(activePipeline, ShaderStage_Fragment, 0, sizeof(u32), &debugViewMode);
-
-	m_backend->BindDescriptorSet(activePipeline, m_pbr_global_descriptor);
-
-	MeshManager::GetInstance()->DrawMeshes(activePipeline);
 }

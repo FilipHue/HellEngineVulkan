@@ -65,6 +65,14 @@ float Random(vec2 co)
     return fract(sin(dot(co.xy, vec2(12.9898, 78.233))) * 43758.5453);
 }
 
+// Hash function for 2D coordinates
+float Hash12(vec2 p)
+{
+    vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+    p3 += dot(p3, p3.yzx + 33.33);
+    return fract((p3.x + p3.y) * p3.z);
+}
+
 // Generate random direction in hemisphere around normal
 vec3 RandomHemisphereDirection(vec3 normal, vec2 seed)
 {

@@ -131,7 +131,7 @@ namespace hellengine
 					aiString path;
 					if (ai_material->GetTexture(aiType, 0, &path) == AI_SUCCESS) {
 						TextureType textureType = GetTextureType(aiType);
-						
+
 						File texture_file = FileManager::ReadFile(file.GetRelativeDirectory() + "/" + std::string(path.C_Str()));
 						i32 index = TextureManager::GetInstance()->GetTexture2DIndex(texture_file.GetName());
 
@@ -171,11 +171,14 @@ namespace hellengine
 
 			UUID uuid = entity.GetComponent<IDComponent>().id;
 
+			static u32 mesh_count = 0;
 			Mesh* mesh = MeshManager::GetInstance()->CreateMesh(ai_mesh->mName.C_Str(), verticies, indices, mesh_mat_info);
-			MeshManager::GetInstance()->UploadMeshGeometry<VertexFormatTangent>(mesh);
-			MeshManager::GetInstance()->CreateMeshInstance(uuid, mesh);
-
-			entity.AddComponent<MeshFilterComponent>().mesh = mesh;
+			if (MeshManager::GetInstance()->UploadMeshGeometry<VertexFormatTangent>(mesh))
+			{
+				MeshManager::GetInstance()->CreateMeshInstance(uuid, mesh);
+				entity.AddComponent<MeshFilterComponent>().mesh = mesh;
+				mesh_count++;
+			}
 		}
 
 		void AssetManager::ExtractTextures(const aiScene* scene, const File& file)

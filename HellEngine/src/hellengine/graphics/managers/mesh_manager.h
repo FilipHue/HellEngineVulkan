@@ -34,6 +34,7 @@ namespace hellengine
 			u32 index_count = 0;
 
 			std::vector<u32> mesh_list;
+			u32 number_of_instances = 0;
 		};
 
 		struct MeshBufferAllocation
