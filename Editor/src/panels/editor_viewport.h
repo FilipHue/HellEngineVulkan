@@ -47,6 +47,8 @@ public:
 	void OnViewportResize();
 	void OnMouseButtonPressed();
 
+	void DrawToolbar();
+
 	Texture2D* GetColorTexture() const { return m_viewport_color_texture; }
 	Texture2D* GetDepthTexture() const { return m_viewport_depth_texture; }
 private:
@@ -63,6 +65,8 @@ private:
 
 	// Viewport
 	DescriptorSet* m_viewport_descriptor;
+	VulkanTexture2D* m_gizmo_icon_texture;
+	void* m_gizmo_icon;
 
 	Texture2D* m_viewport_color_texture;
 	Texture2D* m_viewport_pick_texture;

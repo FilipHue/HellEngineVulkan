@@ -97,6 +97,7 @@ enum EditorRenderMode
 
 struct EditorSettings
 {
+	b8 show_gizmos = true;
 	b8 show_grid = true;
 
 	EditorRenderMode render_mode = EditorRenderMode_Normal;

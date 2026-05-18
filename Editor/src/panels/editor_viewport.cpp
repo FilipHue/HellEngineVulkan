@@ -24,6 +24,17 @@ void EditorViewport::Init(VulkanBackend* backend, VulkanFrontend* frontend, Edit
 	m_depth_color = { 1.0f, 0.0f };
 
 	m_can_pick = true;
+
+	m_gizmo_icon_texture = m_frontend->CreateTexture2D(
+		"ICON_GIZMO",
+		FileManager::ReadFile(CONCAT_PATHS(EDITOR_TEXTURES_PATH, "icon_gizmos.png"))
+	);
+
+	m_gizmo_icon = ImGui_ImplVulkan_AddTexture(
+		m_gizmo_icon_texture->GetSampler(),
+		m_gizmo_icon_texture->GetImageView(),
+		VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+	);
 }
 
 void EditorViewport::RenderBegin()
@@ -240,6 +251,77 @@ void EditorViewport::CreateDescriptors()
 		std::vector<DescriptorSetWriteData> write_data = { data };
 		m_backend->WriteDescriptor(&m_grid_descriptor, write_data);
 	}
+}
+
+void EditorViewport::DrawToolbar()
+{
+	constexpr f32 buttonSize = 24.0f;
+	constexpr f32 iconMargin = 4.0f;
+	constexpr f32 rightPadding = 6.0f;
+
+	const f32 textureWidth = static_cast<f32>(m_gizmo_icon_texture->GetWidth());
+	const f32 textureHeight = static_cast<f32>(m_gizmo_icon_texture->GetHeight());
+
+	const f32 maxIconSize = buttonSize - iconMargin;
+
+	const f32 scale = std::min(
+		maxIconSize / textureWidth,
+		maxIconSize / textureHeight
+	);
+
+	ImVec2 iconSize = ImVec2(
+		textureWidth * scale,
+		textureHeight * scale
+	);
+
+	// Right align button
+	const f32 cursorX =
+		ImGui::GetWindowContentRegionMax().x -
+		buttonSize -
+		rightPadding;
+
+	ImGui::SetCursorPosX(cursorX);
+
+	ImGui::PushID("ViewportGizmosToggle");
+
+	ImGui::PushStyleVar(
+		ImGuiStyleVar_FramePadding,
+		ImVec2(
+			(buttonSize - iconSize.x) * 0.5f,
+			(buttonSize - iconSize.y) * 0.5f
+		)
+	);
+
+	ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 4.0f);
+
+	ImGui::PushStyleColor(
+		ImGuiCol_Button,
+		m_editor_settings->show_gizmos
+		? ImVec4(0.25f, 0.45f, 0.85f, 0.9f)
+		: ImVec4(0.12f, 0.12f, 0.12f, 0.75f)
+	);
+
+	ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.35f, 0.55f, 0.95f, 0.95f));
+	ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.20f, 0.35f, 0.70f, 1.0f));
+
+	ImTextureID icon = reinterpret_cast<ImTextureID>(m_gizmo_icon);
+
+	if (ImGui::ImageButton("##GizmosIcon", icon, iconSize))
+	{
+		m_editor_settings->show_gizmos = !m_editor_settings->show_gizmos;
+	}
+
+	if (ImGui::IsItemHovered())
+	{
+		ImGui::SetTooltip("Toggle Gizmos");
+	}
+
+	ImGui::PopStyleColor(3);
+	ImGui::PopStyleVar(2);
+
+	ImGui::PopID();
+
+	ImGui::Separator();
 }
 
 void EditorViewport::DrawGrid()

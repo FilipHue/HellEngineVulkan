@@ -28,31 +28,32 @@ namespace hellengine
 		void Viewport::Draw()
 		{
 			ImVec2 avail_size = ImGui::GetContentRegionAvail();
-			glm::uvec2 new_size = { (uint32_t)avail_size.x, (uint32_t)avail_size.y };
 
-			auto viweport_offset = ImGui::GetWindowPos();
-			auto viewport_min_region = ImGui::GetWindowContentRegionMin();
-			auto viewport_max_region = ImGui::GetWindowContentRegionMax();
+			m_size = {
+				static_cast<u32>(avail_size.x),
+				static_cast<u32>(avail_size.y)
+			};
 
-			ImVec2 viewport_min = { viweport_offset.x + viewport_min_region.x, viweport_offset.y + viewport_min_region.y };
-			ImVec2 viewport_max = { viweport_offset.x + viewport_max_region.x, viweport_offset.y + viewport_max_region.y };
+			ImGui::Image(
+				(ImTextureID)m_handle,
+				ImVec2(static_cast<f32>(m_size.x), static_cast<f32>(m_size.y))
+			);
+
+			ImVec2 image_min = ImGui::GetItemRectMin();
+			ImVec2 image_max = ImGui::GetItemRectMax();
 
 			m_bounds = {
-				{ (u32)viewport_min.x, (u32)viewport_min.y },
-				{ (u32)viewport_max.x, (u32)viewport_max.y }
+				{ static_cast<u32>(image_min.x), static_cast<u32>(image_min.y) },
+				{ static_cast<u32>(image_max.x), static_cast<u32>(image_max.y) }
 			};
-
-			m_size = new_size;
 
 			m_position = {
-				(u32)viewport_min.x,
-				(u32)viewport_min.y
+				static_cast<u32>(image_min.x),
+				static_cast<u32>(image_min.y)
 			};
 
-			m_is_hovered = ImGui::IsWindowHovered();
+			m_is_hovered = ImGui::IsItemHovered();
 			m_is_focused = ImGui::IsWindowFocused();
-
-			ImGui::Image((ImTextureID)m_handle, ImVec2((f32)m_size.x, (f32)m_size.y));
 		}
 
 		void Viewport::End()

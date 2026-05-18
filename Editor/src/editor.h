@@ -120,14 +120,14 @@ private:
 	void DestroyDebugResources();
 	void CreateDebugDescriptors();
 	void UpdateDebugDescriptors();
+	void UpdateDebug();
 	void RenderDebug();
 
 	// Final Blit
 	void DrawToSwapchain();
 
-	// Debug Visualization
-	void ShowGuizmo();
-	void UpdateGizmos();
+	// Gizmos
+	void ShowTransformGizmo();
 	
 	// Other
 	void UpdateLights();
@@ -181,9 +181,6 @@ private:
 	// Shadow Maps
 	std::vector<VulkanTexture2D*> m_shadow_maps;
 	DescriptorSet* m_textures_descriptor;
-
-	// Debug Visualization
-	b8 m_show_gizmos;
 
 	Buffer* m_gizmo_vb;
 	Buffer* m_gizmo_ib;

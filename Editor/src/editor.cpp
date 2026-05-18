@@ -134,9 +134,9 @@ void Editor::OnRenderUpdate()
 {
 	RenderPBR();
 
-	if (m_show_gizmos)
+	if (m_editor_settings.show_gizmos)
 	{
-		UpdateGizmos();
+		UpdateDebug();
 		RenderDebug();
 	}
 }
@@ -165,8 +165,9 @@ void Editor::OnUIRender()
 
 	if (m_viewport_panel->Begin())
 	{
+		m_viewport_panel->DrawToolbar();
 		m_viewport_panel->Draw();
-		ShowGuizmo();
+		ShowTransformGizmo();
 
 		// Debug Visualization Toolbar
 		{
@@ -181,10 +182,6 @@ void Editor::OnUIRender()
 
 				ImGui::BeginChild("##DebugToolbar", ImVec2(220.0f, 0.0f), ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Border, ImGuiWindowFlags_NoScrollbar);
 
-				// Light Gizmos Toggle
-				ImGui::Checkbox("Light Gizmos", reinterpret_cast<bool*>(&m_show_gizmos));
-
-				ImGui::Separator();
 				ImGui::Text("World Light");
 				ImGui::Separator();
 
@@ -416,6 +413,9 @@ void Editor::CreateDefaultSettings()
 	{
 		m_editor_settings = {};
 
+		m_editor_settings.show_grid = true;
+		m_editor_settings.show_gizmos = true;
+
 		// Initialize Global Illumination settings
 		m_editor_settings.gi_settings = {};
 		m_editor_settings.gi_settings.enabled = 0;              // Disabled by default
@@ -460,10 +460,6 @@ void Editor::CreateResources()
 	m_editor_camera_controller.Init();
 	m_editor_camera_controller.SetCamera(&m_editor_camera);
 	m_editor_camera_controller.SetActive(false);
-
-	m_show_gizmos = true;
-	m_gizmo_vb = nullptr;
-	m_gizmo_ib = nullptr;
 
 	m_editor_data.show_debug_info = true;
 
@@ -1075,6 +1071,168 @@ void Editor::UpdateDebugDescriptors()
 {
 }
 
+void Editor::UpdateDebug()
+{
+	m_gizmo_vertices.clear();
+	m_gizmo_indices.clear();
+
+	Scene* activeScene = SceneManager::GetInstance()->GetActiveScene();
+	if (!activeScene) return;
+
+	auto view = activeScene->GetRegistry().view<LightComponent, TransformComponent>();
+
+	for (auto entity : view)
+	{
+		auto& lightComp = view.get<LightComponent>(entity);
+		auto& transformComp = view.get<TransformComponent>(entity);
+
+		glm::vec3 worldPos = glm::vec3(transformComp.world_transform[3]);
+		glm::vec4 lightColor = glm::vec4(lightComp.color, 1.0f);
+
+		u32 baseIdx = static_cast<u32>(m_gizmo_vertices.size());
+
+		if (lightComp.type == LightType_Point)
+		{
+			// Draw a wireframe sphere
+			f32 radius = lightComp.range * 0.1f;  // Visual size
+			const u32 segments = 16;
+			const u32 rings = 8;
+
+			// Generate sphere vertices
+			for (u32 ring = 0; ring <= rings; ++ring)
+			{
+				f32 phi = glm::pi<f32>() * ring / rings;
+				for (u32 seg = 0; seg <= segments; ++seg)
+				{
+					f32 theta = 2.0f * glm::pi<f32>() * seg / segments;
+					glm::vec3 p = worldPos + radius * glm::vec3(
+						sin(phi) * cos(theta),
+						cos(phi),
+						sin(phi) * sin(theta)
+					);
+					m_gizmo_vertices.push_back({ p, lightColor });
+				}
+			}
+
+			// Generate sphere line indices
+			for (u32 ring = 0; ring < rings; ++ring)
+			{
+				for (u32 seg = 0; seg < segments; ++seg)
+				{
+					u32 curr = baseIdx + ring * (segments + 1) + seg;
+					u32 next = curr + segments + 1;
+
+					// Horizontal ring
+					m_gizmo_indices.push_back(curr);
+					m_gizmo_indices.push_back(curr + 1);
+
+					// Vertical line
+					m_gizmo_indices.push_back(curr);
+					m_gizmo_indices.push_back(next);
+				}
+			}
+		}
+		else if (lightComp.type == LightType_Directional)
+		{
+			// Draw direction arrow
+			glm::vec3 forward = glm::normalize(glm::vec3(transformComp.world_transform * glm::vec4(0.0f, 0.0f, -1.0f, 0.0f)));
+			f32 arrowLength = 2.0f;
+			f32 arrowHeadSize = 0.5f;
+
+			glm::vec3 arrowEnd = worldPos + forward * arrowLength;
+
+			// Arrow shaft
+			m_gizmo_vertices.push_back({ worldPos, lightColor });
+			m_gizmo_vertices.push_back({ arrowEnd, lightColor });
+			m_gizmo_indices.push_back(baseIdx);
+			m_gizmo_indices.push_back(baseIdx + 1);
+
+			// Arrow head (4 lines forming a cone)
+			glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
+			glm::vec3 up = glm::cross(right, forward);
+
+			m_gizmo_vertices.push_back({ arrowEnd, lightColor });
+			m_gizmo_vertices.push_back({ arrowEnd - forward * arrowHeadSize + right * arrowHeadSize * 0.5f, lightColor });
+			m_gizmo_indices.push_back(baseIdx + 1);
+			m_gizmo_indices.push_back(baseIdx + 2);
+
+			m_gizmo_vertices.push_back({ arrowEnd, lightColor });
+			m_gizmo_vertices.push_back({ arrowEnd - forward * arrowHeadSize - right * arrowHeadSize * 0.5f, lightColor });
+			m_gizmo_indices.push_back(baseIdx + 1);
+			m_gizmo_indices.push_back(baseIdx + 3);
+
+			m_gizmo_vertices.push_back({ arrowEnd, lightColor });
+			m_gizmo_vertices.push_back({ arrowEnd - forward * arrowHeadSize + up * arrowHeadSize * 0.5f, lightColor });
+			m_gizmo_indices.push_back(baseIdx + 1);
+			m_gizmo_indices.push_back(baseIdx + 4);
+
+			m_gizmo_vertices.push_back({ arrowEnd, lightColor });
+			m_gizmo_vertices.push_back({ arrowEnd - forward * arrowHeadSize - up * arrowHeadSize * 0.5f, lightColor });
+			m_gizmo_indices.push_back(baseIdx + 1);
+			m_gizmo_indices.push_back(baseIdx + 5);
+		}
+		else if (lightComp.type == LightType_Spot)
+		{
+			// Draw cone
+			glm::vec3 forward = glm::normalize(glm::vec3(transformComp.world_transform * glm::vec4(0.0f, 0.0f, -1.0f, 0.0f)));
+			glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
+			glm::vec3 up = glm::cross(right, forward);
+
+			f32 coneLength = lightComp.range * 0.5f;
+			f32 coneRadius = tan(lightComp.outer_cone_angle) * coneLength;
+
+			const u32 segments = 16;
+			glm::vec3 coneBase = worldPos + forward * coneLength;
+
+			// Cone base circle
+			for (u32 i = 0; i < segments; ++i)
+			{
+				f32 angle1 = 2.0f * glm::pi<f32>() * i / segments;
+				f32 angle2 = 2.0f * glm::pi<f32>() * ((i + 1) % segments) / segments;
+
+				glm::vec3 p1 = coneBase + coneRadius * (cos(angle1) * right + sin(angle1) * up);
+				glm::vec3 p2 = coneBase + coneRadius * (cos(angle2) * right + sin(angle2) * up);
+
+				m_gizmo_vertices.push_back({ p1, lightColor });
+				m_gizmo_vertices.push_back({ p2, lightColor });
+				m_gizmo_indices.push_back(baseIdx + i * 2);
+				m_gizmo_indices.push_back(baseIdx + i * 2 + 1);
+
+				// Lines from apex to base
+				if (i % 4 == 0)
+				{
+					m_gizmo_vertices.push_back({ worldPos, lightColor });
+					m_gizmo_vertices.push_back({ p1, lightColor });
+					u32 apexIdx = static_cast<u32>(m_gizmo_vertices.size()) - 2;
+					m_gizmo_indices.push_back(apexIdx);
+					m_gizmo_indices.push_back(apexIdx + 1);
+				}
+			}
+		}
+	}
+
+	// Upload to GPU
+	if (!m_gizmo_vertices.empty())
+	{
+		u32 vb_size = static_cast<u32>(m_gizmo_vertices.size() * sizeof(VertexGuizmo));
+		u32 ib_size = static_cast<u32>(m_gizmo_indices.size() * sizeof(u32));
+
+		// Recreate buffers if size changed or doesn't exist
+		if (!m_gizmo_vb)
+		{
+			m_gizmo_vb = m_backend->CreateVertexBufferEmpty(10000);
+		}
+		if (!m_gizmo_ib)
+		{
+			m_gizmo_ib = m_backend->CreateIndexBufferEmpty(10000);
+		}
+
+		// Update buffer contents
+		m_backend->UpdateVertexBuffer(m_gizmo_vb, 0, m_gizmo_vertices.data(), vb_size);
+		m_backend->UpdateIndexBuffer(m_gizmo_ib, 0, m_gizmo_indices.data(), ib_size);
+	}
+}
+
 void Editor::RenderDebug()
 {
 	if (!m_gizmo_vb || !m_gizmo_ib)
@@ -1514,7 +1672,7 @@ void Editor::DrawToSwapchain()
 	m_backend->EndDynamicRendering();
 }
 
-void Editor::ShowGuizmo()
+void Editor::ShowTransformGizmo()
 {
 	Entity selected = m_hierarchy_panel->GetSelectedGameObject();
 	if (!selected) return;
@@ -1715,166 +1873,4 @@ void Editor::UpdateLights()
 	}
 
 	m_lights_data.light_count = lightIndex;
-}
-
-void Editor::UpdateGizmos()
-{
-	m_gizmo_vertices.clear();
-	m_gizmo_indices.clear();
-
-	Scene* activeScene = SceneManager::GetInstance()->GetActiveScene();
-	if (!activeScene) return;
-
-	auto view = activeScene->GetRegistry().view<LightComponent, TransformComponent>();
-
-	for (auto entity : view)
-	{
-		auto& lightComp = view.get<LightComponent>(entity);
-		auto& transformComp = view.get<TransformComponent>(entity);
-
-		glm::vec3 worldPos = glm::vec3(transformComp.world_transform[3]);
-		glm::vec4 lightColor = glm::vec4(lightComp.color, 1.0f);
-
-		u32 baseIdx = static_cast<u32>(m_gizmo_vertices.size());
-
-		if (lightComp.type == LightType_Point)
-		{
-			// Draw a wireframe sphere
-			f32 radius = lightComp.range * 0.1f;  // Visual size
-			const u32 segments = 16;
-			const u32 rings = 8;
-
-			// Generate sphere vertices
-			for (u32 ring = 0; ring <= rings; ++ring)
-			{
-				f32 phi = glm::pi<f32>() * ring / rings;
-				for (u32 seg = 0; seg <= segments; ++seg)
-				{
-					f32 theta = 2.0f * glm::pi<f32>() * seg / segments;
-					glm::vec3 p = worldPos + radius * glm::vec3(
-						sin(phi) * cos(theta),
-						cos(phi),
-						sin(phi) * sin(theta)
-					);
-					m_gizmo_vertices.push_back({ p, lightColor });
-				}
-			}
-
-			// Generate sphere line indices
-			for (u32 ring = 0; ring < rings; ++ring)
-			{
-				for (u32 seg = 0; seg < segments; ++seg)
-				{
-					u32 curr = baseIdx + ring * (segments + 1) + seg;
-					u32 next = curr + segments + 1;
-
-					// Horizontal ring
-					m_gizmo_indices.push_back(curr);
-					m_gizmo_indices.push_back(curr + 1);
-
-					// Vertical line
-					m_gizmo_indices.push_back(curr);
-					m_gizmo_indices.push_back(next);
-				}
-			}
-		}
-		else if (lightComp.type == LightType_Directional)
-		{
-			// Draw direction arrow
-			glm::vec3 forward = glm::normalize(glm::vec3(transformComp.world_transform * glm::vec4(0.0f, 0.0f, -1.0f, 0.0f)));
-			f32 arrowLength = 2.0f;
-			f32 arrowHeadSize = 0.5f;
-
-			glm::vec3 arrowEnd = worldPos + forward * arrowLength;
-
-			// Arrow shaft
-			m_gizmo_vertices.push_back({ worldPos, lightColor });
-			m_gizmo_vertices.push_back({ arrowEnd, lightColor });
-			m_gizmo_indices.push_back(baseIdx);
-			m_gizmo_indices.push_back(baseIdx + 1);
-
-			// Arrow head (4 lines forming a cone)
-			glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
-			glm::vec3 up = glm::cross(right, forward);
-
-			m_gizmo_vertices.push_back({ arrowEnd, lightColor });
-			m_gizmo_vertices.push_back({ arrowEnd - forward * arrowHeadSize + right * arrowHeadSize * 0.5f, lightColor });
-			m_gizmo_indices.push_back(baseIdx + 1);
-			m_gizmo_indices.push_back(baseIdx + 2);
-
-			m_gizmo_vertices.push_back({ arrowEnd, lightColor });
-			m_gizmo_vertices.push_back({ arrowEnd - forward * arrowHeadSize - right * arrowHeadSize * 0.5f, lightColor });
-			m_gizmo_indices.push_back(baseIdx + 1);
-			m_gizmo_indices.push_back(baseIdx + 3);
-
-			m_gizmo_vertices.push_back({ arrowEnd, lightColor });
-			m_gizmo_vertices.push_back({ arrowEnd - forward * arrowHeadSize + up * arrowHeadSize * 0.5f, lightColor });
-			m_gizmo_indices.push_back(baseIdx + 1);
-			m_gizmo_indices.push_back(baseIdx + 4);
-
-			m_gizmo_vertices.push_back({ arrowEnd, lightColor });
-			m_gizmo_vertices.push_back({ arrowEnd - forward * arrowHeadSize - up * arrowHeadSize * 0.5f, lightColor });
-			m_gizmo_indices.push_back(baseIdx + 1);
-			m_gizmo_indices.push_back(baseIdx + 5);
-		}
-		else if (lightComp.type == LightType_Spot)
-		{
-			// Draw cone
-			glm::vec3 forward = glm::normalize(glm::vec3(transformComp.world_transform * glm::vec4(0.0f, 0.0f, -1.0f, 0.0f)));
-			glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
-			glm::vec3 up = glm::cross(right, forward);
-
-			f32 coneLength = lightComp.range * 0.5f;
-			f32 coneRadius = tan(lightComp.outer_cone_angle) * coneLength;
-
-			const u32 segments = 16;
-			glm::vec3 coneBase = worldPos + forward * coneLength;
-
-			// Cone base circle
-			for (u32 i = 0; i < segments; ++i)
-			{
-				f32 angle1 = 2.0f * glm::pi<f32>() * i / segments;
-				f32 angle2 = 2.0f * glm::pi<f32>() * ((i + 1) % segments) / segments;
-
-				glm::vec3 p1 = coneBase + coneRadius * (cos(angle1) * right + sin(angle1) * up);
-				glm::vec3 p2 = coneBase + coneRadius * (cos(angle2) * right + sin(angle2) * up);
-
-				m_gizmo_vertices.push_back({ p1, lightColor });
-				m_gizmo_vertices.push_back({ p2, lightColor });
-				m_gizmo_indices.push_back(baseIdx + i * 2);
-				m_gizmo_indices.push_back(baseIdx + i * 2 + 1);
-
-				// Lines from apex to base
-				if (i % 4 == 0)
-				{
-					m_gizmo_vertices.push_back({ worldPos, lightColor });
-					m_gizmo_vertices.push_back({ p1, lightColor });
-					u32 apexIdx = static_cast<u32>(m_gizmo_vertices.size()) - 2;
-					m_gizmo_indices.push_back(apexIdx);
-					m_gizmo_indices.push_back(apexIdx + 1);
-				}
-			}
-		}
-	}
-
-	// Upload to GPU
-	if (!m_gizmo_vertices.empty())
-	{
-		u32 vb_size = static_cast<u32>(m_gizmo_vertices.size() * sizeof(VertexGuizmo));
-		u32 ib_size = static_cast<u32>(m_gizmo_indices.size() * sizeof(u32));
-
-		// Recreate buffers if size changed or doesn't exist
-		if (!m_gizmo_vb)
-		{
-			m_gizmo_vb = m_backend->CreateVertexBufferEmpty(10000);
-		}
-		if (!m_gizmo_ib)
-		{
-			m_gizmo_ib = m_backend->CreateIndexBufferEmpty(10000);
-		}
-
-		// Update buffer contents
-		m_backend->UpdateVertexBuffer(m_gizmo_vb, 0, m_gizmo_vertices.data(), vb_size);
-		m_backend->UpdateIndexBuffer(m_gizmo_ib, 0, m_gizmo_indices.data(), ib_size);
-	}
 }
