@@ -299,8 +299,13 @@ void main()
     float ambientIntensity = ubo_globalData.world.ambient_color_intensity.w;
     vec3 ambient = ambientColor * ambientIntensity * albedo * ao;
 
-    vec2 screenUV = gl_FragCoord.xy / vec2(textureSize(globalIlluminationTexture, 0));
-    vec3 gi = texture(globalIlluminationTexture, screenUV).rgb;
+    vec3 gi = vec3(0.0);
+
+    if (ubo_giData.settings.enabled != 0u)
+    {
+        vec2 screenUV = gl_FragCoord.xy / vec2(textureSize(globalIlluminationTexture, 0));
+        gi = texture(globalIlluminationTexture, screenUV).rgb;
+    }
 
     // Final color
     vec3 color = ambient + Lo + gi + emission;
