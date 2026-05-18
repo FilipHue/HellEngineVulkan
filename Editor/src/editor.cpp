@@ -112,7 +112,7 @@ void Editor::OnRenderBegin()
 		CreateGBufferResources();
 		CreateGIResources();
 
-		UpdateGBufferDescriptors();
+		CreateGIDescriptors();
 		UpdateGIDescriptors();
 	}
 
@@ -1020,13 +1020,7 @@ void Editor::RenderGI()
 		return;
 	}
 
-	Pipeline* giPipeline =
-		PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_GLOBAL_ILLUMINATION);
-
-	if (!giPipeline)
-	{
-		return;
-	}
+	Pipeline* giPipeline = PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_GLOBAL_ILLUMINATION);
 
 	DynamicRenderingAttachmentInfo giAttachment{};
 	giAttachment.image = m_gi_texture->GetHandle();
