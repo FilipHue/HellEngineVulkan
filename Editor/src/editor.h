@@ -3,9 +3,6 @@
 // Internal
 #include "hellengine/hellengine.h"
 
-#include "shared.h"
-#include "types.h"
-
 #include "bars/editor_menu_bar.h"
 #include "panels/editor_hierarchy.h"
 #include "panels/editor_inspector.h"
@@ -22,11 +19,6 @@ using namespace ui;
 using namespace math;
 using namespace resources;
 using namespace tools;
-
-struct EditorSpecificData
-{
-	u32 show_debug_info = 0;
-};
 
 class Editor : public Application
 {
@@ -63,8 +55,6 @@ private:
 	// TODO : These functions should be moved to SceneManager
 	void ImportAsset();
 	void CreateEmptyGameObject();
-
-	void CreateDefaultSettings();
 
 	void CreateResources();
 	void CreatePipelines();
@@ -163,8 +153,6 @@ private:
 	EditorMenuBar* m_menu_bar;
 
 	// Editor state
-	EditorSpecificData m_editor_data;
-	EditorWindowSettings m_window_settings;
 	EditorSettings m_editor_settings;
 
 	// PBR Pipeline

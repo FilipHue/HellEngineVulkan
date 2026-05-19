@@ -60,25 +60,25 @@ project "HellEngine"
     -- }
 
     filter "files:HellEngine/dependencies/GLM/include/**.c*"
-        flags { "NoPCH" }
+        enablepch "Off"
 
     filter "files:HellEngine/dependencies/GLAD/glad.c"
-        flags { "NoPCH" }
+        enablepch "Off"
 
     filter "files:HellEngine/dependencies/STB/**.c*"
-        flags { "NoPCH" }
+        enablepch "Off"
 
     filter "files:HellEngine/dependencies/KTX/**.c*"
-        flags { "NoPCH" }
+        enablepch "Off"
 
     filter "files:HellEngine/dependencies/IMGUI/**.c*"
-        flags { "NoPCH" }
+        enablepch "Off"
 
     filter "files:HellEngine/dependencies/IMGUIZMO/**.c*"
-        flags { "NoPCH" }
+        enablepch "Off"
 
     filter "files:HellEngine/dependencies/YAML/**.c*"
-        flags { "NoPCH" }
+        enablepch "Off"
 
     filter "system:windows"
         cppdialect "C++20"
@@ -95,10 +95,7 @@ project "HellEngine"
             "/Zc:__cplusplus"
         }
 
-        flags
-        {
-            "MultiProcessorCompile"
-        }
+        multiprocessorcompile ("On")
 
     filter "configurations:Debug"
         runtime "Debug"
@@ -107,7 +104,7 @@ project "HellEngine"
 
     filter "configurations:Release"
         runtime "Release"
-        defines {"HE_RELEASE", "NDEBUG"}
+        defines {"HE_RELEASE", "NDEBUG", "YAML_CPP_STATIC_DEFINE"}
         optimize "On"
 
 project "Editor"
@@ -163,11 +160,11 @@ project "Editor"
             "HE_PLATFORM_WINDOWS",
         }
         buildoptions { "/Zc:__cplusplus" }
-        flags { "MultiProcessorCompile" }
+        multiprocessorcompile ("On")
 
     filter "configurations:Debug"
         runtime "Debug"
-        defines {"HE_DEBUG", "HE_EDITOR"}
+        defines {"HE_DEBUG", "HE_EDITOR", "YAML_CPP_STATIC_DEFINE"}
         symbols "On"
         
         links
@@ -176,12 +173,13 @@ project "Editor"
             "%{Library.GLFW}",
             "%{Library.ASSIMP}",
             "%{Library.KTX}",
+            "%{Library.YAMLD}",
             "%{Library.Vulkan}"
         }
 
     filter "configurations:Release"
         runtime "Release"
-        defines {"HE_RELEASE", "NDEBUG", "HE_DEBUG"}
+        defines {"HE_RELEASE", "NDEBUG", "HE_DEBUG", "YAML_CPP_STATIC_DEFINE"}
         optimize "On"
         
         links
@@ -190,7 +188,7 @@ project "Editor"
             "%{Library.GLFW}",
             "%{Library.ASSIMP}",
             "%{Library.KTX}",
-            "%{Library.YAMLD}",
+            "%{Library.YAML}",
             "%{Library.Vulkan}"
         }
 
@@ -249,11 +247,11 @@ project "Sandbox"
             "HE_PLATFORM_WINDOWS",
         }
         buildoptions { "/Zc:__cplusplus" }
-        flags { "MultiProcessorCompile" }
+        multiprocessorcompile ("On")
 
     filter "configurations:Debug"
         runtime "Debug"
-        defines "HE_DEBUG"
+        defines {"HE_DEBUG", "YAML_CPP_STATIC_DEFINE"}
         symbols "On"
 
         links
@@ -268,7 +266,7 @@ project "Sandbox"
 
     filter "configurations:Release"
         runtime "Release"
-        defines {"HE_RELEASE", "NDEBUG"}
+        defines {"HE_RELEASE", "NDEBUG", "YAML_CPP_STATIC_DEFINE"}
         optimize "On"
 
         links
@@ -277,6 +275,7 @@ project "Sandbox"
             "%{Library.GLFW}",
             "%{Library.ASSIMP}",
             "%{Library.KTX}",
+            "%{Library.YAML}",
             "%{Library.Vulkan}"
         }
 

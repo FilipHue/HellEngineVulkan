@@ -21,6 +21,9 @@ namespace hellengine
 			HE_API static File OpenFile(const char* path);
 			HE_API static File OpenFile(const std::string& path);
 
+			HE_API static void WriteFile(const char* path, const std::string& content);
+			HE_API static void WriteFile(const std::string& path, const std::string& content);
+
 			HE_API static b8 Exists(const char* path);
 			HE_API static b8 Exists(const std::string& path);
 

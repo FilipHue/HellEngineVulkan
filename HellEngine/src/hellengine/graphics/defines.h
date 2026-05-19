@@ -13,10 +13,18 @@ constexpr auto MIN_BUFFER_OFFSET_ALIGNMENT = 64U;
 * - Scalars (float, int, uint, bool) have a base alignment of 4 bytes.
 * - vec2 has a base alignment of 8 bytes.
 * - vec3 and vec4 have a base alignment of 16 bytes.
+* - Matrices are treated as arrays of vectors, so a mat4 has a base alignment of 16 bytes (4 vec4 columns).
 * - Arrays of scalars or vectors have a base alignment equal to the base alignment of a single element, rounded up to the next multiple of 16 bytes.
 * - Structs have a base alignment equal to the largest base alignment of any of their members, rounded up to the next multiple of 16 bytes.
 * - The offset of a member within a struct must be a multiple of the base alignment of that member.
 * - The total size of a struct must be a multiple of the base alignment of its largest member.
+* FLOAT, INT, UINT, BOOL: 4 bytes
+* VEC2: [X, Y]
+* VEC3: [X, Y, Z, _PAD]
+* VEC4: [X, Y, Z, W]
+* MAT2: [[X1, Y1], [X2, Y2]]
+* MAT3: [[X1, Y1, Z1], [X2, Y2, Z2], [X3, Y3, Z3], [_PAD, _PAD, _PAD]]
+* MAT4: [[X1, Y1, Z1, W1], [X2, Y2, Z2, W2], [X3, Y3, Z3, W3], [X4, Y4, Z4, W4]]
 */
 constexpr auto LAYOUT_STD140_ALIGNMENT = 16U;
 
@@ -25,6 +33,7 @@ constexpr auto LAYOUT_STD140_ALIGNMENT = 16U;
 * - Scalars (float, int, uint, bool) have a base alignment of 4 bytes.
 * - vec2 has a base alignment of 8 bytes.
 * - vec3 and vec4 have a base alignment of 16 bytes.
+* - Matrices are treated as arrays of vectors, so a mat4 has a base alignment of 16 bytes (4 vec4 columns).
 * - Arrays of scalars or vectors have a base alignment equal to the base alignment of a single element, without rounding up.
 * - Structs have a base alignment equal to the largest base alignment of any of their members, without rounding up.
 * - The offset of a member within a struct must be a multiple of the base alignment of that member.

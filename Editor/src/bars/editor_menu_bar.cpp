@@ -1,9 +1,8 @@
 #include "editor_menu_bar.h"
 
-void EditorMenuBar::Init(EditorHierarchy* hierarchy, EditorWindowSettings* window_settings, EditorSettings* settings)
+void EditorMenuBar::Init(EditorHierarchy* hierarchy, EditorSettings* settings)
 {
 	m_hierarchy_panel = hierarchy;
-	m_window_settings = window_settings;
 	m_settings = settings;
 }
 
@@ -204,18 +203,18 @@ void EditorMenuBar::WindowMenu(ImGuiStyle& style)
 	{
 		MenuSpacing(style);
 
-		ImGui::MenuItem("Hierarchy", nullptr, &m_window_settings->show_hierarchy);
-		ImGui::MenuItem("Inspector", nullptr, &m_window_settings->show_inspector);
+		ImGui::MenuItem("Hierarchy", nullptr, &m_settings->window_settings.show_hierarchy);
+		ImGui::MenuItem("Inspector", nullptr, &m_settings->window_settings.show_inspector);
 
 		ImGui::SeparatorText("Editor");
 
-		ImGui::MenuItem("Editor Settings", nullptr, &m_window_settings->show_editor_settings);
+		ImGui::MenuItem("Editor Settings", nullptr, &m_settings->window_settings.show_editor_settings);
 
 		ImGui::SeparatorText("Rendering");
 
-		ImGui::MenuItem("Render Settings", nullptr, &m_window_settings->show_render_settings);
-		ImGui::MenuItem("GI Settings", nullptr, &m_window_settings->show_gi_settings);
-		ImGui::MenuItem("Shadow Settings", nullptr, &m_window_settings->show_shadow_settings);
+		ImGui::MenuItem("Render Settings", nullptr, &m_settings->window_settings.show_render_settings);
+		ImGui::MenuItem("GI Settings", nullptr, &m_settings->window_settings.show_gi_settings);
+		ImGui::MenuItem("Shadow Settings", nullptr, &m_settings->window_settings.show_shadow_settings);
 
 		ImGui::PopStyleVar();
 		ImGui::EndMenu();
@@ -246,7 +245,7 @@ void EditorMenuBar::HelpMenu(ImGuiStyle& style)
 
 		if (ImGui::MenuItem("About HellEngine"))
 		{
-			m_window_settings->show_about_window = true;
+			m_settings->window_settings.show_about_window = true;
 		}
 
 		ImGui::PopStyleVar();
@@ -256,7 +255,7 @@ void EditorMenuBar::HelpMenu(ImGuiStyle& style)
 
 void EditorMenuBar::ShowEditorSettings()
 {
-	if (!m_window_settings->show_editor_settings)
+	if (!m_settings->window_settings.show_editor_settings)
 	{
 		return;
 	}
@@ -281,7 +280,7 @@ void EditorMenuBar::ShowEditorSettings()
 
 void EditorMenuBar::ShowRenderSettings()
 {
-	if (!m_window_settings->show_render_settings)
+	if (!m_settings->window_settings.show_render_settings)
 	{
 		return;
 	}
@@ -325,7 +324,7 @@ void EditorMenuBar::ShowRenderSettings()
 
 void EditorMenuBar::ShowGISettings()
 {
-	if (!m_window_settings->show_gi_settings)
+	if (!m_settings->window_settings.show_gi_settings)
 	{
 		return;
 	}
@@ -407,7 +406,7 @@ void EditorMenuBar::ShowGISettings()
 
 void EditorMenuBar::ShowShadowSettings()
 {
-	if (!m_window_settings->show_shadow_settings)
+	if (!m_settings->window_settings.show_shadow_settings)
 	{
 		return;
 	}
@@ -531,7 +530,7 @@ void EditorMenuBar::ShowShadowSettings()
 
 void EditorMenuBar::ShowAboutWindow()
 {
-	if (!m_window_settings->show_about_window)
+	if (!m_settings->window_settings.show_about_window)
 	{
 		return;
 	}
@@ -540,7 +539,7 @@ void EditorMenuBar::ShowAboutWindow()
 
 	const bool visible = ImGui::Begin(
 		"About HellEngine",
-		&m_window_settings->show_about_window,
+		&m_settings->window_settings.show_about_window,
 		flags
 	);
 

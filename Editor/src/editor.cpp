@@ -57,7 +57,7 @@ void Editor::Init()
 	EventDispatcher::AddListener(EventType_MouseMoved, HE_BIND_EVENTCALLBACK(OnEventMouseMoved));
 	EventDispatcher::AddListener(EventType_MouseScrolled, HE_BIND_EVENTCALLBACK(OnEventMouseScrolled));
 
-	CreateDefaultSettings();
+	m_editor_settings.Deserialize();
 
 	CreateResources();
 	CreatePipelines();
@@ -158,13 +158,13 @@ void Editor::OnUIRender()
 {
 	m_ui->BeginDocking();
 
-	if (m_window_settings.show_hierarchy && m_hierarchy_panel->Begin())
+	if (m_editor_settings.window_settings.show_hierarchy && m_hierarchy_panel->Begin())
 	{
 		m_hierarchy_panel->Draw();
 		m_hierarchy_panel->End();
 	}
 
-	if (m_window_settings.show_inspector && m_inspector_panel->Begin())
+	if (m_editor_settings.window_settings.show_inspector && m_inspector_panel->Begin())
 	{
 		m_inspector_panel->Draw();
 		m_inspector_panel->End();
@@ -186,6 +186,8 @@ void Editor::OnUIRender()
 
 void Editor::Shutdown()
 {
+	m_editor_settings.Serialize();
+
 	DestroyResources();
 
 	delete m_hierarchy_panel;
@@ -361,54 +363,6 @@ void Editor::CreateEmptyGameObject()
 	m_hierarchy_panel->SetSelectedGameObject(entity);
 }
 
-void Editor::CreateDefaultSettings()
-{
-	// TODO : These settings should be loaded/saved from/to a config file
-	{
-		// Window settings
-		m_window_settings = {};
-
-		m_window_settings.show_hierarchy = true;
-		m_window_settings.show_inspector = true;
-		m_window_settings.show_editor_settings = false;
-		m_window_settings.show_render_settings = false;
-		m_window_settings.show_gi_settings = false;
-		m_window_settings.show_shadow_settings = false;
-		m_window_settings.show_about_window = false;
-	}
-
-	// Editor settings
-	{
-		m_editor_settings = {};
-
-		m_editor_settings.show_grid = true;
-		m_editor_settings.show_gizmos = true;
-
-		// Initialize Global Illumination settings
-		m_editor_settings.gi_settings = {};
-		m_editor_settings.gi_settings.enabled = 0;              // Disabled by default
-		m_editor_settings.gi_settings.sample_count = 16;        // 16 samples per pixel
-		m_editor_settings.gi_settings.ray_distance = 5.0f;      // 5 units maximum ray distance
-		m_editor_settings.gi_settings.intensity = 1.0f;         // 100% intensity
-		m_editor_settings.gi_settings.thickness = 0.5f;         // Surface thickness
-		m_editor_settings.gi_settings.falloff = 2.0f;           // Quadratic falloff
-		m_editor_settings.gi_settings.bias = 0.05f;             // Small bias to avoid self-occlusion
-		m_editor_settings.gi_settings.temporal_weight = 0.95f;  // 95% temporal accumulation
-		m_editor_settings.gi_settings.debug_visualization = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);  // No debug
-
-		// Initialize Shadow settings
-		m_editor_settings.shadow_settings.enabled = 1;                  // Enabled by default
-		m_editor_settings.shadow_settings.shadow_map_size = 2048;       // 2048x2048 shadow maps
-		m_editor_settings.shadow_settings.cascade_split_lambda = 0.75f; // CSM split
-		m_editor_settings.shadow_settings.min_bias = 0.001f;            // Min bias
-		m_editor_settings.shadow_settings.max_bias = 0.01f;             // Max bias
-		m_editor_settings.shadow_settings.normal_offset = 0.02f;         // Normal offset
-		m_editor_settings.shadow_settings.pcf_samples = 1;              // 3x3 PCF
-		m_editor_settings.shadow_settings.softness = 1.0f;              // Shadow softness
-		m_editor_settings.shadow_settings.cascade_distances = glm::vec4(10.0f, 30.0f, 300.0f, 1000.0f);  // Cascade distances
-	}
-}
-
 void Editor::CreateResources()
 {
 	// Init descriptor pool
@@ -512,7 +466,6 @@ void Editor::CreateEditorPipeline()
 
 void Editor::CreateEditorResources()
 {
-	m_editor_data.show_debug_info = true;
 }
 
 void Editor::DestroyEditorResources()
@@ -547,7 +500,7 @@ void Editor::CreateEditorUI()
 	m_viewport_panel->SetViewportEditorReferences(&m_editor_camera, &m_editor_settings);
 	m_viewport_panel->CreateViewportResources();
 
-	m_menu_bar->Init(m_hierarchy_panel, &m_window_settings, &m_editor_settings);
+	m_menu_bar->Init(m_hierarchy_panel, &m_editor_settings);
 	m_menu_bar->SetImportAssetCallback([this]() { ImportAsset(); });
 	m_menu_bar->SetCreateEmptyGameObjectCallback([this]() { CreateEmptyGameObject(); });
 }
@@ -986,15 +939,6 @@ void Editor::CreateDebugPipeline()
 		shader_info.sources[ShaderType_Vertex] = CONCAT_PATHS(EDITOR_SHADER_PATH, "pbr.vert");
 		shader_info.sources[ShaderType_Fragment] = CONCAT_PATHS(EDITOR_SHADER_PATH, "pbr.frag");
 
-		shader_info.specialization_infos.push_back({
-			ShaderStage_Fragment,
-			sizeof(m_editor_data),
-			&m_editor_data,
-			{
-				{ 0, sizeof(m_editor_data.show_debug_info), offsetof(EditorSpecificData, show_debug_info) }
-			}
-			});
-
 		PipelineManager::GetInstance()->CreatePipeline(C_PIPELINE_WIREFRAME, pipeline_info, shader_info);
 	}
 
@@ -1302,15 +1246,6 @@ void Editor::CreatePBRPipeline()
 	ShaderStageInfo shader_info = {};
 	shader_info.sources[ShaderType_Vertex] = CONCAT_PATHS(EDITOR_SHADER_PATH, "pbr.vert");
 	shader_info.sources[ShaderType_Fragment] = CONCAT_PATHS(EDITOR_SHADER_PATH, "pbr.frag");
-
-	shader_info.specialization_infos.push_back({
-		ShaderStage_Fragment,
-		sizeof(m_editor_data),
-		&m_editor_data,
-		{
-			{ 0, sizeof(m_editor_data.show_debug_info), offsetof(EditorSpecificData, show_debug_info) }
-		}
-		});
 
 	PipelineManager::GetInstance()->CreatePipeline(C_PIPELINE_PBR, pipeline_info, shader_info);
 }

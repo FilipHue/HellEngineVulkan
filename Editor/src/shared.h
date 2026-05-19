@@ -1,5 +1,6 @@
 #pragma once
 
+constexpr auto EDITOR_ASSET_PATH = "assets/editor";
 constexpr auto EDITOR_SHADER_PATH = "assets/editor/shaders";
 constexpr auto EDITOR_MODEL_PATH = "assets/models";
 

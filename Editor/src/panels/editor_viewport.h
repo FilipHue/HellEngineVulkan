@@ -2,7 +2,7 @@
 
 #include "hellengine/hellengine.h"
 
-#include "../shared.h"
+#include "../editor_settings.h"
 #include "editor_hierarchy.h"
 
 using namespace hellengine;

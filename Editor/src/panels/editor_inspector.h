@@ -3,7 +3,7 @@
 // Internal
 #include "hellengine/hellengine.h"
 
-#include "../types.h"
+#include "../editor_settings.h"
 
 using namespace hellengine;
 using namespace core;

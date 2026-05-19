@@ -85,6 +85,24 @@ namespace hellengine
 			return OpenFile(path.c_str());
 		}
 
+		void FileManager::WriteFile(const char* path, const std::string& content)
+		{
+			std::ofstream file_stream(path);
+			if (!file_stream.is_open())
+			{
+				HE_CORE_ERROR("Failed to open file for writing: {0}", path);
+				return;
+			}
+
+			file_stream << content;
+			file_stream.close();
+		}
+
+		void FileManager::WriteFile(const std::string& path, const std::string& content)
+		{
+			WriteFile(path.c_str(), content);
+		}
+
 		b8 FileManager::Exists(const char* path)
 		{
 			return std::filesystem::exists(path);

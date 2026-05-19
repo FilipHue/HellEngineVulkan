@@ -33,6 +33,7 @@
     <ClInclude Include="src\types.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="src\editor_settings.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
@@ -51,5 +52,6 @@
     <ClCompile Include="src\panels\editor_viewport.cpp">
       <Filter>src\panels</Filter>
     </ClCompile>
+    <ClCompile Include="src\editor_settings.cpp" />
   </ItemGroup>
 </Project>

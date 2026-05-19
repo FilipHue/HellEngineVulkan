@@ -3,7 +3,7 @@
 // Internal
 #include "hellengine/hellengine.h"
 
-#include "../types.h"
+#include "../editor_settings.h"
 #include "../panels/editor_hierarchy.h"
 
 using namespace hellengine;
@@ -88,7 +88,7 @@ public:
 	EditorMenuBar() = default;
 	virtual ~EditorMenuBar() = default;
 
-	void Init(EditorHierarchy* hierarchy, EditorWindowSettings* window_settings, EditorSettings* settings);
+	void Init(EditorHierarchy* hierarchy, EditorSettings* settings);
 
 	void Draw();
 
@@ -113,7 +113,6 @@ private:
 	void MenuSpacing(ImGuiStyle& style);
 
 	EditorSettings* m_settings = nullptr;
-	EditorWindowSettings* m_window_settings = nullptr;
 	EditorHierarchy* m_hierarchy_panel = nullptr;
 
 	std::function<void()> m_import_asset_callback;
