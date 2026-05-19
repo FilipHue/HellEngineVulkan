@@ -118,6 +118,30 @@
     <Filter Include="dependencies\STB\include\stb">
       <UniqueIdentifier>{CF92049C-BB4D-F447-6405-6D92509F3ED8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="dependencies\YAML">
+      <UniqueIdentifier>{2E718A6A-9A87-8800-E3FE-13224F545988}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dependencies\YAML\include">
+      <UniqueIdentifier>{A1E6542B-0DA9-88B5-5659-1742C25A6193}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dependencies\YAML\include\yaml-cpp">
+      <UniqueIdentifier>{7352A371-5F8E-A6DB-C8A0-BED2B4FB4EF6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dependencies\YAML\include\yaml-cpp\contrib">
+      <UniqueIdentifier>{735D8CC4-5FC5-5292-C830-67A8B4B7697E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dependencies\YAML\include\yaml-cpp\node">
+      <UniqueIdentifier>{28895846-9418-1A31-9D14-FB480923553D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dependencies\YAML\include\yaml-cpp\node\detail">
+      <UniqueIdentifier>{EAA327EB-D621-7884-BF19-361CAB36BAAC}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dependencies\YAML\src">
+      <UniqueIdentifier>{4516B79F-B182-729A-7A76-0AF8E6A19402}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dependencies\YAML\src\contrib">
+      <UniqueIdentifier>{45D3C7AD-B1EB-AED7-7A98-3E71E66F4371}</UniqueIdentifier>
+    </Filter>
     <Filter Include="src">
       <UniqueIdentifier>{2DAB880B-99B4-887C-2230-9F7C8E38947C}</UniqueIdentifier>
     </Filter>
@@ -1788,6 +1812,189 @@
     <ClInclude Include="dependencies\STB\include\stb\stb_voxel_render.h">
       <Filter>dependencies\STB\include\stb</Filter>
     </ClInclude>
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\anchor.h">
+      <Filter>dependencies\YAML\include\yaml-cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\binary.h">
+      <Filter>dependencies\YAML\include\yaml-cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\contrib\anchordict.h">
+      <Filter>dependencies\YAML\include\yaml-cpp\contrib</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\contrib\graphbuilder.h">
+      <Filter>dependencies\YAML\include\yaml-cpp\contrib</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\depthguard.h">
+      <Filter>dependencies\YAML\include\yaml-cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\dll.h">
+      <Filter>dependencies\YAML\include\yaml-cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\emitfromevents.h">
+      <Filter>dependencies\YAML\include\yaml-cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\emitter.h">
+      <Filter>dependencies\YAML\include\yaml-cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\emitterdef.h">
+      <Filter>dependencies\YAML\include\yaml-cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\emittermanip.h">
+      <Filter>dependencies\YAML\include\yaml-cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\emitterstyle.h">
+      <Filter>dependencies\YAML\include\yaml-cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\eventhandler.h">
+      <Filter>dependencies\YAML\include\yaml-cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\exceptions.h">
+      <Filter>dependencies\YAML\include\yaml-cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\fptostring.h">
+      <Filter>dependencies\YAML\include\yaml-cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\mark.h">
+      <Filter>dependencies\YAML\include\yaml-cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\node\convert.h">
+      <Filter>dependencies\YAML\include\yaml-cpp\node</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\node\detail\impl.h">
+      <Filter>dependencies\YAML\include\yaml-cpp\node\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\node\detail\iterator.h">
+      <Filter>dependencies\YAML\include\yaml-cpp\node\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\node\detail\iterator_fwd.h">
+      <Filter>dependencies\YAML\include\yaml-cpp\node\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\node\detail\memory.h">
+      <Filter>dependencies\YAML\include\yaml-cpp\node\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\node\detail\node.h">
+      <Filter>dependencies\YAML\include\yaml-cpp\node\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\node\detail\node_data.h">
+      <Filter>dependencies\YAML\include\yaml-cpp\node\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\node\detail\node_iterator.h">
+      <Filter>dependencies\YAML\include\yaml-cpp\node\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\node\detail\node_ref.h">
+      <Filter>dependencies\YAML\include\yaml-cpp\node\detail</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\node\emit.h">
+      <Filter>dependencies\YAML\include\yaml-cpp\node</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\node\impl.h">
+      <Filter>dependencies\YAML\include\yaml-cpp\node</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\node\iterator.h">
+      <Filter>dependencies\YAML\include\yaml-cpp\node</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\node\node.h">
+      <Filter>dependencies\YAML\include\yaml-cpp\node</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\node\parse.h">
+      <Filter>dependencies\YAML\include\yaml-cpp\node</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\node\ptr.h">
+      <Filter>dependencies\YAML\include\yaml-cpp\node</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\node\type.h">
+      <Filter>dependencies\YAML\include\yaml-cpp\node</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\noexcept.h">
+      <Filter>dependencies\YAML\include\yaml-cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\null.h">
+      <Filter>dependencies\YAML\include\yaml-cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\ostream_wrapper.h">
+      <Filter>dependencies\YAML\include\yaml-cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\parser.h">
+      <Filter>dependencies\YAML\include\yaml-cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\stlemitter.h">
+      <Filter>dependencies\YAML\include\yaml-cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\traits.h">
+      <Filter>dependencies\YAML\include\yaml-cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\yaml.h">
+      <Filter>dependencies\YAML\include\yaml-cpp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\src\collectionstack.h">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\src\contrib\dragonbox.h">
+      <Filter>dependencies\YAML\src\contrib</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\src\contrib\graphbuilderadapter.h">
+      <Filter>dependencies\YAML\src\contrib</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\src\directives.h">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\src\emitterstate.h">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\src\emitterutils.h">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\src\exp.h">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\src\indentation.h">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\src\nodebuilder.h">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\src\nodeevents.h">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\src\ptr_vector.h">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\src\regex_yaml.h">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\src\regeximpl.h">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\src\scanner.h">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\src\scanscalar.h">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\src\scantag.h">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\src\setting.h">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\src\singledocparser.h">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\src\stream.h">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\src\streamcharsource.h">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\src\stringsource.h">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\src\tag.h">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\YAML\src\token.h">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClInclude>
     <ClInclude Include="src\hellengine\containers\recycling_vector.h">
       <Filter>src\hellengine\containers</Filter>
     </ClInclude>
@@ -2117,6 +2324,102 @@
     <ClCompile Include="dependencies\STB\include\stb\stb_vorbis.c">
       <Filter>dependencies\STB\include\stb</Filter>
     </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\binary.cpp">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\contrib\graphbuilder.cpp">
+      <Filter>dependencies\YAML\src\contrib</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\contrib\graphbuilderadapter.cpp">
+      <Filter>dependencies\YAML\src\contrib</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\convert.cpp">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\depthguard.cpp">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\directives.cpp">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\emit.cpp">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\emitfromevents.cpp">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\emitter.cpp">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\emitterstate.cpp">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\emitterutils.cpp">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\exceptions.cpp">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\exp.cpp">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\fptostring.cpp">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\memory.cpp">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\node.cpp">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\node_data.cpp">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\nodebuilder.cpp">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\nodeevents.cpp">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\null.cpp">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\ostream_wrapper.cpp">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\parse.cpp">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\parser.cpp">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\regex_yaml.cpp">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\scanner.cpp">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\scanscalar.cpp">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\scantag.cpp">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\scantoken.cpp">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\simplekey.cpp">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\singledocparser.cpp">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\stream.cpp">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\tag.cpp">
+      <Filter>dependencies\YAML\src</Filter>
+    </ClCompile>
     <ClCompile Include="src\hellengine\core\application\application.cpp">
       <Filter>src\hellengine\core\application</Filter>
     </ClCompile>
@@ -2234,6 +2537,9 @@
     <ClCompile Include="src\hellengine\graphics\render\render_graph.cpp">
       <Filter>src\hellengine\graphics\render</Filter>
     </ClCompile>
+    <ClCompile Include="src\hellengine\math\algebra.cpp">
+      <Filter>src\hellengine\math</Filter>
+    </ClCompile>
     <ClCompile Include="src\hellengine\math\random\random.cpp">
       <Filter>src\hellengine\math\random</Filter>
     </ClCompile>
@@ -2270,7 +2576,6 @@
     <ClCompile Include="src\hepch.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\hellengine\math\algebra.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="dependencies\ASSIMP\include\assimp\config.h.in">

@@ -30,7 +30,9 @@
     <ClInclude Include="src\shared.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="src\types.h" />
+    <ClInclude Include="src\types.h">
+      <Filter>src</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />

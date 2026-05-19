@@ -56,8 +56,8 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>hepch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>HE_PLATFORM_WINDOWS;HE_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;dependencies\SPDLOG\include;..;dependencies\GLFW\include;dependencies\GLM\include;dependencies\STB\include;dependencies\ASSIMP\include;dependencies\KTX\include;dependencies\IMGUI;dependencies\IMGUIZMO\include;dependencies\ENTT\include;C:\VulkanSDK\1.4.328.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>HE_PLATFORM_WINDOWS;YAML_CPP_STATIC_DEFINE;HE_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>src;dependencies\SPDLOG\include;..;dependencies\GLFW\include;dependencies\GLM\include;dependencies\STB\include;dependencies\ASSIMP\include;dependencies\KTX\include;dependencies\IMGUI;dependencies\IMGUIZMO\include;dependencies\ENTT\include;dependencies\YAML\include;C:\VulkanSDK\1.4.328.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -77,8 +77,8 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>hepch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>HE_PLATFORM_WINDOWS;HE_RELEASE;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;dependencies\SPDLOG\include;..;dependencies\GLFW\include;dependencies\GLM\include;dependencies\STB\include;dependencies\ASSIMP\include;dependencies\KTX\include;dependencies\IMGUI;dependencies\IMGUIZMO\include;dependencies\ENTT\include;C:\VulkanSDK\1.4.328.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>HE_PLATFORM_WINDOWS;YAML_CPP_STATIC_DEFINE;HE_RELEASE;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>src;dependencies\SPDLOG\include;..;dependencies\GLFW\include;dependencies\GLM\include;dependencies\STB\include;dependencies\ASSIMP\include;dependencies\KTX\include;dependencies\IMGUI;dependencies\IMGUIZMO\include;dependencies\ENTT\include;dependencies\YAML\include;C:\VulkanSDK\1.4.328.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -613,6 +613,67 @@
     <ClInclude Include="dependencies\STB\include\stb\stb_tilemap_editor.h" />
     <ClInclude Include="dependencies\STB\include\stb\stb_truetype.h" />
     <ClInclude Include="dependencies\STB\include\stb\stb_voxel_render.h" />
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\anchor.h" />
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\binary.h" />
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\contrib\anchordict.h" />
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\contrib\graphbuilder.h" />
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\depthguard.h" />
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\dll.h" />
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\emitfromevents.h" />
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\emitter.h" />
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\emitterdef.h" />
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\emittermanip.h" />
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\emitterstyle.h" />
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\eventhandler.h" />
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\exceptions.h" />
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\fptostring.h" />
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\mark.h" />
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\node\convert.h" />
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\node\detail\impl.h" />
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\node\detail\iterator.h" />
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\node\detail\iterator_fwd.h" />
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\node\detail\memory.h" />
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\node\detail\node.h" />
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\node\detail\node_data.h" />
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\node\detail\node_iterator.h" />
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\node\detail\node_ref.h" />
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\node\emit.h" />
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\node\impl.h" />
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\node\iterator.h" />
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\node\node.h" />
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\node\parse.h" />
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\node\ptr.h" />
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\node\type.h" />
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\noexcept.h" />
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\null.h" />
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\ostream_wrapper.h" />
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\parser.h" />
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\stlemitter.h" />
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\traits.h" />
+    <ClInclude Include="dependencies\YAML\include\yaml-cpp\yaml.h" />
+    <ClInclude Include="dependencies\YAML\src\collectionstack.h" />
+    <ClInclude Include="dependencies\YAML\src\contrib\dragonbox.h" />
+    <ClInclude Include="dependencies\YAML\src\contrib\graphbuilderadapter.h" />
+    <ClInclude Include="dependencies\YAML\src\directives.h" />
+    <ClInclude Include="dependencies\YAML\src\emitterstate.h" />
+    <ClInclude Include="dependencies\YAML\src\emitterutils.h" />
+    <ClInclude Include="dependencies\YAML\src\exp.h" />
+    <ClInclude Include="dependencies\YAML\src\indentation.h" />
+    <ClInclude Include="dependencies\YAML\src\nodebuilder.h" />
+    <ClInclude Include="dependencies\YAML\src\nodeevents.h" />
+    <ClInclude Include="dependencies\YAML\src\ptr_vector.h" />
+    <ClInclude Include="dependencies\YAML\src\regex_yaml.h" />
+    <ClInclude Include="dependencies\YAML\src\regeximpl.h" />
+    <ClInclude Include="dependencies\YAML\src\scanner.h" />
+    <ClInclude Include="dependencies\YAML\src\scanscalar.h" />
+    <ClInclude Include="dependencies\YAML\src\scantag.h" />
+    <ClInclude Include="dependencies\YAML\src\setting.h" />
+    <ClInclude Include="dependencies\YAML\src\singledocparser.h" />
+    <ClInclude Include="dependencies\YAML\src\stream.h" />
+    <ClInclude Include="dependencies\YAML\src\streamcharsource.h" />
+    <ClInclude Include="dependencies\YAML\src\stringsource.h" />
+    <ClInclude Include="dependencies\YAML\src\tag.h" />
+    <ClInclude Include="dependencies\YAML\src\token.h" />
     <ClInclude Include="src\hellengine\containers\recycling_vector.h" />
     <ClInclude Include="src\hellengine\containers\tuple.h" />
     <ClInclude Include="src\hellengine\core\api.h" />
@@ -750,6 +811,102 @@
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="dependencies\STB\include\stb\stb_vorbis.c">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\binary.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\contrib\graphbuilder.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\contrib\graphbuilderadapter.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\convert.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\depthguard.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\directives.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\emit.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\emitfromevents.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\emitter.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\emitterstate.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\emitterutils.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\exceptions.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\exp.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\fptostring.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\memory.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\node.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\node_data.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\nodebuilder.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\nodeevents.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\null.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\ostream_wrapper.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\parse.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\parser.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\regex_yaml.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\scanner.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\scanscalar.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\scantag.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\scantoken.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\simplekey.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\singledocparser.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\stream.cpp">
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="dependencies\YAML\src\tag.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="src\hellengine\core\application\application.cpp" />

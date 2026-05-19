@@ -47,6 +47,7 @@ project "HellEngine"
         "%{IncludeDirs.IMGUI}",
         "%{IncludeDirs.IMGUIZMO}",
         "%{IncludeDirs.ENTT}",
+        "%{IncludeDirs.YAML}",
 
         "%{IncludeDirs.VULKAN}"
     }
@@ -76,11 +77,15 @@ project "HellEngine"
     filter "files:HellEngine/dependencies/IMGUIZMO/**.c*"
         flags { "NoPCH" }
 
+    filter "files:HellEngine/dependencies/YAML/**.c*"
+        flags { "NoPCH" }
+
     filter "system:windows"
         cppdialect "C++20"
         defines 
         { 
             "HE_PLATFORM_WINDOWS",
+            "YAML_CPP_STATIC_DEFINE",
             -- "HE_BUILD_DLL",
             -- "HE_DLL"
         }
@@ -132,6 +137,7 @@ project "Editor"
         "HellEngine/dependencies/IMGUI",
         "HellEngine/dependencies/IMGUIZMO/include",
         "HellEngine/dependencies/ENTT/include",
+        "HellEngine/dependencies/YAML/include",
         "%{IncludeDirs.VULKAN}"
     }
 
@@ -141,6 +147,7 @@ project "Editor"
         "%{LibraryDirectories.GLFW}",
         "%{LibraryDirectories.ASSIMP}",
         "%{LibraryDirectories.KTX}",
+        "%{LibraryDirectories.YAML}",
         "%{LibraryDirectories.VulkanSDK}"
     }
 
@@ -183,6 +190,7 @@ project "Editor"
             "%{Library.GLFW}",
             "%{Library.ASSIMP}",
             "%{Library.KTX}",
+            "%{Library.YAMLD}",
             "%{Library.Vulkan}"
         }
 
@@ -215,6 +223,7 @@ project "Sandbox"
         "HellEngine/dependencies/IMGUI",
         "HellEngine/dependencies/IMGUIZMO/include",
         "HellEngine/dependencies/ENTT/include",
+        "HellEngine/dependencies/YAML/include",
         "%{IncludeDirs.VULKAN}"
     }
 
@@ -224,6 +233,7 @@ project "Sandbox"
         "%{LibraryDirectories.GLFW}",
         "%{LibraryDirectories.ASSIMP}",
         "%{LibraryDirectories.KTX}",
+        "%{LibraryDirectories.YAML}",
         "%{LibraryDirectories.VulkanSDK}"
     }
 
@@ -252,6 +262,7 @@ project "Sandbox"
             "%{Library.GLFW}",
             "%{Library.ASSIMP}",
             "%{Library.KTX}",
+            "%{Library.YAMLD}",
             "%{Library.Vulkan}"
         }
 
