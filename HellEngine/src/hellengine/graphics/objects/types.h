@@ -445,6 +445,7 @@ namespace hellengine
 			PipelineCullMode cull_mode;
 			PipelineFrontFace front_face;
 			f32 line_width;
+			b8 depth_clamp_enable;
 
 			std::vector<PipelineDynamicState> dynamic_states;
 			std::vector<DescriptorSetInfo> layout;

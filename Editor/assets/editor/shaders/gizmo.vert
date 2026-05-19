@@ -1,12 +1,16 @@
+// ====================
+// Gizmo Vertex Shader
+// ====================
 #version 460
 
-// Input vertex attributes
+// Vertex attributes
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec4 inColor;
 
-// Output to the fragment shader
+// Outputs
 layout(location = 0) out vec4 vColor;
 
+// Descriptors
 // Push constants for the model-view-projection matrix
 layout(push_constant) uniform GizmoData {
 	mat4 mvp;

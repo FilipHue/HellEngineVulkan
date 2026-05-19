@@ -39,7 +39,9 @@ namespace hellengine
 			HE_API const glm::vec3& GetPosition() const;
 			HE_API void SetPosition(glm::vec3 position);
 
+			HE_API f32 GetNear() const;
 			HE_API void SetNear(f32 near_z);
+			HE_API f32 GetFar() const;
 			HE_API void SetFar(f32 far_z);
 
 			HE_API ProjectionType GetType() const;

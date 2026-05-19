@@ -3,6 +3,9 @@
 // Internal
 #include <hellengine/core/core.h>
 
+// External
+#include <glm/glm.hpp>
+
 // STL
 #include <numeric>
 
@@ -20,6 +23,8 @@ namespace hellengine
 		constexpr i64 lcm_array(const std::array<i64, N>& nums, i64 index = 0, i64 result = 1) {
 			return (index == N) ? result : lcm_array<N>(nums, index + 1, lcm(result, nums[index]));
 		}
+
+		std::array<glm::vec3, 8> GetFrustumCornersWorldSpace(const glm::mat4& projection, const glm::mat4& view);
 
 	} // namespace math
 	 

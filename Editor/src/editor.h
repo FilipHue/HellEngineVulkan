@@ -131,6 +131,20 @@ private:
 	
 	// Other
 	void UpdateLights();
+	glm::mat4 ComputeCascadeMatrix(
+		MultiProjectionCamera& camera,
+		const glm::uvec2& viewportSize,
+		const glm::vec3& lightDir,
+		f32 cascadeNear,
+		f32 cascadeFar,
+		f32 shadowMapSize);
+	void ComputeDirectionalLightCascades(
+		MultiProjectionCamera& camera,
+		const glm::uvec2& viewportSize,
+		const ShadowSettings& shadowSettings,
+		const glm::vec3& lightDir,
+		u32 lightIndex,
+		LightGPUData& gpuLight);
 
 private:
 	// Editor

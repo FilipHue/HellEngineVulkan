@@ -1,13 +1,14 @@
+// =========================
+// G-buffer Fragment Shader
+// =========================
 #version 460
 
 #extension GL_EXT_nonuniform_qualifier : enable
 
+// Includes
 #include "includes/common.glsl"
 
-// ================================
 // Inputs
-// ================================
-
 layout(location = 0) in vec3 vColor;
 layout(location = 1) in vec2 vUV;
 layout(location = 2) in vec3 vPosWS;
@@ -16,18 +17,12 @@ layout(location = 4) in vec3 vTangentWS;
 layout(location = 5) in vec3 vBitangentWS;
 layout(location = 6) in flat int vObjectIndex;
 
-// ================================
 // Outputs
-// ================================
-
 layout(location = 0) out vec4 outPosition;
 layout(location = 1) out vec4 outNormal;
 layout(location = 2) out vec4 outAlbedoAO;
 
-// ================================
 // Descriptors
-// ================================
-
 // Set 0: Global data
 layout(set = 0, binding = 0) uniform GlobalData
 {
@@ -50,10 +45,7 @@ layout(set = 2, binding = 0, std430) readonly buffer PerObjectSSBO
 // Set 3: Textures
 layout(set = 3, binding = 1) uniform sampler2D textures[];
 
-// ================================
 // Functions
-// ================================
-
 vec4 SampleTexture(int index, vec2 uv)
 {
     return texture(textures[nonuniformEXT(uint(index))], uv);
@@ -94,10 +86,6 @@ float GetMaterialAO(MaterialInfo mat)
 
     return 1.0;
 }
-
-// ================================
-// Main
-// ================================
 
 void main()
 {

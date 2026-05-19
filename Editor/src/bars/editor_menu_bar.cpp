@@ -487,6 +487,11 @@ void EditorMenuBar::ShowShadowSettings()
 				"%.4f"
 			);
 
+			m_settings->shadow_settings.max_bias = std::max(
+				m_settings->shadow_settings.min_bias,
+				m_settings->shadow_settings.max_bias
+			);
+
 			ImGui::DragFloat(
 				"Normal Offset",
 				&m_settings->shadow_settings.normal_offset,

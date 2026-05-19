@@ -63,11 +63,8 @@ layout(set = 2, binding = 0, std430) readonly buffer PerObjectSSBO {
 } ssbo_objects;
 
 // Texture samplers
-layout(set = 3, binding = 0) uniform sampler2D shadowMaps[MAX_LIGHTS];
+layout(set = 3, binding = 0) uniform sampler2D shadowMaps[MAX_SHADOW_MAPS];
 layout(set = 3, binding = 1) uniform sampler2D textures[];
-
-
-layout(constant_id = 0) const uint HELLENGINE_EDITOR = 0;
 
 layout(push_constant) uniform PushConstants {
     uint debug_view_mode;
@@ -82,52 +79,139 @@ vec4 SampleTexture(int index, vec2 uv)
     return texture(textures[nonuniformEXT(uint(index))], uv);
 }
 
-// Calculate shadow factor for a light (0.0 = fully shadowed, 1.0 = fully lit)
+float SampleShadowMapPCF(uint shadowMapIndex, vec2 uv, float currentDepth, float bias)
+{
+    vec2 texelSize = 1.0 / vec2(textureSize(shadowMaps[nonuniformEXT(shadowMapIndex)], 0));
+    int radius = int(ubo_shadowData.settings.pcf_samples);
+
+    float result = 0.0;
+    int count = 0;
+
+    for (int x = -radius; x <= radius; ++x)
+    {
+        for (int y = -radius; y <= radius; ++y)
+        {
+            vec2 offset = vec2(x, y) * texelSize * ubo_shadowData.settings.softness;
+            float closestDepth = texture(shadowMaps[nonuniformEXT(shadowMapIndex)], uv + offset).r;
+            result += (currentDepth - bias) > closestDepth ? 0.0 : 1.0;
+            count++;
+        }
+    }
+
+    return result / float(count);
+}
+
 float CalculateShadow(LightInfo light, vec3 worldPos, vec3 normal, uint lightIndex)
 {
-    // Early exit if shadows disabled globally or for this light
+    // Early out: shadows disabled globally or for this light
     if (ubo_shadowData.settings.enabled == 0u || light.shadow_params.w < 0.5)
         return 1.0;
 
-    // Transform world position to light space
-    vec4 lightSpacePos = light.shadow_matrix * vec4(worldPos, 1.0);
-
-    // Perspective divide
-    vec3 projCoords = lightSpacePos.xyz / lightSpacePos.w;
-
-    // Transform to [0,1] range
-    projCoords.xy = projCoords.xy * 0.5 + 0.5;
-
-    // Sample shadow map
-    float shadowMapDepth = texture(shadowMaps[lightIndex], projCoords.xy).r;
-
-    // Outside shadow map bounds - no shadow
-    if (projCoords.x < 0.0 || projCoords.x > 1.0 ||
-        projCoords.y < 0.0 || projCoords.y > 1.0 ||
-        projCoords.z > 1.0)
-        return 1.0;
-
-    // Clamp z to valid range (allow 0.0)
-    if (projCoords.z < 0.0)
-        projCoords.z = 0.0;
-
-    float currentDepth = projCoords.z;
-
-    // Apply bias to reduce shadow acne
-    vec3 lightDir;
     float lightType = light.position_type.w;
-    if (lightType == 1.0) {
-        lightDir = normalize(-light.position_type.xyz);
-    } else if (lightType == 2.0) {
-        lightDir = normalize(light.direction_range.xyz);
-    } else {
-        lightDir = normalize(light.position_type.xyz - worldPos);
+    vec3 N = normalize(normal);
+
+    if (lightType != 1.0)
+    {
+        vec4 lightSpacePos = light.shadow_matrix * vec4(worldPos, 1.0);
+        vec3 projCoords = lightSpacePos.xyz / lightSpacePos.w;
+        projCoords.xy = projCoords.xy * 0.5 + 0.5;
+
+        if (projCoords.x < 0.0 || projCoords.x > 1.0 ||
+            projCoords.y < 0.0 || projCoords.y > 1.0 ||
+            projCoords.z < 0.0 || projCoords.z > 1.0)
+            return 1.0;
+
+        vec3 lightDir = (lightType == 2.0)
+            ? normalize(light.direction_range.xyz)
+            : normalize(light.position_type.xyz - worldPos);
+
+        float bias = max(
+            ubo_shadowData.settings.max_bias * (1.0 - dot(N, lightDir)),
+            ubo_shadowData.settings.min_bias
+        );
+
+        uint shadowMapIndex = uint(light.shadow_params.x); //  use this, not lightIndex
+        return SampleShadowMapPCF(shadowMapIndex, projCoords.xy, projCoords.z, bias);
     }
 
-    float bias = max(ubo_shadowData.settings.max_bias * (1.0 - dot(normal, lightDir)), ubo_shadowData.settings.min_bias);
+    // -------------------------------------------------------------------
+    // Directional light: cascaded shadow maps
+    // -------------------------------------------------------------------
+    vec3 lightDir = normalize(-light.position_type.xyz);
 
-    // Standard depth comparison
-    float shadow = (currentDepth - bias) > shadowMapDepth ? 0.0 : 1.0;
+    float ndotl = dot(N, lightDir);
+    if (ndotl <= 0.0)
+        return 0.0;
+
+    float bias = max(
+        ubo_shadowData.settings.max_bias * (1.0 - ndotl),
+        ubo_shadowData.settings.min_bias
+    );
+
+    // Normal offset to reduce acne on grazing surfaces
+    vec3 shadowSamplePos = worldPos + N * ubo_shadowData.settings.normal_offset;
+
+    // View-space depth for cascade selection
+    vec3 camForward = -vec3(
+        ubo_globalData.camera.view[0][2],
+        ubo_globalData.camera.view[1][2],
+        ubo_globalData.camera.view[2][2]
+    );
+    float viewDepth = dot(worldPos - ubo_globalData.camera.position.xyz, camForward);
+
+    // Select cascade
+    uint cascadeIndex;
+    if      (viewDepth < light.cascade_splits.x) cascadeIndex = 0u;
+    else if (viewDepth < light.cascade_splits.y) cascadeIndex = 1u;
+    else if (viewDepth < light.cascade_splits.z) cascadeIndex = 2u;
+    else                                          cascadeIndex = 3u;
+
+    // Project into cascade
+    vec4 lightSpacePos = light.cascade_matrices[cascadeIndex] * vec4(shadowSamplePos, 1.0);
+    vec3 projCoords = lightSpacePos.xyz / lightSpacePos.w;
+    projCoords.xy = projCoords.xy * 0.5 + 0.5;
+
+    if (projCoords.x < 0.0 || projCoords.x > 1.0 ||
+        projCoords.y < 0.0 || projCoords.y > 1.0 ||
+        projCoords.z < 0.0 || projCoords.z > 1.0)
+        return 1.0;
+
+    uint shadowMapIndex = uint(light.shadow_params.x) + cascadeIndex;
+    float shadow = SampleShadowMapPCF(shadowMapIndex, projCoords.xy, projCoords.z, bias);
+
+    // -------------------------------------------------------------------
+    // Blend cascade seam
+    // -------------------------------------------------------------------
+    const float BLEND_THRESHOLD = 0.95;
+
+    if (cascadeIndex < 3u)
+    {
+        float prevSplit  = (cascadeIndex == 0u) ? 0.0 : light.cascade_splits[cascadeIndex - 1u];
+        float currSplit  = light.cascade_splits[cascadeIndex];
+        float range      = currSplit - prevSplit;
+        float blendStart = prevSplit + range * BLEND_THRESHOLD;
+        float fade       = clamp(
+            (viewDepth - blendStart) / (range * (1.0 - BLEND_THRESHOLD)),
+            0.0, 1.0
+        );
+
+        if (fade > 0.0)
+        {
+            uint nextIdx = cascadeIndex + 1u;
+            vec4 nextLightSpacePos = light.cascade_matrices[nextIdx] * vec4(shadowSamplePos, 1.0);
+            vec3 nextCoords = nextLightSpacePos.xyz / nextLightSpacePos.w;
+            nextCoords.xy = nextCoords.xy * 0.5 + 0.5;
+
+            if (nextCoords.x >= 0.0 && nextCoords.x <= 1.0 &&
+                nextCoords.y >= 0.0 && nextCoords.y <= 1.0 &&
+                nextCoords.z >= 0.0 && nextCoords.z <= 1.0)
+            {
+                uint nextMapIndex = uint(light.shadow_params.x) + nextIdx;
+                float nextShadow  = SampleShadowMapPCF(nextMapIndex, nextCoords.xy, nextCoords.z, bias);
+                shadow = mix(shadow, nextShadow, fade);
+            }
+        }
+    }
 
     return shadow;
 }
@@ -295,8 +379,8 @@ void main()
     // Ambient Lighting (world/environment light)
     // ================================
 
-    vec3 ambientColor = ubo_globalData.world.ambient_color_intensity.xyz;
-    float ambientIntensity = ubo_globalData.world.ambient_color_intensity.w;
+    vec3 ambientColor = vec3(0.03); // Default ambient color (can be overridden by GI)
+    float ambientIntensity = 0.5; // Default ambient intensity
     vec3 ambient = ambientColor * ambientIntensity * albedo * ao;
 
     vec3 gi = vec3(0.0);
@@ -320,63 +404,120 @@ void main()
     // ================================
     // HELLENGINE_EDITOR Debug Visualization
     // ================================
-    if (HELLENGINE_EDITOR == 1u)
+    switch (pc.debug_view_mode)
     {
-        switch (pc.debug_view_mode)
+        case 0u: break;  // Normal rendering (keep PBR result)
+        case 1u:
         {
-            case 0u: break;  // Normal rendering (keep PBR result)
-            case 1u:
+            // Wireframe mode - handled by pipeline polygon mode
+            color = vec3(0.2, 0.8, 1.0);  // Light blue wireframe
+            break;
+        };
+        case 2u:
+        {
+            // UV visualization - show UVs as red/green gradient
+            color = vec3(fract(vUV.x), fract(vUV.y), 0.0);
+            break;
+        };
+        case 3u:
+        {
+            // Normal visualization (world-space normals mapped to RGB)
+            color = vNormalWS * 0.5 + 0.5;
+            break;
+        };
+        case 4u:
+        {
+            color = vec3(0.0);
+            bool anyLight = false;
+
+            for (uint i = 0u; i < ubo_lightData.light_count; ++i)
             {
-                // Wireframe mode - handled by pipeline polygon mode
-                color = vec3(0.2, 0.8, 1.0);  // Light blue wireframe
-                break;
-            };
-            case 2u:
-            {
-                // UV visualization - show UVs as red/green gradient
-                color = vec3(fract(vUV.x), fract(vUV.y), 0.0);
-                break;
-            };
-            case 3u:
-            {
-                // Normal visualization (world-space normals mapped to RGB)
-                color = vNormalWS * 0.5 + 0.5;
-                break;
-            };
-            case 4u:
-            {
-                // Shadow Map visualization - show depth from first shadow-casting light
-                // Find first shadow-casting light
-                for (uint i = 0u; i < ubo_lightData.light_count; ++i)
+                LightInfo light = ubo_lightData.lights[i];
+                if (light.shadow_params.w < 0.5)
+                    continue;
+
+                float lightType = light.position_type.w;
+
+                // ----------------------------------------------------------
+                // Directional light: show cascade with tint per cascade
+                // ----------------------------------------------------------
+                if (lightType == 1.0)
                 {
-                    LightInfo light = ubo_lightData.lights[i];
-                    if (light.shadow_params.w >= 0.5)  // If light casts shadows
+                    vec3 camForward = -vec3(
+                        ubo_globalData.camera.view[0][2],
+                        ubo_globalData.camera.view[1][2],
+                        ubo_globalData.camera.view[2][2]
+                    );
+                    float viewDepth = dot(vPosWS - ubo_globalData.camera.position.xyz, camForward);
+
+                    uint cascadeIndex;
+                    if      (viewDepth < light.cascade_splits.x) cascadeIndex = 0u;
+                    else if (viewDepth < light.cascade_splits.y) cascadeIndex = 1u;
+                    else if (viewDepth < light.cascade_splits.z) cascadeIndex = 2u;
+                    else                                          cascadeIndex = 3u;
+
+                    vec4 lightSpacePos = light.cascade_matrices[cascadeIndex] * vec4(vPosWS, 1.0);
+                    vec3 projCoords = lightSpacePos.xyz / lightSpacePos.w;
+                    projCoords.xy = projCoords.xy * 0.5 + 0.5;
+
+                    if (projCoords.x >= 0.0 && projCoords.x <= 1.0 &&
+                        projCoords.y >= 0.0 && projCoords.y <= 1.0 &&
+                        projCoords.z >= 0.0 && projCoords.z <= 1.0)
                     {
-                        // Transform to light space
-                        vec4 lightSpacePos = light.shadow_matrix * vec4(vPosWS, 1.0);
-                        vec3 projCoords = lightSpacePos.xyz / lightSpacePos.w;
-                        projCoords = projCoords * 0.5 + 0.5;
+                        uint shadowMapIndex = uint(light.shadow_params.x) + cascadeIndex;
+                        float depth = texture(shadowMaps[shadowMapIndex], projCoords.xy).r;
 
-                        // Visualize shadow map sampling in light-space bounds
-                        if (projCoords.x >= 0.0 && projCoords.x <= 1.0 &&
-                            projCoords.y >= 0.0 && projCoords.y <= 1.0 &&
-                            projCoords.z >= 0.0 && projCoords.z <= 1.0)
-                        {
-                            float shadowDepth = texture(shadowMaps[i], projCoords.xy).r;
-                            // Grayscale depth + blue tint when inside valid projection bounds
-                            color = vec3(shadowDepth);
-                            color.b = max(color.b, 0.2);
-                        }
-                        else
-                        {
-                            // Outside projection bounds
-                            color = vec3(1.0, 0.0, 1.0);
-                        }
+                        vec3 cascadeTint;
+                        if      (cascadeIndex == 0u) cascadeTint = vec3(1.0, 0.4, 0.4); // red
+                        else if (cascadeIndex == 1u) cascadeTint = vec3(0.4, 1.0, 0.4); // green
+                        else if (cascadeIndex == 2u) cascadeTint = vec3(0.4, 0.4, 1.0); // blue
+                        else                         cascadeTint = vec3(1.0, 1.0, 0.4); // yellow
 
-                        break;  // Only visualize first shadow-casting light
+                        color += vec3(depth) * cascadeTint;
+                        anyLight = true;
+                    }
+                    else
+                    {
+                        color += vec3(1.0, 0.0, 1.0); // magenta = outside cascade
+                        anyLight = true;
+                    }
+                }
+                // ----------------------------------------------------------
+                // Spot / Point light: single shadow map, tint cyan/orange
+                // ----------------------------------------------------------
+                else
+                {
+                    vec4 lightSpacePos = light.shadow_matrix * vec4(vPosWS, 1.0);
+                    vec3 projCoords = lightSpacePos.xyz / lightSpacePos.w;
+                    projCoords.xy = projCoords.xy * 0.5 + 0.5;
+
+                    if (projCoords.x >= 0.0 && projCoords.x <= 1.0 &&
+                        projCoords.y >= 0.0 && projCoords.y <= 1.0 &&
+                        projCoords.z >= 0.0 && projCoords.z <= 1.0)
+                    {
+                        uint shadowMapIndex = uint(light.shadow_params.x);
+                        float depth = texture(shadowMaps[shadowMapIndex], projCoords.xy).r;
+
+                        vec3 lightTint = (lightType == 2.0)
+                            ? vec3(0.4, 1.0, 1.0)   // cyan   = spot
+                            : vec3(1.0, 0.6, 0.2);  // orange = point
+
+                        color += vec3(depth) * lightTint;
+                        anyLight = true;
+                    }
+                    else
+                    {
+                        color += vec3(0.5, 0.0, 0.5); // dark magenta = outside frustum
+                        anyLight = true;
                     }
                 }
             }
+
+            // No shadow-casting lights found
+            if (!anyLight)
+                color = vec3(0.2);
+
+            break;
         }
     }
 

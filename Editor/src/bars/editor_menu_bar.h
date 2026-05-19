@@ -19,6 +19,11 @@ using namespace resources;
 static constexpr i32 GI_SAMPLE_COUNT_MIN = 4;
 static constexpr i32 GI_SAMPLE_COUNT_MAX = 32;
 
+// GI Ambient Intensity
+static constexpr f32 GI_AMBIENT_INTENSITY_MIN = 0.0f;
+static constexpr f32 GI_AMBIENT_INTENSITY_MAX = 2.0f;
+static constexpr f32 GI_AMBIENT_INTENSITY_STEP = 0.01f;
+
 // GI Intensity
 static constexpr f32 GI_INTENSITY_MIN = 0.0f;
 static constexpr f32 GI_INTENSITY_MAX = 2.0f;
@@ -46,7 +51,7 @@ static constexpr u32 SHADOW_MAP_SIZE_2048 = 2048;
 static constexpr u32 SHADOW_MAP_SIZE_4096 = 4096;
 
 // Shadow Bias Settings
-static constexpr f32 SHADOW_MIN_BIAS_MIN = 0.0001f;
+static constexpr f32 SHADOW_MIN_BIAS_MIN = 0.0f;
 static constexpr f32 SHADOW_MIN_BIAS_MAX = 0.01f;
 static constexpr f32 SHADOW_MIN_BIAS_STEP = 0.0001f;
 

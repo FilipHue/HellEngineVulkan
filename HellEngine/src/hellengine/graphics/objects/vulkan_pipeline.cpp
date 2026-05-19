@@ -281,7 +281,7 @@ namespace hellengine
 			m_rasterization_state.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
 			m_rasterization_state.pNext = VK_NULL_HANDLE;
 			m_rasterization_state.flags = 0;
-			m_rasterization_state.depthClampEnable = VK_FALSE;
+			m_rasterization_state.depthClampEnable = info.depth_clamp_enable ? VK_TRUE : VK_FALSE;
 			m_rasterization_state.rasterizerDiscardEnable = VK_FALSE;
 			m_rasterization_state.polygonMode = GetVulkanPolygonMode(info.polygon_mode);
 			m_rasterization_state.lineWidth = info.line_width;

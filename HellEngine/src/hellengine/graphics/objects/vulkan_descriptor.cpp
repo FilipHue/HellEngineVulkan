@@ -243,6 +243,7 @@ namespace hellengine
 
 		void VulkanDescriptorSet::WriteBuffer(VkBuffer* buffer, VkDeviceSize* offset, VkDeviceSize* range, u32 binding, VkDescriptorType type, u32 count, u32 array_element)
 		{
+			u32 base_index = (u32)m_buffer_infos.size();
 			for (u32 i = 0; i < count; i++)
 			{
 				m_buffer_infos.push_back({
@@ -259,13 +260,14 @@ namespace hellengine
 			write.dstArrayElement = array_element;
 			write.descriptorType = type;
 			write.descriptorCount = count;
-			write.pBufferInfo = &m_buffer_infos.back();
+			write.pBufferInfo = &m_buffer_infos[base_index];
 
 			m_writes.push_back(write);
 		}
 
 		void VulkanDescriptorSet::WriteImage(VkImageView* image_view, VkSampler* sampler, u32 binding, VkDescriptorType type, u32 count, u32 array_element)
 		{
+			u32 base_index = (u32)m_image_infos.size();
 			for (u32 i = 0; i < count; i++)
 			{
 				m_image_infos.push_back({
@@ -282,7 +284,7 @@ namespace hellengine
 			write.dstArrayElement = array_element;
 			write.descriptorType = type;
 			write.descriptorCount = count;
-			write.pImageInfo = m_image_infos.data();
+			write.pImageInfo = &m_image_infos[base_index];
 
 			m_writes.push_back(write);
 		}

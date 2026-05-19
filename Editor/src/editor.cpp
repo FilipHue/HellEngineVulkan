@@ -2,6 +2,11 @@
 
 Editor::Editor(ApplicationConfiguration* configuration) : Application(configuration)
 {
+	/* Other */
+	m_global_data = {};
+	m_lights_data = {};
+	m_viewport_last_size = { 0, 0 };
+
 	/* Editor UI */
 	m_hierarchy_panel = nullptr;
 	m_inspector_panel = nullptr;
@@ -65,8 +70,10 @@ void Editor::Init()
 	CreateGIResources();
 
 	CreatePBRDescriptors();
+	UpdatePBRDescriptors();
 	CreateGBufferDescriptors();
 	CreateGIDescriptors();
+	UpdateGIDescriptors();
 
 	m_viewport_last_size = m_viewport_panel->GetSize();
 }
@@ -112,8 +119,8 @@ void Editor::OnRenderBegin()
 		CreateGBufferResources();
 		CreateGIResources();
 
-		CreateGIDescriptors();
 		UpdateGIDescriptors();
+		UpdatePBRDescriptors();
 	}
 
 	UpdateLights();
@@ -169,35 +176,6 @@ void Editor::OnUIRender()
 		m_viewport_panel->Draw();
 		ShowTransformGizmo();
 
-		// Debug Visualization Toolbar
-		{
-			ImGuiWindow* vp = ImGui::FindWindowByName("Viewport");
-			if (vp)
-			{
-				ImGui::SetCursorScreenPos(ImVec2(vp->Pos.x + 10.0f, vp->Pos.y + 30.0f));
-
-				ImGui::PushStyleColor(ImGuiCol_ChildBg, ImVec4(0.1f, 0.1f, 0.1f, 0.8f));
-				ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
-				ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8.0f, 8.0f));
-
-				ImGui::BeginChild("##DebugToolbar", ImVec2(220.0f, 0.0f), ImGuiChildFlags_AutoResizeY | ImGuiChildFlags_Border, ImGuiWindowFlags_NoScrollbar);
-
-				ImGui::Text("World Light");
-				ImGui::Separator();
-
-				// Ambient Color
-				ImGui::ColorEdit3("Ambient##Color", &m_global_data.world.ambient_color_intensity.x);
-
-				// Ambient Intensity
-				ImGui::SliderFloat("Intensity##Ambient", &m_global_data.world.ambient_color_intensity.w, 0.0f, 1.0f);
-
-				ImGui::EndChild();
-
-				ImGui::PopStyleVar(2);
-				ImGui::PopStyleColor();
-			}
-		}
-
 		m_viewport_panel->End();
 	}
 
@@ -208,22 +186,12 @@ void Editor::OnUIRender()
 
 void Editor::Shutdown()
 {
-	if (m_gizmo_vb)
-	{
-		m_backend->DestroyBuffer(m_gizmo_vb);
-	}
-
-	if (m_gizmo_ib)
-	{
-		m_backend->DestroyBuffer(m_gizmo_ib);
-	}
+	DestroyResources();
 
 	delete m_hierarchy_panel;
 	delete m_inspector_panel;
 	delete m_viewport_panel;
 	delete m_menu_bar;
-
-	DestroyResources();
 }
 
 b8 Editor::OnEventWindowClose(EventContext& event)
@@ -274,7 +242,7 @@ b8 Editor::OnEventKeyPressed(EventContext& event)
 		if (event.data.key_event.key == KEY_W)
 		{
 			m_guizmo_operation = ImGuizmo::TRANSLATE;
-			m_guizmo_mode = ImGuizmo::WORLD;
+			m_guizmo_mode = ImGuizmo::LOCAL;
 		}
 		else if (event.data.key_event.key == KEY_E)
 		{
@@ -434,10 +402,10 @@ void Editor::CreateDefaultSettings()
 		m_editor_settings.shadow_settings.cascade_split_lambda = 0.75f; // CSM split
 		m_editor_settings.shadow_settings.min_bias = 0.001f;            // Min bias
 		m_editor_settings.shadow_settings.max_bias = 0.01f;             // Max bias
-		m_editor_settings.shadow_settings.normal_offset = 0.1f;         // Normal offset
+		m_editor_settings.shadow_settings.normal_offset = 0.02f;         // Normal offset
 		m_editor_settings.shadow_settings.pcf_samples = 1;              // 3x3 PCF
 		m_editor_settings.shadow_settings.softness = 1.0f;              // Shadow softness
-		m_editor_settings.shadow_settings.cascade_distances = glm::vec4(10.0f, 30.0f, 80.0f, 200.0f);  // Cascade distances
+		m_editor_settings.shadow_settings.cascade_distances = glm::vec4(10.0f, 30.0f, 300.0f, 1000.0f);  // Cascade distances
 	}
 }
 
@@ -461,11 +429,11 @@ void Editor::CreateResources()
 	m_editor_camera_controller.SetCamera(&m_editor_camera);
 	m_editor_camera_controller.SetActive(false);
 
-	m_editor_data.show_debug_info = true;
-
 	CreateEditorResources();
 
 	CreateShadowResources();
+
+	CreateDebugResources();
 }
 
 void Editor::CreatePipelines()
@@ -477,112 +445,7 @@ void Editor::CreatePipelines()
 	CreateGIPipeline();
 	CreateShadowPipeline();
 
-	// Debug Wireframe Pipeline
-	{
-		PipelineCreateInfo pipeline_info = {};
-		pipeline_info.type = PipelineType_Graphics;
-		pipeline_info.topology = PipelinePrimitiveTopology_TriangleList;
-		pipeline_info.polygon_mode = PipelinePolygonMode_Line;
-		pipeline_info.cull_mode = PipelineCullMode_None;
-		pipeline_info.front_face = PipelineFrontFace_CounterClockwise;
-		pipeline_info.line_width = 1.0f;
-
-		pipeline_info.dynamic_states = { PipelineDynamicState_Viewport, PipelineDynamicState_Scissor };
-		pipeline_info.layout = {
-			{
-				{
-					{ 0, DescriptorType_UniformBuffer, 1, ShaderStage_Vertex | ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
-					{ 1, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
-					{ 2, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
-					{ 3, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
-					{ 4, DescriptorType_CombinedImageSampler, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind }
-				},
-				DescriptorSetFlags_UpdateAfterBindPool
-			},
-			{
-				{
-					{ 0, DescriptorType_StorageBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind }	// Per-draw data
-				},
-				DescriptorSetFlags_UpdateAfterBindPool
-			},
-			{
-				{
-					{ 0, DescriptorType_StorageBuffer, 1, ShaderStage_Vertex | ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },	// Per-object data
-				},
-				DescriptorSetFlags_UpdateAfterBindPool
-			},
-			{
-				{
-					{ 0, DescriptorType_CombinedImageSampler, MAX_LIGHTS, ShaderStage_Fragment, DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind },
-					{ 1, DescriptorType_CombinedImageSampler, MAX_TEXTURES, ShaderStage_Fragment, DescriptorBindingFlags_VariableCount | DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind }
-				},
-				DescriptorSetFlags_UpdateAfterBindPool
-			}
-		};
-
-		pipeline_info.vertex_binding_description = VertexFormatTangent::GetBindingDescription();
-		pipeline_info.vertex_attribute_descriptions = VertexFormatTangent::GetAttributeDescriptions();
-
-		pipeline_info.push_constant_ranges = {
-			{ ShaderStage_Fragment, 0, sizeof(u32) }
-		};
-		pipeline_info.depth_stencil_info = { true, true };
-
-		pipeline_info.dynamic_rendering_info = {
-			false,
-			{ VK_FORMAT_R16G16B16A16_SFLOAT, VK_FORMAT_R32_UINT },
-			VK_FORMAT_D32_SFLOAT
-		};
-
-		ShaderStageInfo shader_info = {};
-		shader_info.sources[ShaderType_Vertex] = CONCAT_PATHS(EDITOR_SHADER_PATH, "pbr.vert");
-		shader_info.sources[ShaderType_Fragment] = CONCAT_PATHS(EDITOR_SHADER_PATH, "pbr.frag");
-
-		shader_info.specialization_infos.push_back({
-			ShaderStage_Fragment,
-			sizeof(m_editor_data),
-			&m_editor_data,
-			{
-				{ 0, sizeof(m_editor_data.show_debug_info), offsetof(EditorSpecificData, show_debug_info) }
-			}
-			});
-
-		PipelineManager::GetInstance()->CreatePipeline(C_PIPELINE_WIREFRAME, pipeline_info, shader_info);
-	}
-
-	// Gizmo Pipeline
-	{
-		PipelineCreateInfo pipeline_info = {};
-		pipeline_info.type = PipelineType_Graphics;
-		pipeline_info.topology = PipelinePrimitiveTopology_LineList;
-		pipeline_info.polygon_mode = PipelinePolygonMode_Fill;
-		pipeline_info.cull_mode = PipelineCullMode_None;
-		pipeline_info.front_face = PipelineFrontFace_CounterClockwise;
-		pipeline_info.line_width = 2.0f;
-
-		pipeline_info.dynamic_states = { PipelineDynamicState_Viewport, PipelineDynamicState_Scissor };
-		pipeline_info.layout = {};
-
-		pipeline_info.vertex_binding_description = VertexGuizmo::GetBindingDescription();
-		pipeline_info.vertex_attribute_descriptions = VertexGuizmo::GetAttributeDescriptions();
-
-		pipeline_info.push_constant_ranges = {
-			{ ShaderStage_Vertex, 0, sizeof(glm::mat4) }
-		};
-		pipeline_info.depth_stencil_info = { true, false };
-
-		pipeline_info.dynamic_rendering_info = {
-			false,
-			{ VK_FORMAT_R16G16B16A16_SFLOAT, VK_FORMAT_R32_UINT },
-			VK_FORMAT_D32_SFLOAT
-		};
-
-		ShaderStageInfo shader_info = {};
-		shader_info.sources[ShaderType_Vertex] = CONCAT_PATHS(EDITOR_SHADER_PATH, "gizmo.vert");
-		shader_info.sources[ShaderType_Fragment] = CONCAT_PATHS(EDITOR_SHADER_PATH, "gizmo.frag");
-
-		PipelineManager::GetInstance()->CreatePipeline(C_PIPELINE_GIZMO, pipeline_info, shader_info);
-	}
+	CreateDebugPipeline();
 }
 
 void Editor::CreateDescriptors()
@@ -592,6 +455,8 @@ void Editor::CreateDescriptors()
 	CreateEditorDescriptors();
 
 	CreateShadowDescriptors();
+
+	CreateDebugDescriptors();
 }
 
 void Editor::DestroyResources()
@@ -602,6 +467,8 @@ void Editor::DestroyResources()
 	DestroyGBufferResources();
 	DestroyGIResources();
 	DestroyShadowResources();
+
+	DestroyDebugResources();
 }
 
 void Editor::CreateEditorPipeline()
@@ -614,6 +481,7 @@ void Editor::CreateEditorPipeline()
 	pipeline_info.cull_mode = PipelineCullMode_None;
 	pipeline_info.front_face = PipelineFrontFace_CounterClockwise;
 	pipeline_info.line_width = 1.0f;
+	pipeline_info.depth_clamp_enable = false;
 
 	pipeline_info.dynamic_states = { PipelineDynamicState_Viewport, PipelineDynamicState_Scissor };
 	pipeline_info.layout = {
@@ -644,6 +512,7 @@ void Editor::CreateEditorPipeline()
 
 void Editor::CreateEditorResources()
 {
+	m_editor_data.show_debug_info = true;
 }
 
 void Editor::DestroyEditorResources()
@@ -662,6 +531,27 @@ void Editor::RenderEditor()
 {
 }
 
+void Editor::CreateEditorUI()
+{
+	m_inspector_panel = new EditorInspector();
+	m_inspector_panel->Init();
+
+	m_hierarchy_panel = new EditorHierarchy();
+	m_hierarchy_panel->Init(m_inspector_panel);
+
+	m_menu_bar = new EditorMenuBar();
+
+	m_viewport_panel = new EditorViewport();
+	m_viewport_panel->Init(m_backend, m_frontend, m_hierarchy_panel);
+	m_viewport_panel->SetSize(m_window->GetWidth(), m_window->GetHeight());
+	m_viewport_panel->SetViewportEditorReferences(&m_editor_camera, &m_editor_settings);
+	m_viewport_panel->CreateViewportResources();
+
+	m_menu_bar->Init(m_hierarchy_panel, &m_window_settings, &m_editor_settings);
+	m_menu_bar->SetImportAssetCallback([this]() { ImportAsset(); });
+	m_menu_bar->SetCreateEmptyGameObjectCallback([this]() { CreateEmptyGameObject(); });
+}
+
 void Editor::CreateGBufferPipeline()
 {
 	PipelineCreateInfo pipeline_info = {};
@@ -671,6 +561,7 @@ void Editor::CreateGBufferPipeline()
 	pipeline_info.cull_mode = PipelineCullMode_None;
 	pipeline_info.front_face = PipelineFrontFace_CounterClockwise;
 	pipeline_info.line_width = 1.0f;
+	pipeline_info.depth_clamp_enable = false;
 
 	pipeline_info.dynamic_states = {
 		PipelineDynamicState_Viewport,
@@ -702,7 +593,7 @@ void Editor::CreateGBufferPipeline()
 		},
 		{
 			{
-				{ 0, DescriptorType_CombinedImageSampler, MAX_LIGHTS, ShaderStage_Fragment, DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind },
+				{ 0, DescriptorType_CombinedImageSampler, MAX_LIGHTS * MAX_SHADOW_CASCADES, ShaderStage_Fragment, DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind },
 				{ 1, DescriptorType_CombinedImageSampler, MAX_TEXTURES, ShaderStage_Fragment, DescriptorBindingFlags_VariableCount | DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind }
 			},
 			DescriptorSetFlags_UpdateAfterBindPool
@@ -868,6 +759,7 @@ void Editor::CreateGIPipeline()
 	pipeline_info.cull_mode = PipelineCullMode_None;
 	pipeline_info.front_face = PipelineFrontFace_CounterClockwise;
 	pipeline_info.line_width = 1.0f;
+	pipeline_info.depth_clamp_enable = false;
 
 	pipeline_info.dynamic_states = {
 		PipelineDynamicState_Viewport,
@@ -932,15 +824,15 @@ void Editor::DestroyGIResources()
 
 void Editor::CreateGIDescriptors()
 {
-	Pipeline* giPipeline =
-		PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_GLOBAL_ILLUMINATION);
-
-	if (!giPipeline)
-	{
-		return;
-	}
-
+	Pipeline* giPipeline = PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_GLOBAL_ILLUMINATION);
 	m_gi_descriptor = m_backend->CreateDescriptorSet(giPipeline, 0);
+}
+
+void Editor::UpdateGIDescriptors()
+{
+	if (!m_gi_descriptor || !m_gi_texture || !m_gbuffer_position ||
+		!m_gbuffer_normal || !m_gbuffer_albedo_ao || !m_gbuffer_depth)
+		return;
 
 	DescriptorSetWriteData globalWrite{};
 	globalWrite.type = DescriptorType_UniformBuffer;
@@ -981,32 +873,11 @@ void Editor::CreateGIDescriptors()
 	depthWrite.data.image.samplers = new VkSampler(m_gbuffer_depth->GetSampler());
 
 	std::vector<DescriptorSetWriteData> writes = {
-		globalWrite,
-		giSettingsWrite,
-		positionWrite,
-		normalWrite,
-		albedoAOWrite,
-		depthWrite
+		globalWrite, giSettingsWrite, positionWrite,
+		normalWrite, albedoAOWrite, depthWrite
 	};
 
 	m_backend->WriteDescriptor(&m_gi_descriptor, writes);
-}
-
-void Editor::UpdateGIDescriptors()
-{
-	if (!m_gi_texture)
-	{
-		return;
-	}
-
-	DescriptorSetWriteData giWrite{};
-	giWrite.type = DescriptorType_CombinedImageSampler;
-	giWrite.binding = 4;
-	giWrite.data.image.image_views = new VkImageView(m_gi_texture->GetImageView());
-	giWrite.data.image.samplers = new VkSampler(m_gi_texture->GetSampler());
-
-	std::vector<DescriptorSetWriteData> writes = { giWrite };
-	m_backend->WriteDescriptor(&m_pbr_descriptor, writes);
 }
 
 void Editor::RenderGI()
@@ -1053,6 +924,113 @@ void Editor::RenderGI()
 
 void Editor::CreateDebugPipeline()
 {
+	// Debug Wireframe Pipeline
+	{
+		PipelineCreateInfo pipeline_info = {};
+		pipeline_info.type = PipelineType_Graphics;
+		pipeline_info.topology = PipelinePrimitiveTopology_TriangleList;
+		pipeline_info.polygon_mode = PipelinePolygonMode_Line;
+		pipeline_info.cull_mode = PipelineCullMode_None;
+		pipeline_info.front_face = PipelineFrontFace_CounterClockwise;
+		pipeline_info.line_width = 1.0f;
+		pipeline_info.depth_clamp_enable = false;
+
+		pipeline_info.dynamic_states = { PipelineDynamicState_Viewport, PipelineDynamicState_Scissor };
+		pipeline_info.layout = {
+			{
+				{
+					{ 0, DescriptorType_UniformBuffer, 1, ShaderStage_Vertex | ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
+					{ 1, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
+					{ 2, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
+					{ 3, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
+					{ 4, DescriptorType_CombinedImageSampler, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind }
+				},
+				DescriptorSetFlags_UpdateAfterBindPool
+			},
+			{
+				{
+					{ 0, DescriptorType_StorageBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind }	// Per-draw data
+				},
+				DescriptorSetFlags_UpdateAfterBindPool
+			},
+			{
+				{
+					{ 0, DescriptorType_StorageBuffer, 1, ShaderStage_Vertex | ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },	// Per-object data
+				},
+				DescriptorSetFlags_UpdateAfterBindPool
+			},
+			{
+				{
+					{ 0, DescriptorType_CombinedImageSampler, MAX_LIGHTS * MAX_SHADOW_CASCADES, ShaderStage_Fragment, DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind },
+					{ 1, DescriptorType_CombinedImageSampler, MAX_TEXTURES, ShaderStage_Fragment, DescriptorBindingFlags_VariableCount | DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind }
+				},
+				DescriptorSetFlags_UpdateAfterBindPool
+			}
+		};
+
+		pipeline_info.vertex_binding_description = VertexFormatTangent::GetBindingDescription();
+		pipeline_info.vertex_attribute_descriptions = VertexFormatTangent::GetAttributeDescriptions();
+
+		pipeline_info.push_constant_ranges = {
+			{ ShaderStage_Fragment, 0, sizeof(u32) }
+		};
+		pipeline_info.depth_stencil_info = { true, true };
+
+		pipeline_info.dynamic_rendering_info = {
+			false,
+			{ VK_FORMAT_R16G16B16A16_SFLOAT, VK_FORMAT_R32_UINT },
+			VK_FORMAT_D32_SFLOAT
+		};
+
+		ShaderStageInfo shader_info = {};
+		shader_info.sources[ShaderType_Vertex] = CONCAT_PATHS(EDITOR_SHADER_PATH, "pbr.vert");
+		shader_info.sources[ShaderType_Fragment] = CONCAT_PATHS(EDITOR_SHADER_PATH, "pbr.frag");
+
+		shader_info.specialization_infos.push_back({
+			ShaderStage_Fragment,
+			sizeof(m_editor_data),
+			&m_editor_data,
+			{
+				{ 0, sizeof(m_editor_data.show_debug_info), offsetof(EditorSpecificData, show_debug_info) }
+			}
+			});
+
+		PipelineManager::GetInstance()->CreatePipeline(C_PIPELINE_WIREFRAME, pipeline_info, shader_info);
+	}
+
+	// Gizmo Pipeline
+	{
+		PipelineCreateInfo pipeline_info = {};
+		pipeline_info.type = PipelineType_Graphics;
+		pipeline_info.topology = PipelinePrimitiveTopology_LineList;
+		pipeline_info.polygon_mode = PipelinePolygonMode_Fill;
+		pipeline_info.cull_mode = PipelineCullMode_None;
+		pipeline_info.front_face = PipelineFrontFace_CounterClockwise;
+		pipeline_info.line_width = 2.0f;
+
+		pipeline_info.dynamic_states = { PipelineDynamicState_Viewport, PipelineDynamicState_Scissor };
+		pipeline_info.layout = {};
+
+		pipeline_info.vertex_binding_description = VertexGuizmo::GetBindingDescription();
+		pipeline_info.vertex_attribute_descriptions = VertexGuizmo::GetAttributeDescriptions();
+
+		pipeline_info.push_constant_ranges = {
+			{ ShaderStage_Vertex, 0, sizeof(glm::mat4) }
+		};
+		pipeline_info.depth_stencil_info = { true, false };
+
+		pipeline_info.dynamic_rendering_info = {
+			false,
+			{ VK_FORMAT_R16G16B16A16_SFLOAT, VK_FORMAT_R32_UINT },
+			VK_FORMAT_D32_SFLOAT
+		};
+
+		ShaderStageInfo shader_info = {};
+		shader_info.sources[ShaderType_Vertex] = CONCAT_PATHS(EDITOR_SHADER_PATH, "gizmo.vert");
+		shader_info.sources[ShaderType_Fragment] = CONCAT_PATHS(EDITOR_SHADER_PATH, "gizmo.frag");
+
+		PipelineManager::GetInstance()->CreatePipeline(C_PIPELINE_GIZMO, pipeline_info, shader_info);
+	}
 }
 
 void Editor::CreateDebugResources()
@@ -1061,6 +1039,15 @@ void Editor::CreateDebugResources()
 
 void Editor::DestroyDebugResources()
 {
+	if (m_gizmo_vb)
+	{
+		m_backend->DestroyBuffer(m_gizmo_vb);
+	}
+
+	if (m_gizmo_ib)
+	{
+		m_backend->DestroyBuffer(m_gizmo_ib);
+	}
 }
 
 void Editor::CreateDebugDescriptors()
@@ -1254,27 +1241,6 @@ void Editor::RenderDebug()
 	m_backend->DrawIndexed(static_cast<u32>(m_gizmo_indices.size()), 1, 0, 0, 0);
 }
 
-void Editor::CreateEditorUI()
-{
-	m_inspector_panel = new EditorInspector();
-	m_inspector_panel->Init();
-
-	m_hierarchy_panel = new EditorHierarchy();
-	m_hierarchy_panel->Init(m_inspector_panel);
-
-	m_menu_bar = new EditorMenuBar();
-
-	m_viewport_panel = new EditorViewport();
-	m_viewport_panel->Init(m_backend, m_frontend, m_hierarchy_panel);
-	m_viewport_panel->SetSize(m_window->GetWidth(), m_window->GetHeight());
-	m_viewport_panel->SetViewportEditorReferences(&m_editor_camera, &m_editor_settings);
-	m_viewport_panel->CreateViewportResources();
-
-	m_menu_bar->Init(m_hierarchy_panel, &m_window_settings, &m_editor_settings);
-	m_menu_bar->SetImportAssetCallback([this]() { ImportAsset(); });
-	m_menu_bar->SetCreateEmptyGameObjectCallback([this]() { CreateEmptyGameObject(); });
-}
-
 void Editor::CreatePBRPipeline()
 {
 	PipelineCreateInfo pipeline_info = {};
@@ -1284,6 +1250,7 @@ void Editor::CreatePBRPipeline()
 	pipeline_info.cull_mode = PipelineCullMode_None;
 	pipeline_info.front_face = PipelineFrontFace_CounterClockwise;
 	pipeline_info.line_width = 1.0f;
+	pipeline_info.depth_clamp_enable = false;
 
 	pipeline_info.dynamic_states = { PipelineDynamicState_Viewport, PipelineDynamicState_Scissor };
 	pipeline_info.layout = {
@@ -1311,7 +1278,7 @@ void Editor::CreatePBRPipeline()
 		},
 		{
 			{
-				{ 0, DescriptorType_CombinedImageSampler, MAX_LIGHTS, ShaderStage_Fragment, DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind },
+				{ 0, DescriptorType_CombinedImageSampler, MAX_LIGHTS * MAX_SHADOW_CASCADES, ShaderStage_Fragment, DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind },
 				{ 1, DescriptorType_CombinedImageSampler, MAX_TEXTURES, ShaderStage_Fragment, DescriptorBindingFlags_VariableCount | DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind }
 			},
 			DescriptorSetFlags_UpdateAfterBindPool
@@ -1357,7 +1324,6 @@ void Editor::CreatePBRResources()
 	m_global_data.camera.position = glm::vec4(m_editor_camera.GetPosition(), 0.0f);
 
 	m_global_data.world.time = glm::vec4(0.0f);
-	m_global_data.world.ambient_color_intensity = glm::vec4(1.0f, 1.0f, 1.0f, 0.03f);
 
 	m_pbr_global_data_ubo = m_backend->CreateUniformBufferMappedPersistent(sizeof(GlobalData), 1);
 
@@ -1385,7 +1351,10 @@ void Editor::DestroyPBRResources()
 void Editor::CreatePBRDescriptors()
 {
 	m_pbr_descriptor = m_backend->CreateDescriptorSet(PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_PBR), 0);
+}
 
+void Editor::UpdatePBRDescriptors()
+{
 	DescriptorSetWriteData data1{};
 	data1.type = DescriptorType_UniformBuffer;
 	data1.binding = 0;
@@ -1431,10 +1400,6 @@ void Editor::CreatePBRDescriptors()
 	m_backend->WriteDescriptor(&m_pbr_descriptor, write_data);
 }
 
-void Editor::UpdatePBRDescriptors()
-{
-}
-
 void Editor::RenderPBR()
 {
 	Pipeline* activePipeline = PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_PBR);
@@ -1459,9 +1424,10 @@ void Editor::CreateShadowPipeline()
 	pipeline_info.type = PipelineType_Graphics;
 	pipeline_info.topology = PipelinePrimitiveTopology_TriangleList;
 	pipeline_info.polygon_mode = PipelinePolygonMode_Fill;
-	pipeline_info.cull_mode = PipelineCullMode_Front;
+	pipeline_info.cull_mode = PipelineCullMode_None;
 	pipeline_info.front_face = PipelineFrontFace_CounterClockwise;
 	pipeline_info.line_width = 1.0f;
+	pipeline_info.depth_clamp_enable = true;
 
 	pipeline_info.dynamic_states = { PipelineDynamicState_Viewport, PipelineDynamicState_Scissor };
 	pipeline_info.layout = {
@@ -1470,7 +1436,8 @@ void Editor::CreateShadowPipeline()
 				{ 0, DescriptorType_UniformBuffer, 1, ShaderStage_Vertex | ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },	// Global data
 				{ 1, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },						// Lights data
 				{ 2, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },						// GI settings
-				{ 3, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind }						// Shadow settings
+				{ 3, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },						// Shadow settings
+				{ 4, DescriptorType_CombinedImageSampler, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind }					// GI texture{}
 			},
 			DescriptorSetFlags_UpdateAfterBindPool
 		},
@@ -1488,7 +1455,7 @@ void Editor::CreateShadowPipeline()
 		},
 		{
 			{
-				{ 0, DescriptorType_CombinedImageSampler, MAX_LIGHTS, ShaderStage_Fragment, DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind },
+				{ 0, DescriptorType_CombinedImageSampler, MAX_LIGHTS * MAX_SHADOW_CASCADES, ShaderStage_Fragment, DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind },
 				{ 1, DescriptorType_CombinedImageSampler, MAX_TEXTURES, ShaderStage_Fragment, DescriptorBindingFlags_VariableCount | DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind }
 			},
 			DescriptorSetFlags_UpdateAfterBindPool
@@ -1512,25 +1479,28 @@ void Editor::CreateShadowPipeline()
 
 void Editor::CreateShadowResources()
 {
-	// Cleanup old shadow maps before recreating them.
 	for (size_t i = 0; i < m_shadow_maps.size(); ++i)
 	{
 		std::string name = "ShadowMap_" + std::to_string(i);
 		TextureManager::GetInstance()->DestroyTexture2D(name);
 	}
+
 	m_shadow_maps.clear();
 
 	u32 shadowMapSize = m_editor_settings.shadow_settings.shadow_map_size;
+	u32 shadowMapCount = MAX_LIGHTS * MAX_SHADOW_CASCADES;
 
-	for (u32 i = 0; i < MAX_LIGHTS; ++i)
+	for (u32 i = 0; i < shadowMapCount; ++i)
 	{
 		std::string shadowMapName = "ShadowMap_" + std::to_string(i);
+
 		VulkanTexture2D* shadowMap = TextureManager::GetInstance()->CreateTexture2D(
 			shadowMapName,
 			VK_FORMAT_D32_SFLOAT,
 			shadowMapSize,
 			shadowMapSize
 		);
+
 		m_shadow_maps.push_back(shadowMap);
 	}
 }
@@ -1590,70 +1560,74 @@ void Editor::RenderShadowMaps()
 	if (!shadowPipeline) return;
 
 	u32 shadowMapSize = m_editor_settings.shadow_settings.shadow_map_size;
-
-	// Iterate through all lights in the scene using registry view
 	auto view = scene->GetRegistry().view<LightComponent, TransformComponent>();
 
-	u32 lightIndex = 0;  // Index in the lights UBO (matches UpdateLights logic)
+	u32 lightIndex = 0;
 	for (auto entity : view)
 	{
 		auto& lightComp = view.get<LightComponent>(entity);
-		auto& transformComp = view.get<TransformComponent>(entity);
 
-		// Skip disabled lights (must match UpdateLights() logic)
 		if (!lightComp.enabled)
-		{
-			continue;  // Don't increment lightIndex
-		}
+			continue;
 
-		if (lightIndex >= MAX_LIGHTS) break;
+		if (lightIndex >= MAX_LIGHTS)
+			break;
 
-		// Skip if light doesn't cast shadows
 		if (!lightComp.cast_shadows)
 		{
 			lightIndex++;
 			continue;
 		}
 
-		// Get the shadow matrix for this light (already computed in UpdateLights)
-		glm::mat4 lightViewProj = m_lights_data.lights[lightIndex].shadow_matrix;
+		LightGPUData& gpuLight = m_lights_data.lights[lightIndex];
+		const u32 cascadeCount = lightComp.type == LightType_Directional ? MAX_SHADOW_CASCADES : 1;
 
-		// Get shadow map texture for this light
-		VulkanTexture2D* shadowMap = m_shadow_maps[lightIndex];
+		for (u32 cascade = 0; cascade < cascadeCount; ++cascade)
+		{
+			const u32 shadowMapIndex = lightComp.type == LightType_Directional
+				? lightIndex * MAX_SHADOW_CASCADES + cascade
+				: lightIndex * MAX_SHADOW_CASCADES;
 
-		// Begin rendering to shadow map (depth-only pass)
-		DynamicRenderingAttachmentInfo depthAttachment{};
-		depthAttachment.image = shadowMap->GetHandle();
-		depthAttachment.image_view = shadowMap->GetImageView();
-		depthAttachment.format = VK_FORMAT_D32_SFLOAT;
-		depthAttachment.image_layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-		depthAttachment.load_op = VK_ATTACHMENT_LOAD_OP_CLEAR;
-		depthAttachment.store_op = VK_ATTACHMENT_STORE_OP_STORE;
-		depthAttachment.clear_value.depthStencil = { 1.0f, 0 };  // Clear depth to far plane
-		depthAttachment.initial_layout = VK_IMAGE_LAYOUT_UNDEFINED;
-		depthAttachment.final_layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+			if (shadowMapIndex >= m_shadow_maps.size())
+				continue;
 
-		DynamicRenderingInfo shadowDRI{};
-		shadowDRI.extent = { shadowMapSize, shadowMapSize };
-		shadowDRI.depth_attachment = depthAttachment;
-		shadowDRI.flags = 0;
+			glm::mat4 lightViewProj = lightComp.type == LightType_Directional
+				? gpuLight.cascade_matrices[cascade]
+				: gpuLight.shadow_matrix;
 
-		m_backend->BeginDynamicRenderingWithAttachments(shadowDRI);
+			VulkanTexture2D* shadowMap = m_shadow_maps[shadowMapIndex];
 
-		// Set viewport and scissor for shadow map resolution
-		m_backend->SetViewport({ { 0.0f, 0.0f, (f32)shadowMapSize, (f32)shadowMapSize, 0.0f, 1.0f } });
-		m_backend->SetScissor({ { { 0, 0 }, { shadowMapSize, shadowMapSize } } });
+			DynamicRenderingAttachmentInfo depthAttachment{};
+			depthAttachment.image = shadowMap->GetHandle();
+			depthAttachment.image_view = shadowMap->GetImageView();
+			depthAttachment.format = VK_FORMAT_D32_SFLOAT;
+			depthAttachment.image_layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+			depthAttachment.load_op = VK_ATTACHMENT_LOAD_OP_CLEAR;
+			depthAttachment.store_op = VK_ATTACHMENT_STORE_OP_STORE;
+			depthAttachment.clear_value.depthStencil = { 1.0f, 0 };
+			depthAttachment.initial_layout = VK_IMAGE_LAYOUT_UNDEFINED;
+			depthAttachment.final_layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
 
-		// Bind shadow pipeline
-		m_backend->BindPipeline(shadowPipeline);
+			DynamicRenderingInfo shadowDRI{};
+			shadowDRI.extent = { shadowMapSize, shadowMapSize };
+			shadowDRI.depth_attachment = depthAttachment;
+			shadowDRI.flags = 0;
 
-		// Push light view-projection matrix
-		m_backend->BindPushConstants(shadowPipeline, ShaderStage_Vertex, 0, sizeof(glm::mat4), &lightViewProj);
+			m_backend->BeginDynamicRenderingWithAttachments(shadowDRI);
 
-		// Render all meshes from light's perspective (depth-only, no material/texture descriptors)
-		MeshManager::GetInstance()->DrawMeshes(shadowPipeline);
+			m_backend->SetViewport({ { 0.0f, 0.0f, static_cast<f32>(shadowMapSize), static_cast<f32>(shadowMapSize), 0.0f, 1.0f } });
+			m_backend->SetScissor({ { { 0, 0 }, { shadowMapSize, shadowMapSize } } });
 
-		m_backend->EndDynamicRenderingWithAttachments(shadowDRI);
+			m_backend->BindPipeline(shadowPipeline);
+
+			// Required if shadow_depth.vert reads object/material/per-draw data from descriptor sets.
+			m_backend->BindDescriptorSet(shadowPipeline, m_pbr_descriptor);
+
+			m_backend->BindPushConstants(shadowPipeline, ShaderStage_Vertex, 0, sizeof(glm::mat4), &lightViewProj);
+			MeshManager::GetInstance()->DrawMeshes(shadowPipeline);
+
+			m_backend->EndDynamicRenderingWithAttachments(shadowDRI);
+		}
 
 		lightIndex++;
 	}
@@ -1764,7 +1738,6 @@ void Editor::ShowTransformGizmo()
 
 void Editor::UpdateLights()
 {
-	// Get active scene
 	Scene* activeScene = SceneManager::GetInstance()->GetActiveScene();
 	if (!activeScene)
 	{
@@ -1772,95 +1745,118 @@ void Editor::UpdateLights()
 		return;
 	}
 
-	// Gather all entities with LightComponent
 	auto view = activeScene->GetRegistry().view<LightComponent, TransformComponent>();
 
 	u32 lightIndex = 0;
 	for (auto entity : view)
 	{
-		if (lightIndex >= MAX_LIGHTS) break;  // Max lights reached
+		if (lightIndex >= MAX_LIGHTS)
+			break;
 
 		auto& lightComp = view.get<LightComponent>(entity);
 		auto& transformComp = view.get<TransformComponent>(entity);
 
-		// Skip disabled lights
-		if (!lightComp.enabled) continue;
+		if (!lightComp.enabled)
+			continue;
 
 		LightGPUData& gpuLight = m_lights_data.lights[lightIndex];
 
-		// Get world position from transform
+		// ----------------------------------------------------------------
+		// World-space position and scale
+		// ----------------------------------------------------------------
 		glm::vec3 worldPos = glm::vec3(transformComp.world_transform[3]);
 
-		// Derive world scale from transform basis vectors (handles parent scaling)
 		f32 scaleX = glm::length(glm::vec3(transformComp.world_transform[0]));
 		f32 scaleY = glm::length(glm::vec3(transformComp.world_transform[1]));
 		f32 scaleZ = glm::length(glm::vec3(transformComp.world_transform[2]));
 		f32 maxWorldScale = glm::max(scaleX, glm::max(scaleY, scaleZ));
 		f32 effectiveRange = lightComp.range * glm::max(maxWorldScale, 0.0001f);
 
-		// Set light type
+		// Clamp range to something sane so perspective matrix never degenerates
+		effectiveRange = glm::max(effectiveRange, 0.5f);
+
 		f32 lightType = static_cast<f32>(lightComp.type);
 
+		// ----------------------------------------------------------------
+		// Forward direction (used by directional and spot)
+		// ----------------------------------------------------------------
+		glm::vec3 forward = -glm::normalize(glm::vec3(transformComp.world_transform[2]));
+
+		// ----------------------------------------------------------------
+		// Type-specific GPU data
+		// ----------------------------------------------------------------
 		if (lightComp.type == LightType_Point)
 		{
-			// Point light: position is world position
 			gpuLight.position_type = glm::vec4(worldPos, lightType);
 			gpuLight.direction_range = glm::vec4(0.0f, 0.0f, 0.0f, effectiveRange);
 		}
 		else if (lightComp.type == LightType_Directional)
 		{
-			// Directional light: position stores direction (derived from forward axis)
-			glm::vec3 forward = -glm::normalize(glm::vec3(transformComp.world_transform[2]));
 			gpuLight.position_type = glm::vec4(forward, lightType);
 			gpuLight.direction_range = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
 		}
 		else if (lightComp.type == LightType_Spot)
 		{
-			// Spot light: position and direction
-			glm::vec3 forward = -glm::normalize(glm::vec3(transformComp.world_transform[2]));
 			gpuLight.position_type = glm::vec4(worldPos, lightType);
 			gpuLight.direction_range = glm::vec4(forward, effectiveRange);
 			gpuLight.cone_attenuation.x = glm::cos(lightComp.inner_cone_angle);
 			gpuLight.cone_attenuation.y = glm::cos(lightComp.outer_cone_angle);
 		}
 
+		// ----------------------------------------------------------------
 		// Common properties
+		// ----------------------------------------------------------------
 		gpuLight.color_intensity = glm::vec4(lightComp.color, lightComp.intensity);
 		gpuLight.cone_attenuation.z = lightComp.attenuation;
-		gpuLight.cone_attenuation.w = 1.0f;  // Enabled
+		gpuLight.cone_attenuation.w = 1.0f; // enabled
 
-		// Shadow properties
-		gpuLight.shadow_params.x = static_cast<f32>(lightIndex);  // Shadow map index (placeholder)
-		gpuLight.shadow_params.y = m_editor_settings.shadow_settings.min_bias;     // Shadow bias
-		gpuLight.shadow_params.z = 1.0f;                           // Shadow strength
-		gpuLight.shadow_params.w = lightComp.cast_shadows ? 1.0f : 0.0f;  // Cast shadows flag
+		// shadow_params.x = base shadow map index for this light
+		gpuLight.shadow_params.x = static_cast<f32>(lightIndex * MAX_SHADOW_CASCADES);
+		gpuLight.shadow_params.y = m_editor_settings.shadow_settings.min_bias;
+		gpuLight.shadow_params.z = 1.0f;
+		gpuLight.shadow_params.w = lightComp.cast_shadows ? 1.0f : 0.0f;
 
-		// Compute shadow matrix (simplified - for directional/spot lights)
+		// ----------------------------------------------------------------
+		// Shadow matrix
+		// ----------------------------------------------------------------
 		if (lightComp.cast_shadows && m_editor_settings.shadow_settings.enabled)
 		{
 			if (lightComp.type == LightType_Directional)
 			{
-				// Simple orthographic shadow matrix for directional light
-				glm::vec3 lightDir = glm::normalize(glm::vec3(gpuLight.position_type));
-				glm::mat4 lightView = glm::lookAt(worldPos, worldPos + lightDir, glm::vec3(0.0f, 1.0f, 0.0f));
-				glm::mat4 lightProj = glm::ortho(-1024.0f, 1024.0f, -1024.0f, 1024.0f, 0.1f, 200.0f);
-				gpuLight.shadow_matrix = lightProj * lightView;
+				ComputeDirectionalLightCascades(
+					m_editor_camera,
+					m_viewport_last_size,
+					m_editor_settings.shadow_settings,
+					forward,
+					lightIndex,
+					gpuLight
+				);
+
+				gpuLight.shadow_matrix = gpuLight.cascade_matrices[0];
 			}
 			else if (lightComp.type == LightType_Spot)
 			{
-				// Perspective shadow matrix for spot light
-				glm::vec3 lightDir = glm::normalize(glm::vec3(gpuLight.direction_range));
-				glm::mat4 lightView = glm::lookAt(worldPos, worldPos + lightDir, glm::vec3(0.0f, 1.0f, 0.0f));
-				f32 fov = lightComp.outer_cone_angle * 2.0f;  // FOV from outer cone
-				f32 nearPlane = 0.1f;
-				f32 farPlane = gpuLight.direction_range.w;
+				// Safe up vector — avoid degenerate lookAt when light points straight down/up
+				glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
+				if (glm::abs(glm::dot(up, forward)) > 0.95f)
+					up = glm::vec3(1.0f, 0.0f, 0.0f);
 
-				glm::mat4 lightProj = glm::perspective(fov, 1.0f, nearPlane, farPlane);
+				glm::mat4 lightView = glm::lookAt(worldPos, worldPos + forward, up);
+
+				// FOV must be the full cone angle (outer * 2), in radians
+				f32 fov = glm::clamp(lightComp.outer_cone_angle * 2.0f,
+					glm::radians(1.0f),
+					glm::radians(179.0f));
+				f32 nearPlane = 0.1f;
+				f32 farPlane = effectiveRange;
+
+				glm::mat4 lightProj = glm::perspectiveZO(fov, 1.0f, nearPlane, farPlane);
+				lightProj[1][1] *= -1.0f; // Vulkan Y-flip
+
 				gpuLight.shadow_matrix = lightProj * lightView;
 			}
-			else
+			else // Point light — no shadow support yet
 			{
-				// Point lights use cubemap shadows (not implemented yet)
 				gpuLight.shadow_matrix = glm::mat4(1.0f);
 			}
 		}
@@ -1873,4 +1869,170 @@ void Editor::UpdateLights()
 	}
 
 	m_lights_data.light_count = lightIndex;
+}
+
+glm::mat4 Editor::ComputeCascadeMatrix(
+	MultiProjectionCamera& camera,
+	const glm::uvec2& viewportSize,
+	const glm::vec3& lightDir,
+	f32 cascadeNear,
+	f32 cascadeFar,
+	f32 shadowMapSize)
+{
+	// -----------------------------------------------------------------
+	// Build a perspective matrix for THIS cascade's slice of the camera frustum.
+	// Use the ZO (Zero-to-One) variant to match Vulkan's [0, 1] depth convention.
+	// -----------------------------------------------------------------
+	const f32 aspect = viewportSize.y > 0
+		? static_cast<f32>(viewportSize.x) / static_cast<f32>(viewportSize.y)
+		: 1.0f;
+
+	glm::mat4 cameraProj = glm::perspectiveZO(glm::radians(60.0f), aspect, cascadeNear, cascadeFar);
+	cameraProj[1][1] *= -1.0f; // Vulkan Y-flip
+
+	const glm::mat4 cameraView = camera.GetView();
+	auto corners = GetFrustumCornersWorldSpace(cameraProj, cameraView);
+
+	// -----------------------------------------------------------------
+	// Compute frustum center (average of the 8 corners)
+	// -----------------------------------------------------------------
+	glm::vec3 center(0.0f);
+	for (const glm::vec3& corner : corners)
+		center += corner;
+	center /= 8.0f;
+
+	// -----------------------------------------------------------------
+	// Stable up vector (avoid degenerate cross product when light is near vertical)
+	// -----------------------------------------------------------------
+	glm::vec3 up(0.0f, 1.0f, 0.0f);
+	if (glm::abs(glm::dot(up, lightDir)) > 0.95f)
+		up = glm::vec3(0.0f, 0.0f, 1.0f);
+
+	// -----------------------------------------------------------------
+	// Bounding sphere around frustum center (rotation-invariant => stable
+	// cascade size as the camera rotates, no swimming artifacts).
+	// -----------------------------------------------------------------
+	f32 radius = 0.0f;
+	for (const glm::vec3& corner : corners)
+		radius = glm::max(radius, glm::length(corner - center));
+	radius = glm::ceil(radius);
+
+	// -----------------------------------------------------------------
+	// Snap frustum center to shadow map texel grid to reduce shimmering
+	// -----------------------------------------------------------------
+	const f32 texelSize = (radius * 2.0f) / shadowMapSize;
+
+	const glm::mat4 tempLightView = glm::lookAt(center, center + lightDir, up);
+
+	glm::vec3 centerLS = glm::vec3(tempLightView * glm::vec4(center, 1.0f));
+	centerLS.x = std::floor(centerLS.x / texelSize) * texelSize;
+	centerLS.y = std::floor(centerLS.y / texelSize) * texelSize;
+
+	glm::vec3 snappedCenter = glm::vec3(glm::inverse(tempLightView) * glm::vec4(centerLS, 1.0f));
+
+	// -----------------------------------------------------------------
+	// Final light view: "eye" at the snapped frustum center, looking along the light dir.
+	// No hardcoded pull-back distance; the Z range is derived from the frustum corners.
+	// -----------------------------------------------------------------
+	const glm::mat4 lightView = glm::lookAt(snappedCenter, snappedCenter + lightDir, up);
+
+	// -----------------------------------------------------------------
+	// Compute actual Z extents of the frustum in light space, then pad them
+	// so shadow casters between the light and the visible frustum are included.
+	// -----------------------------------------------------------------
+	f32 minZ = std::numeric_limits<f32>::max();
+	f32 maxZ = std::numeric_limits<f32>::lowest();
+	for (const glm::vec3& corner : corners)
+	{
+		f32 z = (lightView * glm::vec4(corner, 1.0f)).z;
+		minZ = glm::min(minZ, z);
+		maxZ = glm::max(maxZ, z);
+	}
+
+	constexpr f32 zMult = 10.0f; // extend Z range to catch off-frustum shadow casters
+	if (minZ < 0.0f) minZ *= zMult; else minZ /= zMult;
+	if (maxZ < 0.0f) maxZ /= zMult; else maxZ *= zMult;
+
+	const f32 padding = radius * 0.1f;
+
+	// -----------------------------------------------------------------
+	// Orthographic projection for the shadow pass.
+	// glm::orthoZO produces [0, 1] depth (Vulkan-compatible).
+	// In light view space the camera looks down +Z (since we used
+	// lookAt(eye, eye + lightDir, up)), so corners along the light direction
+	// have positive Z. glm::orthoZO expects near/far as positive distances
+	// along -Z by default; we negate to map correctly.
+	// -----------------------------------------------------------------
+	glm::mat4 lightProj = glm::orthoZO(
+		-radius - padding, radius + padding,
+		-radius - padding, radius + padding,
+		-maxZ,
+		-minZ
+	);
+
+	lightProj[1][1] *= -1.0f; // Vulkan Y-flip
+
+	return lightProj * lightView;
+}
+
+void Editor::ComputeDirectionalLightCascades(
+	MultiProjectionCamera& camera,
+	const glm::uvec2& viewportSize,
+	const ShadowSettings& shadowSettings,
+	const glm::vec3& lightDir,
+	u32 lightIndex,
+	LightGPUData& gpuLight)
+{
+	// -----------------------------------------------------------------
+	// Camera near/far. Ideally pull these from the camera itself; using the
+	// same values you initialized the perspective with in CreateResources.
+	// -----------------------------------------------------------------
+	const f32 cameraNear = 0.1f;
+	const f32 cameraFar = 1000.0f;
+	const f32 lambda = shadowSettings.cascade_split_lambda;
+	const f32 shadowMapSize = static_cast<f32>(shadowSettings.shadow_map_size);
+
+	// -----------------------------------------------------------------
+	// PSSM split scheme: blend logarithmic (good for distant detail) and
+	// uniform (good for near detail) splits using `lambda` as the mix.
+	// lambda = 0   -> fully uniform
+	// lambda = 1   -> fully logarithmic
+	// lambda = 0.75 (typical) -> mostly logarithmic with some uniform spread
+	// -----------------------------------------------------------------
+	glm::vec4 splits(0.0f);
+	for (u32 i = 0; i < MAX_SHADOW_CASCADES; ++i)
+	{
+		f32 p = static_cast<f32>(i + 1) / static_cast<f32>(MAX_SHADOW_CASCADES);
+		f32 logSplit = cameraNear * std::pow(cameraFar / cameraNear, p);
+		f32 uniformSplit = cameraNear + (cameraFar - cameraNear) * p;
+		splits[i] = lambda * logSplit + (1.0f - lambda) * uniformSplit;
+	}
+
+	// -----------------------------------------------------------------
+	// Build a cascade matrix for each slice [previousSplit, currentSplit]
+	// -----------------------------------------------------------------
+	f32 cascadeNear = cameraNear;
+	for (u32 cascade = 0; cascade < MAX_SHADOW_CASCADES; ++cascade)
+	{
+		const f32 cascadeFar = splits[cascade];
+
+		gpuLight.cascade_matrices[cascade] = ComputeCascadeMatrix(
+			camera,
+			viewportSize,
+			lightDir,
+			cascadeNear,
+			cascadeFar,
+			shadowMapSize
+		);
+
+		cascadeNear = cascadeFar;
+	}
+
+	// -----------------------------------------------------------------
+	// Splits are uploaded as view-space depth thresholds; the shader uses
+	// these to select which cascade to sample for each fragment.
+	// -----------------------------------------------------------------
+	gpuLight.cascade_splits = splits;
+	gpuLight.shadow_params.x = static_cast<f32>(lightIndex * MAX_SHADOW_CASCADES);
+	gpuLight.shadow_params.z = static_cast<f32>(MAX_SHADOW_CASCADES);
 }

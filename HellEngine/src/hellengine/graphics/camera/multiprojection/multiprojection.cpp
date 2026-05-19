@@ -104,10 +104,20 @@ namespace hellengine
 			RecalculateViewMatrix();
 		}
 
+		f32 MultiProjectionCamera::GetNear() const
+		{
+			return m_near;
+		}
+
 		void MultiProjectionCamera::SetNear(f32 near_z)
 		{
 			m_near = near_z;
 			RecalculateProjectionMatrix();
+		}
+
+		f32 MultiProjectionCamera::GetFar() const
+		{
+			return m_far;
 		}
 
 		void MultiProjectionCamera::SetFar(f32 far_z)

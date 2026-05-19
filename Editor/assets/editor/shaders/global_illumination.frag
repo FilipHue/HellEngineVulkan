@@ -1,11 +1,18 @@
+// ====================================
+// Global Illumination Fragment Shader
+// ====================================
 #version 460
 
-#include "includes/common.glsl"
+// Includes
 #include "includes/global_illumination.glsl"
 
+// Inputs
 layout(location = 0) in vec2 vUV;
+
+// Outputs
 layout(location = 0) out vec4 outGI;
 
+// Descriptors
 layout(set = 0, binding = 0) uniform GlobalData
 {
     CameraData camera;
@@ -17,36 +24,15 @@ layout(set = 0, binding = 1) uniform GlobalIlluminationData
     GlobalIlluminationSettings settings;
 } ubo_giData;
 
+// Uniforms
 layout(set = 0, binding = 2) uniform sampler2D gPosition;
 layout(set = 0, binding = 3) uniform sampler2D gNormal;
 layout(set = 0, binding = 4) uniform sampler2D gAlbedoAO;
 layout(set = 0, binding = 5) uniform sampler2D gDepth;
 
-vec2 WorldToScreenUV(vec3 worldPos)
+vec3 ComputeGlobalIllumination(vec2 uv, GlobalIlluminationSettings settings, mat4 projection, mat4 view)
 {
-    vec4 clip = ubo_globalData.camera.projection * ubo_globalData.camera.view * vec4(worldPos, 1.0);
-
-    if (clip.w <= 0.0)
-    {
-        return vec2(-1.0);
-    }
-
-    vec3 ndc = clip.xyz / clip.w;
-
-    return ndc.xy * 0.5 + 0.5;
-}
-
-bool IsInsideScreen(vec2 uv)
-{
-    return uv.x >= 0.0 &&
-           uv.x <= 1.0 &&
-           uv.y >= 0.0 &&
-           uv.y <= 1.0;
-}
-
-vec3 ComputeGlobalIllumination(vec2 uv)
-{
-    if (ubo_giData.settings.enabled == 0u)
+    if (settings.enabled == 0u)
     {
         return vec3(0.0);
     }
@@ -58,11 +44,9 @@ vec3 ComputeGlobalIllumination(vec2 uv)
     vec3 albedo = albedoAO.rgb;
     float ao = albedoAO.a;
 
-    uint sampleCount = max(ubo_giData.settings.sample_count, 1u);
+    uint sampleCount = max(settings.sample_count, 1u);
 
-    vec3 ambientLight =
-        ubo_globalData.world.ambient_color_intensity.xyz *
-        ubo_globalData.world.ambient_color_intensity.w;
+    vec3 ambientLight = vec3(1.0);
 
     vec2 resolution = vec2(textureSize(gPosition, 0));
 
@@ -75,10 +59,10 @@ vec3 ComputeGlobalIllumination(vec2 uv)
         vec3 rayDir = RandomHemisphereDirection(normal, seed);
 
         float sampleT = (float(i) + 0.5) / float(sampleCount);
-        float sampleDistance = sampleT * ubo_giData.settings.ray_distance;
+        float sampleDistance = sampleT * settings.ray_distance;
 
         vec3 sampleWorldPos = worldPos + rayDir * sampleDistance;
-        vec2 sampleUV = WorldToScreenUV(sampleWorldPos);
+        vec2 sampleUV = WorldToScreenUV(sampleWorldPos, projection, view);
 
         if (!IsInsideScreen(sampleUV))
         {
@@ -92,7 +76,7 @@ vec3 ComputeGlobalIllumination(vec2 uv)
         float hitDistance = length(sceneWorldPos - worldPos);
         float rayDistanceError = abs(hitDistance - sampleDistance);
 
-        if (rayDistanceError > ubo_giData.settings.thickness)
+        if (rayDistanceError > settings.thickness)
         {
             continue;
         }
@@ -101,7 +85,7 @@ vec3 ComputeGlobalIllumination(vec2 uv)
         float hitFacing = max(dot(sceneNormal, -rayDir), 0.0);
 
         float distanceFalloff =
-            1.0 / (1.0 + pow(hitDistance, ubo_giData.settings.falloff));
+            1.0 / (1.0 + pow(hitDistance, settings.falloff));
 
         vec3 bouncedLight = ambientLight * sceneAlbedoAO.rgb;
 
@@ -124,20 +108,25 @@ vec3 ComputeGlobalIllumination(vec2 uv)
     }
     else
     {
-        gi = ambientLight;
+        gi = vec3(0.0);
     }
 
     gi *= albedo;
     gi *= ao;
-    gi *= ubo_giData.settings.intensity;
+    gi *= settings.intensity;
 
     return gi;
 }
 
 void main()
 {
-    vec3 gi = ComputeGlobalIllumination(vUV);
-    gi = max(gi, vec3(0.0));
-    gi = min(gi, vec3(1.0));
-    outGI = vec4(gi, 1.0);
+    vec3 gi = ComputeGlobalIllumination(vUV, ubo_giData.settings, ubo_globalData.camera.projection, ubo_globalData.camera.view);
+    if (ubo_giData.settings.enabled == 1u)
+    {
+        outGI = vec4(gi, 1.0);
+    }
+    else
+    {
+        outGI = vec4(0.0);
+    }
 }

@@ -22,7 +22,6 @@ struct CameraData {
 
 struct WorldData {
     vec4 time;                      // x = total time, y = delta time
-    vec4 ambient_color_intensity;   // xyz = color, w = intensity
 };
 
 struct PerObjectData {
@@ -91,6 +90,28 @@ vec3 RandomHemisphereDirection(vec3 normal, vec2 seed)
         bitangent * (sinTheta * sin(phi)) +
         normal * cosTheta
     );
+}
+
+vec2 WorldToScreenUV(vec3 worldPos, mat4 projection, mat4 view)
+{
+    vec4 clip = projection * view * vec4(worldPos, 1.0);
+
+    if (clip.w <= 0.0)
+    {
+        return vec2(-1.0);
+    }
+
+    vec3 ndc = clip.xyz / clip.w;
+
+    return ndc.xy * 0.5 + 0.5;
+}
+
+bool IsInsideScreen(vec2 uv)
+{
+    return uv.x >= 0.0 &&
+           uv.x <= 1.0 &&
+           uv.y >= 0.0 &&
+           uv.y <= 1.0;
 }
 
 // ================================

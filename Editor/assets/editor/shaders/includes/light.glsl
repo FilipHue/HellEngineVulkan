@@ -9,18 +9,24 @@
 // ================================
 
 #define MAX_LIGHTS 16
+#define MAX_SHADOW_CASCADES 4
+#define MAX_SHADOW_MAPS (MAX_LIGHTS * MAX_SHADOW_CASCADES)
 
 // ================================
 // Structures
 // ================================
 
 struct LightInfo {
-    vec4 position_type;     // xyz = position (or direction for directional), w = type (0=point, 1=directional, 2=spot)
-    vec4 color_intensity;   // xyz = color, w = intensity
-    vec4 direction_range;   // xyz = direction (for spot), w = range
-    vec4 cone_attenuation;  // x = inner cone, y = outer cone, z = attenuation, w = enabled (1.0 = on, 0.0 = off)
-    mat4 shadow_matrix;     // Shadow projection matrix
-    vec4 shadow_params;     // x = shadow map index, y = bias, z = strength, w = cast_shadows
+    vec4 position_type;      // xyz = position or direction, w = type
+    vec4 direction_range;    // xyz = direction, w = range
+    vec4 color_intensity;    // xyz = color, w = intensity
+    vec4 cone_attenuation;   // x = inner, y = outer, z = attenuation, w = enabled
+    vec4 shadow_params;      // x = base shadow map index, y = bias, z = cascade count/strength, w = cast_shadows
+
+    mat4 shadow_matrix;      // fallback shadow matrix for spot lights
+
+    mat4 cascade_matrices[MAX_SHADOW_CASCADES];
+    vec4 cascade_splits;
 };
 
 struct PointLight {

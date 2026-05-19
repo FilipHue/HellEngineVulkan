@@ -2,10 +2,10 @@
 #ifndef GLOBAL_ILLUMINATION_GLSL
 #define GLOBAL_ILLUMINATION_GLSL
 
-// ================================
-// Structures
-// ================================
+// Includes
+#include "common.glsl"
 
+// Structures
 struct GlobalIlluminationSettings
 {
     uint enabled;
