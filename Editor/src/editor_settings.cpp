@@ -111,10 +111,7 @@ void EditorSettings::SerializeGISettings(YAML::Node& root)
 	root["editor"]["gi_settings"]["falloff"] = gi_settings.falloff;
 	root["editor"]["gi_settings"]["bias"] = gi_settings.bias;
 	root["editor"]["gi_settings"]["temporal_weight"] = gi_settings.temporal_weight;
-	root["editor"]["gi_settings"]["debug_visualization"]["x"] = gi_settings.debug_visualization.x;
-	root["editor"]["gi_settings"]["debug_visualization"]["y"] = gi_settings.debug_visualization.y;
-	root["editor"]["gi_settings"]["debug_visualization"]["z"] = gi_settings.debug_visualization.z;
-	root["editor"]["gi_settings"]["debug_visualization"]["w"] = gi_settings.debug_visualization.w;
+	root["editor"]["gi_settings"]["debug_visualization"] = gi_settings.debug_visualization;
 }
 
 void EditorSettings::SerializeShadowSettings(YAML::Node& root)
@@ -127,10 +124,7 @@ void EditorSettings::SerializeShadowSettings(YAML::Node& root)
 	root["editor"]["shadow_settings"]["normal_offset"] = shadow_settings.normal_offset;
 	root["editor"]["shadow_settings"]["pcf_samples"] = shadow_settings.pcf_samples;
 	root["editor"]["shadow_settings"]["softness"] = shadow_settings.softness;
-	root["editor"]["shadow_settings"]["cascade_distances"]["x"] = shadow_settings.cascade_distances.x;
-	root["editor"]["shadow_settings"]["cascade_distances"]["y"] = shadow_settings.cascade_distances.y;
-	root["editor"]["shadow_settings"]["cascade_distances"]["z"] = shadow_settings.cascade_distances.z;
-	root["editor"]["shadow_settings"]["cascade_distances"]["w"] = shadow_settings.cascade_distances.w;
+	root["editor"]["shadow_settings"]["cascade_distances"] = shadow_settings.cascade_distances;
 }
 
 void EditorSettings::SerializeWindowSettings(YAML::Node& root)
@@ -166,23 +160,7 @@ void EditorSettings::DeserializeGISettings(const YAML::Node& root)
 			gi_settings.temporal_weight = root["editor"]["gi_settings"]["temporal_weight"].as<float>();
 
 		if (root["editor"]["gi_settings"]["debug_visualization"])
-		{
-			float x = gi_settings.debug_visualization.x;
-			float y = gi_settings.debug_visualization.y;
-			float z = gi_settings.debug_visualization.z;
-			float w = gi_settings.debug_visualization.w;
-
-			if (root["editor"]["gi_settings"]["debug_visualization"]["x"])
-				x = root["editor"]["gi_settings"]["debug_visualization"]["x"].as<float>();
-			if (root["editor"]["gi_settings"]["debug_visualization"]["y"])
-				y = root["editor"]["gi_settings"]["debug_visualization"]["y"].as<float>();
-			if (root["editor"]["gi_settings"]["debug_visualization"]["z"])
-				z = root["editor"]["gi_settings"]["debug_visualization"]["z"].as<float>();
-			if (root["editor"]["gi_settings"]["debug_visualization"]["w"])
-				w = root["editor"]["gi_settings"]["debug_visualization"]["w"].as<float>();
-
-			gi_settings.debug_visualization = glm::vec4(x, y, z, w);
-		}
+			gi_settings.debug_visualization = root["editor"]["gi_settings"]["debug_visualization"].as<glm::vec4>();
 	}
 }
 
@@ -208,23 +186,7 @@ void EditorSettings::DeserializeShadowSettings(const YAML::Node& root)
 			shadow_settings.softness = root["editor"]["shadow_settings"]["softness"].as<float>();
 
 		if (root["editor"]["shadow_settings"]["cascade_distances"])
-		{
-			float x = shadow_settings.cascade_distances.x;
-			float y = shadow_settings.cascade_distances.y;
-			float z = shadow_settings.cascade_distances.z;
-			float w = shadow_settings.cascade_distances.w;
-
-			if (root["editor"]["shadow_settings"]["cascade_distances"]["x"])
-				x = root["editor"]["shadow_settings"]["cascade_distances"]["x"].as<float>();
-			if (root["editor"]["shadow_settings"]["cascade_distances"]["y"])
-				y = root["editor"]["shadow_settings"]["cascade_distances"]["y"].as<float>();
-			if (root["editor"]["shadow_settings"]["cascade_distances"]["z"])
-				z = root["editor"]["shadow_settings"]["cascade_distances"]["z"].as<float>();
-			if (root["editor"]["shadow_settings"]["cascade_distances"]["w"])
-				w = root["editor"]["shadow_settings"]["cascade_distances"]["w"].as<float>();
-
-			shadow_settings.cascade_distances = glm::vec4(x, y, z, w);
-		}
+			shadow_settings.cascade_distances = root["editor"]["shadow_settings"]["cascade_distances"].as<glm::vec4>();
 	}
 }
 
