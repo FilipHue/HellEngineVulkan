@@ -21,7 +21,7 @@ namespace hellengine
 		class AssetManager
 		{
 		public:
-			HE_API static void LoadModel(const File& file);
+			HE_API static void LoadModel(const File& file, b8 load_from_scene);
 			HE_API static Texture2D* LoadTexture2D(const File& file);
 			HE_API static TextureCubemap* LoadTextureCubemap(const File& file);
 

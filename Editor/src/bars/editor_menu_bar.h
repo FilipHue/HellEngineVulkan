@@ -17,7 +17,7 @@ using namespace resources;
 
 // GI Samples
 static constexpr i32 GI_SAMPLE_COUNT_MIN = 4;
-static constexpr i32 GI_SAMPLE_COUNT_MAX = 32;
+static constexpr i32 GI_SAMPLE_COUNT_MAX = 256;
 
 // GI Ambient Intensity
 static constexpr f32 GI_AMBIENT_INTENSITY_MIN = 0.0f;

@@ -29,6 +29,7 @@ namespace hellengine
             void DestroyEntity(Entity entity);
 
             Entity CreateGameObject(const std::string& name, Entity parent);
+            Entity CreateGameObjectWithUUID(const std::string& name, Entity parent, UUID id);
             void DestroyGameObject(Entity entity);
             void ReparentGameObject(Entity child, Entity parent);
 

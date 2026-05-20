@@ -623,9 +623,21 @@ namespace hellengine
 			if (!indices.empty())      hash = fnv1a_hash_combine(hash, fnv1a_hash(indices.data(), indices.size()));
 
 			hash = fnv1a_hash_combine(hash, (u64)v.positions.size());
-			hash = fnv1a_hash_combine(hash, (u64)indices.size());
+				hash = fnv1a_hash_combine(hash, (u64)indices.size());
 
-			return hash;
+				return hash;
+		}
+
+		Mesh* MeshManager::GetMeshByName(const std::string& mesh_name) const
+		{
+			for (Mesh* mesh : m_meshes)
+			{
+				if (mesh && mesh->GetName() == mesh_name)
+				{
+					return mesh;
+				}
+			}
+			return nullptr;
 		}
 
 	} // namespace graphics

@@ -63,16 +63,23 @@ void EditorMenuBar::FileMenu(ImGuiStyle& style)
 
 		if (ImGui::MenuItem("Open Scene...", "Ctrl+O"))
 		{
+			File file = FileManager::OpenFile("Scene Files (*.yaml)\0*.yaml\0All Files (*.*)\0*.*\0");
+			if (FileManager::Exists(file))
+			{
+				SceneManager::GetInstance()->LoadScene(file.GetAbsolutePath());
+			}
 		}
 
 		ImGui::Separator();
 
 		if (ImGui::MenuItem("Save", "Ctrl+S"))
 		{
+			SceneManager::GetInstance()->SaveScene(EDITOR_SCENE_PATH);
 		}
 
 		if (ImGui::MenuItem("Save As...", "Ctrl+Shift+S"))
 		{
+			SceneManager::GetInstance()->SaveSceneAs();
 		}
 
 		ImGui::Separator();

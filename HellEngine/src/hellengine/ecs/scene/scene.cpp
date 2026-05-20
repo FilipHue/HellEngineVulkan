@@ -82,6 +82,22 @@ namespace hellengine
             return entity;
         }
 
+        Entity Scene::CreateGameObjectWithUUID(const std::string& name, Entity parent, UUID id)
+        {
+            HE_ASSERT(IsValid(parent) || parent == NULL_ENTITY, "Parent entity is not valid in the current scene");
+
+            Entity entity = CreateEntityWithUUID(id, name);
+            UUID child_id = entity.GetComponent<IDComponent>().id;
+
+            if (parent)
+            {
+                UUID parent_id = parent.GetComponent<IDComponent>().id;
+                m_hierarchy.AttachNode(child_id, parent_id);
+            }
+
+            return entity;
+        }
+
         void Scene::DestroyGameObject(Entity entity)
         {
             HE_ASSERT(IsValid(entity), "Entity is not valid in the current scene");

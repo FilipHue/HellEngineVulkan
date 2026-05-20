@@ -14,7 +14,7 @@ namespace hellengine
 	using namespace ecs;
 	namespace resources
 	{
-		void AssetManager::LoadModel(const File& file)
+		void AssetManager::LoadModel(const File& file, b8 load_from_scene)
 		{
 			HE_GRAPHICS_INFO("Loading asset: {0}", file.GetRelativePath());
 
@@ -28,13 +28,19 @@ namespace hellengine
 			if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 			{
 				HE_CORE_ERROR("\tAssimp error: {0}", importer->GetErrorString());
-				EXIT(1);
 			}
 
 			ExtractTextures(scene, file);
 
-			Entity root = SceneManager::GetInstance()->GetActiveScene()->CreateGameObject(file.GetStem(), NULL_ENTITY);
-			ProcessNode(scene->mRootNode, scene, glm::mat4(1.0f), root, file);
+			if (load_from_scene)
+			{
+				ProcessNode(scene->mRootNode, scene, glm::mat4(1.0f), NULL_ENTITY, file);
+			}
+			else
+			{
+				Entity root = SceneManager::GetInstance()->GetActiveScene()->CreateGameObject(file.GetStem(), NULL_ENTITY);
+				ProcessNode(scene->mRootNode, scene, glm::mat4(1.0f), root, file);
+			}
 
 			HE_GRAPHICS_INFO("\tLoaded");
 		}
@@ -163,21 +169,18 @@ namespace hellengine
 			// Note: Metalness and Roughness have no legacy equivalents, will use shader fallbacks
 			// Specular-to-roughness conversion happens in shader (1.0 - specular)
 
-			Entity entity = SceneManager::GetInstance()
-				->GetActiveScene()
-				->CreateGameObject(ai_mesh->mName.C_Str(), parent_entity);
-
-			entity.GetComponent<TransformComponent>().world_transform = transform;
-
-			UUID uuid = entity.GetComponent<IDComponent>().id;
-
-			static u32 mesh_count = 0;
 			Mesh* mesh = MeshManager::GetInstance()->CreateMesh(ai_mesh->mName.C_Str(), verticies, indices, mesh_mat_info);
-			if (MeshManager::GetInstance()->UploadMeshGeometry<VertexFormatTangent>(mesh))
+			MeshManager::GetInstance()->SetMeshPath(mesh->GetName(), file.GetAbsolutePath());
+			b8 uploaded = MeshManager::GetInstance()->UploadMeshGeometry<VertexFormatTangent>(mesh);
+			
+			if (uploaded && parent_entity != NULL_ENTITY)
 			{
+				Entity entity = SceneManager::GetInstance()->GetActiveScene()->CreateGameObject(ai_mesh->mName.C_Str(), parent_entity);
+				entity.GetComponent<TransformComponent>().world_transform = transform;
+				UUID uuid = entity.GetComponent<IDComponent>().id;
+
 				MeshManager::GetInstance()->CreateMeshInstance(uuid, mesh);
 				entity.AddComponent<MeshFilterComponent>().mesh = mesh;
-				mesh_count++;
 			}
 		}
 

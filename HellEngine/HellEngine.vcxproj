@@ -759,6 +759,7 @@
     <ClInclude Include="src\hellengine\math\random\random.h" />
     <ClInclude Include="src\hellengine\math\types.h" />
     <ClInclude Include="src\hellengine\math\vertex\vertex.h" />
+    <ClInclude Include="src\hellengine\math\yaml_conversions.h" />
     <ClInclude Include="src\hellengine\platform\glfw\glfw_types.h" />
     <ClInclude Include="src\hellengine\platform\glfw\glfw_window.h" />
     <ClInclude Include="src\hellengine\platform\windows\windows_types.h" />

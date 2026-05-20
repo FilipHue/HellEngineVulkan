@@ -2280,6 +2280,7 @@
     <ClInclude Include="src\hepch.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="src\hellengine\math\yaml_conversions.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dependencies\GLM\include\glm\detail\glm.cpp">

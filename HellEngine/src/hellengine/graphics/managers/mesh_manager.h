@@ -114,6 +114,18 @@ namespace hellengine
 
 			void SetMeshInstanceFilter(UUID id, Mesh* mesh);
 
+			void SetMeshPath(const std::string& mesh_name, const std::string& path) { m_mesh_path_map[mesh_name] = path; }
+			std::string GetMeshPath(const std::string& mesh_name) const
+			{
+				auto it = m_mesh_path_map.find(mesh_name);
+				if (it != m_mesh_path_map.end())
+				{
+					return it->second;
+				}
+				return "";
+			}
+			Mesh* GetMeshByName(const std::string& mesh_name) const;
+
 		private:
 			void CreatePool();
 			u64 ComputeMeshHash(const RawVertexData& v, const std::vector<u32>& indices);
@@ -142,6 +154,8 @@ namespace hellengine
 
 			std::vector<VkImageView> m_descriptor_image_views;
 			std::vector<VkSampler>   m_descriptor_image_samplers;
+
+			std::unordered_map<std::string, std::string> m_mesh_path_map;
 
 			DeletionQueue m_deletion_queue;
 			VulkanBackend* m_backend = nullptr;
