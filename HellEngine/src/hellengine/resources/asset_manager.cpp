@@ -9,14 +9,20 @@
 namespace hellengine
 {
 
-	using namespace graphics;
-	using namespace math;
-	using namespace ecs;
 	namespace resources
 	{
-		void AssetManager::LoadModel(const File& file, b8 load_from_scene)
+		std::vector<Mesh*> AssetManager::s_all_loaded_meshes;
+		std::vector<Mesh*> AssetManager::s_loaded_root_meshes;
+		std::string AssetManager::s_last_loaded_filename;
+
+		void AssetManager::LoadModel(const File& file)
 		{
 			HE_GRAPHICS_INFO("Loading asset: {0}", file.GetRelativePath());
+
+			// Clear previously loaded meshes
+			s_all_loaded_meshes.clear();
+			s_loaded_root_meshes.clear();
+			s_last_loaded_filename = file.GetStem();
 
 			Assimp::Importer* importer = new Assimp::Importer();
 			u32 import_options = aiProcess_Triangulate | 
@@ -28,21 +34,24 @@ namespace hellengine
 			if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 			{
 				HE_CORE_ERROR("\tAssimp error: {0}", importer->GetErrorString());
+				return;
 			}
 
 			ExtractTextures(scene, file);
 
-			if (load_from_scene)
+			// Process meshes and build hierarchy - no entity creation
+			ProcessNode(scene->mRootNode, scene, glm::mat4(1.0f), nullptr, file);
+
+			// Identify root meshes (meshes with no parent)
+			for (Mesh* mesh : s_all_loaded_meshes)
 			{
-				ProcessNode(scene->mRootNode, scene, glm::mat4(1.0f), NULL_ENTITY, file);
-			}
-			else
-			{
-				Entity root = SceneManager::GetInstance()->GetActiveScene()->CreateGameObject(file.GetStem(), NULL_ENTITY);
-				ProcessNode(scene->mRootNode, scene, glm::mat4(1.0f), root, file);
+				if (mesh && mesh->GetParent() == nullptr)
+				{
+					s_loaded_root_meshes.push_back(mesh);
+				}
 			}
 
-			HE_GRAPHICS_INFO("\tLoaded");
+			HE_GRAPHICS_INFO("\tLoaded {0} meshes, {1} roots", s_all_loaded_meshes.size(), s_loaded_root_meshes.size());
 		}
 
 		Texture2D* AssetManager::LoadTexture2D(const File& file)
@@ -65,7 +74,7 @@ namespace hellengine
 			return TextureManager::GetInstance()->CreateTextureCubemap(file.GetName(), file);
 		}
 
-		void AssetManager::ProcessNode(aiNode* node, const aiScene* scene, const glm::mat4& parent_transform, Entity parent_entity, const File& file)
+		void AssetManager::ProcessNode(aiNode* node, const aiScene* scene, const glm::mat4& parent_transform, Mesh* parent_mesh, const File& file)
 		{
 			glm::mat4 local = glm::transpose(glm::make_mat4(&node->mTransformation.a1));
 			glm::mat4 world = parent_transform * local;
@@ -73,16 +82,16 @@ namespace hellengine
 			for (u32 i = 0; i < node->mNumMeshes; i++)
 			{
 				aiMesh* ai_mesh = scene->mMeshes[node->mMeshes[i]];
-				ProcessMesh(ai_mesh, scene, world, parent_entity, file);
+				ProcessMesh(ai_mesh, scene, world, parent_mesh, file);
 			}
 
 			for (u32 i = 0; i < node->mNumChildren; i++)
 			{
-				ProcessNode(node->mChildren[i], scene, world, parent_entity, file);
+				ProcessNode(node->mChildren[i], scene, world, parent_mesh, file);
 			}
 		}
 
-		void AssetManager::ProcessMesh(aiMesh* ai_mesh, const aiScene* scene, const glm::mat4& transform, Entity parent_entity, const File& file)
+		void AssetManager::ProcessMesh(aiMesh* ai_mesh, const aiScene* scene, const glm::mat4& transform, Mesh* parent_mesh, const File& file)
 		{
 			// Vertices
 			RawVertexData verticies = {};
@@ -170,18 +179,33 @@ namespace hellengine
 			// Specular-to-roughness conversion happens in shader (1.0 - specular)
 
 			Mesh* mesh = MeshManager::GetInstance()->CreateMesh(ai_mesh->mName.C_Str(), verticies, indices, mesh_mat_info);
-			MeshManager::GetInstance()->SetMeshPath(mesh->GetName(), file.GetAbsolutePath());
-			b8 uploaded = MeshManager::GetInstance()->UploadMeshGeometry<VertexFormatTangent>(mesh);
-			
-			if (uploaded && parent_entity != NULL_ENTITY)
+			if (!mesh)
 			{
-				Entity entity = SceneManager::GetInstance()->GetActiveScene()->CreateGameObject(ai_mesh->mName.C_Str(), parent_entity);
-				entity.GetComponent<TransformComponent>().world_transform = transform;
-				UUID uuid = entity.GetComponent<IDComponent>().id;
-
-				MeshManager::GetInstance()->CreateMeshInstance(uuid, mesh);
-				entity.AddComponent<MeshFilterComponent>().mesh = mesh;
+				HE_CORE_ERROR("Failed to create mesh: {0}", ai_mesh->mName.C_Str());
+				return;
 			}
+
+			MeshManager::GetInstance()->SetMeshPath(mesh->GetName(), file.GetAbsolutePath());
+
+			// Set parent relationship in the mesh
+			mesh->SetParent(parent_mesh);
+
+			// Add this mesh as a child to the parent mesh
+			if (parent_mesh)
+			{
+				parent_mesh->AddChild(mesh);
+			}
+
+			// Upload geometry
+			b8 uploaded = MeshManager::GetInstance()->UploadMeshGeometry<VertexFormatTangent>(mesh);
+
+			if (!uploaded)
+			{
+				HE_CORE_WARN("Failed to upload mesh geometry: {0}", mesh->GetName());
+			}
+
+			// Track all loaded meshes (even if upload failed)
+			s_all_loaded_meshes.push_back(mesh);
 		}
 
 		void AssetManager::ExtractTextures(const aiScene* scene, const File& file)
@@ -237,6 +261,30 @@ namespace hellengine
 			case aiTextureType_TRANSMISSION:      return TextureType_Transmission;
 
 			default:                              return TextureType_Unknown;
+			}
+		}
+
+		void AssetManager::DebugPrintMeshHierarchy()
+		{
+			HE_GRAPHICS_INFO("=== Mesh Hierarchy Debug ===");
+			HE_GRAPHICS_INFO("Total meshes loaded: {0}", s_all_loaded_meshes.size());
+			HE_GRAPHICS_INFO("Root meshes: {0}", s_loaded_root_meshes.size());
+
+			for (Mesh* root : s_loaded_root_meshes)
+			{
+				HE_GRAPHICS_INFO("Root: {0} ({1} vertices)", root->GetName(), root->GetRawData().positions.size());
+
+				std::function<void(Mesh*, int)> print_hierarchy = [&](Mesh* mesh, int depth)
+				{
+					for (Mesh* child : mesh->GetChildren())
+					{
+						std::string indent(depth * 2, ' ');
+						HE_GRAPHICS_INFO("{0}Child: {1} ({2} vertices)", indent, child->GetName(), child->GetRawData().positions.size());
+						print_hierarchy(child, depth + 1);
+					}
+				};
+
+				print_hierarchy(root, 1);
 			}
 		}
 

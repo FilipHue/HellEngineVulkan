@@ -133,6 +133,77 @@ namespace hellengine
 			}
 		}
 
+		void SceneManager::CreateEntitiesFromMeshes(Entity parent_entity)
+		{
+			if (!m_active_scene)
+			{
+				HE_CORE_WARN("CreateEntitiesFromMeshes: No active scene");
+				return;
+			}
+
+			std::vector<graphics::Mesh*> root_meshes = AssetManager::GetLoadedRootMeshes();
+			if (root_meshes.empty())
+			{
+				HE_CORE_WARN("CreateEntitiesFromMeshes: No root meshes found");
+				return;
+			}
+
+			// Create a root entity for the imported file
+			std::string root_name = AssetManager::GetLastLoadedFilename();
+			if (root_name.empty())
+			{
+				root_name = "Model";
+			}
+
+			Entity root_entity = m_active_scene->CreateGameObject(root_name, parent_entity);
+
+			// Recursively create entities for all root meshes
+			for (graphics::Mesh* root_mesh : root_meshes)
+			{
+				if (root_mesh)
+				{
+					RecursiveCreateEntitiesFromMesh(root_mesh, root_entity);
+				}
+			}
+
+			HE_GRAPHICS_INFO("Created {0} root mesh entities under '{1}'", root_meshes.size(), root_name);
+		}
+
+		void SceneManager::RecursiveCreateEntitiesFromMesh(graphics::Mesh* mesh, Entity parent_entity)
+		{
+			if (!mesh || !m_active_scene)
+			{
+				HE_CORE_WARN("RecursiveCreateEntitiesFromMesh: mesh or scene is null");
+				return;
+			}
+
+			HE_GRAPHICS_INFO("Creating entity from mesh: {0}", mesh->GetName());
+
+			// Create entity for this mesh
+			Entity entity = m_active_scene->CreateGameObject(mesh->GetName(), parent_entity);
+
+			// Add MeshFilterComponent
+			entity.AddComponent<MeshFilterComponent>().mesh = mesh;
+
+			// Create mesh instance for rendering
+			UUID entity_uuid = entity.GetComponent<IDComponent>().id;
+			MeshManager::GetInstance()->CreateMeshInstance(entity_uuid, mesh);
+
+			HE_GRAPHICS_INFO("Created entity '{0}' for mesh with {1} vertices", mesh->GetName(), mesh->GetRawData().positions.size());
+
+			// Recursively create entities for all child meshes
+			const std::vector<graphics::Mesh*>& children = mesh->GetChildren();
+			for (graphics::Mesh* child : children)
+			{
+				if (child)
+				{
+					RecursiveCreateEntitiesFromMesh(child, entity);
+				}
+			}
+
+			HE_GRAPHICS_INFO("Mesh '{0}' has {1} children", mesh->GetName(), children.size());
+		}
+
 		void SceneManager::SerializeScene(const std::string& name, const std::string& file_path)
 		{
 			Scene* scene = GetScene(name);
@@ -400,7 +471,7 @@ namespace hellengine
 					static std::string last_path = "";
 					if (MeshManager::GetInstance()->GetMeshPath(mesh_name) != last_path || last_path == "")
 					{
-						AssetManager::LoadModel(FileManager::ReadFile(mesh_path), true);
+						AssetManager::LoadModel(FileManager::ReadFile(mesh_path));
 
 						last_path = MeshManager::GetInstance()->GetMeshPath(mesh_name);
 					}

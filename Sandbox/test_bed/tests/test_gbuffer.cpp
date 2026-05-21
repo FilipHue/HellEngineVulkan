@@ -209,8 +209,8 @@ b8 TestGBuffer::OnMouseScrolled(EventContext& event)
 
 void TestGBuffer::LoadResources()
 {
-	m_scene_model = AssetManager::LoadModel(FileManager::ReadFile(CONCAT_PATHS(MODEL_PATH, "samplebuilding.gltf")));
-	m_glass_model = AssetManager::LoadModel(FileManager::ReadFile(CONCAT_PATHS(MODEL_PATH, "samplebuilding_glass.gltf")));
+	AssetManager::LoadModel(FileManager::ReadFile(CONCAT_PATHS(MODEL_PATH, "samplebuilding.gltf")));
+	AssetManager::LoadModel(FileManager::ReadFile(CONCAT_PATHS(MODEL_PATH, "samplebuilding_glass.gltf")));
 	m_glass_texture = AssetManager::LoadTexture2D(FileManager::ReadFile(CONCAT_PATHS(TEXTURE_PATH, "colored_glass_rgba.ktx")));
 }
 
