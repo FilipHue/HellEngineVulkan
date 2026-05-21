@@ -37,17 +37,16 @@ project "HellEngine"
     includedirs 
     { 
         "%{prj.name}/src",
-        "%{IncludeDirs.ASSIMP}",
-        "%{IncludeDirs.DDS}",
-        "%{IncludeDirs.ENTT}",
+        "%{IncludeDirs.SPDLOG}",
         "%{IncludeDirs.GLAD}",
         "%{IncludeDirs.GLFW}",
         "%{IncludeDirs.GLM}",
+        "%{IncludeDirs.STB}",
+        "%{IncludeDirs.ASSIMP}",
+        "%{IncludeDirs.KTX}",
         "%{IncludeDirs.IMGUI}",
         "%{IncludeDirs.IMGUIZMO}",
-        "%{IncludeDirs.KTX}",
-        "%{IncludeDirs.SPDLOG}",
-        "%{IncludeDirs.STB}",
+        "%{IncludeDirs.ENTT}",
         "%{IncludeDirs.YAML}",
 
         "%{IncludeDirs.VULKAN}"
@@ -126,26 +125,25 @@ project "Editor"
     includedirs 
     { 
         "HellEngine/src",
-        "HellEngine/dependencies/ASSIMP/include",
-        "HellEngine/dependencies/DDS/include",
-        "HellEngine/dependencies/ENTT/include",
+        "HellEngine/dependencies/SPDLOG/include",
         "HellEngine/dependencies/GLFW/include",
         "HellEngine/dependencies/GLM/include",
+        "HellEngine/dependencies/STB",
+        "HellEngine/dependencies/ASSIMP/include",
+        "HellEngine/dependencies/KTX/include",
         "HellEngine/dependencies/IMGUI",
         "HellEngine/dependencies/IMGUIZMO/include",
-        "HellEngine/dependencies/KTX/include",
-        "HellEngine/dependencies/SPDLOG/include",
-        "HellEngine/dependencies/STB",
+        "HellEngine/dependencies/ENTT/include",
         "HellEngine/dependencies/YAML/include",
         "%{IncludeDirs.VULKAN}"
     }
 
     libdirs
     {
-        "%{LibraryDirectories.ASSIMP}",
-        "%{LibraryDirectories.GLFW}",
-        "%{LibraryDirectories.KTX}",
         "%{LibraryDirectories.SPDLOG}",
+        "%{LibraryDirectories.GLFW}",
+        "%{LibraryDirectories.ASSIMP}",
+        "%{LibraryDirectories.KTX}",
         "%{LibraryDirectories.YAML}",
         "%{LibraryDirectories.VulkanSDK}"
     }
@@ -171,10 +169,10 @@ project "Editor"
         
         links
         {
-            "%{Library.ASSIMP}",
-            "%{Library.GLFW}",
-            "%{Library.KTX}",
             "%{Library.SPDLOG}",
+            "%{Library.GLFW}",
+            "%{Library.ASSIMP}",
+            "%{Library.KTX}",
             "%{Library.YAMLD}",
             "%{Library.Vulkan}"
         }
@@ -186,10 +184,10 @@ project "Editor"
         
         links
         {
-            "%{Library.ASSIMP}",
-            "%{Library.GLFW}",
-            "%{Library.KTX}",
             "%{Library.SPDLOG}",
+            "%{Library.GLFW}",
+            "%{Library.ASSIMP}",
+            "%{Library.KTX}",
             "%{Library.YAML}",
             "%{Library.Vulkan}"
         }
@@ -214,26 +212,25 @@ project "Sandbox"
     includedirs 
     { 
         "HellEngine/src",
-        "HellEngine/dependencies/ASSIMP/include",
-        "HellEngine/dependencies/DDS/include",
-        "HellEngine/dependencies/ENTT/include",
+        "HellEngine/dependencies/SPDLOG/include",
         "HellEngine/dependencies/GLFW/include",
         "HellEngine/dependencies/GLM/include",
+        "HellEngine/dependencies/STB/include",
+        "HellEngine/dependencies/ASSIMP/include",
+        "HellEngine/dependencies/KTX/include",
         "HellEngine/dependencies/IMGUI",
         "HellEngine/dependencies/IMGUIZMO/include",
-        "HellEngine/dependencies/KTX/include",
-        "HellEngine/dependencies/SPDLOG/include",
-        "HellEngine/dependencies/STB",
+        "HellEngine/dependencies/ENTT/include",
         "HellEngine/dependencies/YAML/include",
         "%{IncludeDirs.VULKAN}"
     }
 
     libdirs
     {
-        "%{LibraryDirectories.ASSIMP}",
-        "%{LibraryDirectories.GLFW}",
-        "%{LibraryDirectories.KTX}",
         "%{LibraryDirectories.SPDLOG}",
+        "%{LibraryDirectories.GLFW}",
+        "%{LibraryDirectories.ASSIMP}",
+        "%{LibraryDirectories.KTX}",
         "%{LibraryDirectories.YAML}",
         "%{LibraryDirectories.VulkanSDK}"
     }
@@ -259,10 +256,10 @@ project "Sandbox"
 
         links
         {
-            "%{Library.ASSIMP}",
-            "%{Library.GLFW}",
-            "%{Library.KTX}",
             "%{Library.SPDLOG}",
+            "%{Library.GLFW}",
+            "%{Library.ASSIMP}",
+            "%{Library.KTX}",
             "%{Library.YAMLD}",
             "%{Library.Vulkan}"
         }
@@ -274,10 +271,10 @@ project "Sandbox"
 
         links
         {
-            "%{Library.ASSIMP}",
-            "%{Library.GLFW}",
-            "%{Library.KTX}",
             "%{Library.SPDLOG}",
+            "%{Library.GLFW}",
+            "%{Library.ASSIMP}",
+            "%{Library.KTX}",
             "%{Library.YAML}",
             "%{Library.Vulkan}"
         }

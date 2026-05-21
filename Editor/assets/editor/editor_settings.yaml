@@ -3,8 +3,8 @@ editor:
   show_gizmos: true
   render_mode: 0
   gi_settings:
-    enabled: 0
-    sample_count: 4
+    enabled: 1
+    sample_count: 256
     ray_distance: 20
     intensity: 2
     thickness: 2
@@ -21,10 +21,10 @@ editor:
     shadow_map_size: 2048
     cascade_split_lambda: 0.75
     min_bias: 0
-    max_bias: 0.0093
+    max_bias: 0.001
     normal_offset: 0
     pcf_samples: 4
-    softness: 0
+    softness: 5
     cascade_distances:
       x: 10
       y: 30

@@ -400,7 +400,7 @@ namespace hellengine
 					static std::string last_path = "";
 					if (MeshManager::GetInstance()->GetMeshPath(mesh_name) != last_path || last_path == "")
 					{
-						AssetManager::LoadModel(FileManager::ReadFile(mesh_path));
+						AssetManager::LoadModel(FileManager::ReadFile(mesh_path), true);
 
 						last_path = MeshManager::GetInstance()->GetMeshPath(mesh_name);
 					}
@@ -422,77 +422,6 @@ namespace hellengine
 					DeserializeEntity(entity_node["children"][i], scene, entity);
 				}
 			}
-		}
-
-		void SceneManager::CreateEntitiesFromMeshes(Entity parent_entity)
-		{
-			if (!m_active_scene)
-			{
-				HE_CORE_ERROR("No active scene to create entities in");
-				return;
-			}
-
-			std::vector<graphics::Mesh*> root_meshes = AssetManager::GetLoadedRootMeshes();
-
-			if (root_meshes.empty())
-			{
-				HE_CORE_WARN("No root meshes found to create entities from");
-				return;
-			}
-
-			// Create a root entity with the filename
-			std::string root_name = AssetManager::GetLastLoadedFilename();
-			if (root_name.empty())
-			{
-				root_name = "Model";
-			}
-
-			Entity root_entity = m_active_scene->CreateGameObject(root_name, parent_entity);
-			HE_GRAPHICS_INFO("Created root entity: {0}", root_name);
-
-			// Create entities for all root meshes under this parent
-			for (graphics::Mesh* root_mesh : root_meshes)
-			{
-				if (root_mesh)
-				{
-					RecursiveCreateEntitiesFromMesh(root_mesh, root_entity);
-				}
-			}
-		}
-
-		void SceneManager::RecursiveCreateEntitiesFromMesh(graphics::Mesh* mesh, Entity parent_entity)
-		{
-			if (!mesh || !m_active_scene)
-			{
-				HE_CORE_WARN("RecursiveCreateEntitiesFromMesh: mesh or scene is null");
-				return;
-			}
-
-			HE_GRAPHICS_INFO("Creating entity from mesh: {0}", mesh->GetName());
-
-			// Create entity for this mesh
-			Entity entity = m_active_scene->CreateGameObject(mesh->GetName(), parent_entity);
-
-			// Add MeshFilterComponent
-			entity.AddComponent<MeshFilterComponent>().mesh = mesh;
-
-			// Create mesh instance for rendering
-			UUID entity_uuid = entity.GetComponent<IDComponent>().id;
-			MeshManager::GetInstance()->CreateMeshInstance(entity_uuid, mesh);
-
-			HE_GRAPHICS_INFO("Created entity '{0}' for mesh with {1} vertices", mesh->GetName(), mesh->GetRawData().positions.size());
-
-			// Recursively create entities for all child meshes
-			const std::vector<graphics::Mesh*>& children = mesh->GetChildren();
-			for (graphics::Mesh* child : children)
-			{
-				if (child)
-				{
-					RecursiveCreateEntitiesFromMesh(child, entity);
-				}
-			}
-
-			HE_GRAPHICS_INFO("Mesh '{0}' has {1} children", mesh->GetName(), children.size());
 		}
 
 		SceneManager* SceneManager::GetInstance()

@@ -10,7 +10,6 @@ namespace hellengine
 		Mesh::Mesh()
 		{
 			m_material_info = nullptr;
-			m_parent = nullptr;
 		}
 
 		Mesh::~Mesh()

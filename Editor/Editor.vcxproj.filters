@@ -18,9 +18,6 @@
     <ClInclude Include="src\editor.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="src\editor_settings.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="src\panels\editor_hierarchy.h">
       <Filter>src\panels</Filter>
     </ClInclude>
@@ -36,6 +33,7 @@
     <ClInclude Include="src\types.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="src\editor_settings.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
@@ -43,9 +41,6 @@
       <Filter>src\bars</Filter>
     </ClCompile>
     <ClCompile Include="src\editor.cpp">
-      <Filter>src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\editor_settings.cpp">
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\panels\editor_hierarchy.cpp">
@@ -57,5 +52,6 @@
     <ClCompile Include="src\panels\editor_viewport.cpp">
       <Filter>src\panels</Filter>
     </ClCompile>
+    <ClCompile Include="src\editor_settings.cpp" />
   </ItemGroup>
 </Project>

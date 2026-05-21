@@ -67,7 +67,7 @@ void EditorHierarchy::Draw()
             ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { style.ItemSpacing.x, style.ItemSpacing.y * 3.0f });
 
             if (ImGui::MenuItem("Create Scene"))
-                SceneManager::GetInstance()->CreateScene("Untitled Scene");
+                SceneManager::GetInstance()->CreateScene("Untitled");
 
             if (ImGui::MenuItem("Load Scene"))
             {
