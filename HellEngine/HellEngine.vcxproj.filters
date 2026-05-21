@@ -22,6 +22,12 @@
     <Filter Include="dependencies\ASSIMP\include\assimp\port\AndroidJNI">
       <UniqueIdentifier>{DC1578A1-C8A9-6D49-316E-C7FD1D21A83B}</UniqueIdentifier>
     </Filter>
+    <Filter Include="dependencies\DDS">
+      <UniqueIdentifier>{B683AED4-A27C-CD26-CBAE-B2ABB706AD32}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="dependencies\DDS\include">
+      <UniqueIdentifier>{2901871B-1526-D69B-3E71-BB2B2AF5D4B9}</UniqueIdentifier>
+    </Filter>
     <Filter Include="dependencies\ENTT">
       <UniqueIdentifier>{D6B17F6A-42C8-7D00-8B3F-0922F7944E88}</UniqueIdentifier>
     </Filter>
@@ -515,6 +521,9 @@
     </ClInclude>
     <ClInclude Include="dependencies\ASSIMP\include\assimp\version.h">
       <Filter>dependencies\ASSIMP\include\assimp</Filter>
+    </ClInclude>
+    <ClInclude Include="dependencies\DDS\include\DDSTextureLoaderVk.h">
+      <Filter>dependencies\DDS\include</Filter>
     </ClInclude>
     <ClInclude Include="dependencies\ENTT\include\entt\entt.hpp">
       <Filter>dependencies\ENTT\include\entt</Filter>
@@ -2238,6 +2247,9 @@
     <ClInclude Include="src\hellengine\math\vertex\vertex.h">
       <Filter>src\hellengine\math\vertex</Filter>
     </ClInclude>
+    <ClInclude Include="src\hellengine\math\yaml_conversions.h">
+      <Filter>src\hellengine\math</Filter>
+    </ClInclude>
     <ClInclude Include="src\hellengine\platform\glfw\glfw_types.h">
       <Filter>src\hellengine\platform\glfw</Filter>
     </ClInclude>
@@ -2280,9 +2292,11 @@
     <ClInclude Include="src\hepch.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="src\hellengine\math\yaml_conversions.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="dependencies\DDS\include\DDSTextureLoaderVk.cpp">
+      <Filter>dependencies\DDS\include</Filter>
+    </ClCompile>
     <ClCompile Include="dependencies\GLM\include\glm\detail\glm.cpp">
       <Filter>dependencies\GLM\include\glm\detail</Filter>
     </ClCompile>

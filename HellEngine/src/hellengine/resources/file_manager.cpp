@@ -152,11 +152,6 @@ namespace hellengine
 			return Exists(file.GetAbsolutePath().c_str());
 		}
 
-		std::string FileManager::GetAbsolutePath(const char* path)
-		{
-			return std::filesystem::absolute(path).string();
-		}
-
 	} // namespace resources
 
 } // namespace hellengine

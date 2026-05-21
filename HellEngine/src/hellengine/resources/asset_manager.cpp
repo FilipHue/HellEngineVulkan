@@ -14,9 +14,16 @@ namespace hellengine
 	using namespace ecs;
 	namespace resources
 	{
-		void AssetManager::LoadModel(const File& file, b8 load_from_scene)
+		void AssetManager::LoadModel(const File& file)
 		{
 			HE_GRAPHICS_INFO("Loading asset: {0}", file.GetRelativePath());
+
+			// Clear previous meshes
+			s_loaded_root_meshes.clear();
+			s_all_loaded_meshes.clear();
+
+			// Store the filename for later use
+			s_last_loaded_filename = file.GetStem();
 
 			Assimp::Importer* importer = new Assimp::Importer();
 			u32 import_options = aiProcess_Triangulate | 
@@ -28,21 +35,25 @@ namespace hellengine
 			if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 			{
 				HE_CORE_ERROR("\tAssimp error: {0}", importer->GetErrorString());
+				return;
 			}
 
 			ExtractTextures(scene, file);
+			ProcessNode(scene->mRootNode, scene, glm::mat4(1.0f), nullptr, file);
 
-			if (load_from_scene)
+			// Identify root meshes - those with no parent (parent == nullptr)
+			for (Mesh* mesh : s_all_loaded_meshes)
 			{
-				ProcessNode(scene->mRootNode, scene, glm::mat4(1.0f), NULL_ENTITY, file);
-			}
-			else
-			{
-				Entity root = SceneManager::GetInstance()->GetActiveScene()->CreateGameObject(file.GetStem(), NULL_ENTITY);
-				ProcessNode(scene->mRootNode, scene, glm::mat4(1.0f), root, file);
+				if (mesh && mesh->GetParent() == nullptr)
+				{
+					s_loaded_root_meshes.push_back(mesh);
+					HE_GRAPHICS_INFO("Identified root mesh: {0}", mesh->GetName());
+				}
 			}
 
-			HE_GRAPHICS_INFO("\tLoaded");
+			s_loaded_files.push_back(file);
+
+			HE_GRAPHICS_INFO("Loaded model: Total meshes: {0}, Root meshes: {1}", s_all_loaded_meshes.size(), s_loaded_root_meshes.size());
 		}
 
 		Texture2D* AssetManager::LoadTexture2D(const File& file)
@@ -65,24 +76,40 @@ namespace hellengine
 			return TextureManager::GetInstance()->CreateTextureCubemap(file.GetName(), file);
 		}
 
-		void AssetManager::ProcessNode(aiNode* node, const aiScene* scene, const glm::mat4& parent_transform, Entity parent_entity, const File& file)
+		Mesh* AssetManager::ProcessNode(aiNode* node, const aiScene* scene, const glm::mat4& parent_transform, Mesh* parent_mesh, const File& file)
 		{
 			glm::mat4 local = glm::transpose(glm::make_mat4(&node->mTransformation.a1));
 			glm::mat4 world = parent_transform * local;
 
+			Mesh* node_mesh = nullptr;
+
+			// Process all meshes in this node
 			for (u32 i = 0; i < node->mNumMeshes; i++)
 			{
 				aiMesh* ai_mesh = scene->mMeshes[node->mMeshes[i]];
-				ProcessMesh(ai_mesh, scene, world, parent_entity, file);
+				Mesh* mesh = ProcessMesh(ai_mesh, scene, world, parent_mesh, file);
+
+				if (i == 0)
+				{
+					node_mesh = mesh;
+				}
+				else if (mesh && node_mesh)
+				{
+					// If this node has multiple meshes, set them as siblings (same parent)
+					mesh->SetParent(parent_mesh);
+				}
 			}
 
+			// Process child nodes, passing the node's first mesh as their parent
 			for (u32 i = 0; i < node->mNumChildren; i++)
 			{
-				ProcessNode(node->mChildren[i], scene, world, parent_entity, file);
+				ProcessNode(node->mChildren[i], scene, world, node_mesh ? node_mesh : parent_mesh, file);
 			}
+
+			return node_mesh;
 		}
 
-		void AssetManager::ProcessMesh(aiMesh* ai_mesh, const aiScene* scene, const glm::mat4& transform, Entity parent_entity, const File& file)
+		Mesh* AssetManager::ProcessMesh(aiMesh* ai_mesh, const aiScene* scene, const glm::mat4& transform, Mesh* parent_mesh, const File& file)
 		{
 			// Vertices
 			RawVertexData verticies = {};
@@ -125,6 +152,8 @@ namespace hellengine
 					indices.push_back(face.mIndices[k]);
 				}
 			}
+
+			HE_GRAPHICS_INFO("ProcessMesh: {0} - Vertices: {1}, Indices: {2}", ai_mesh->mName.C_Str(), verticies.positions.size(), indices.size());
 
 			// Material
 			aiMaterial* ai_material = scene->mMaterials[ai_mesh->mMaterialIndex];
@@ -170,18 +199,35 @@ namespace hellengine
 			// Specular-to-roughness conversion happens in shader (1.0 - specular)
 
 			Mesh* mesh = MeshManager::GetInstance()->CreateMesh(ai_mesh->mName.C_Str(), verticies, indices, mesh_mat_info);
-			MeshManager::GetInstance()->SetMeshPath(mesh->GetName(), file.GetAbsolutePath());
-			b8 uploaded = MeshManager::GetInstance()->UploadMeshGeometry<VertexFormatTangent>(mesh);
-			
-			if (uploaded && parent_entity != NULL_ENTITY)
+			if (!mesh)
 			{
-				Entity entity = SceneManager::GetInstance()->GetActiveScene()->CreateGameObject(ai_mesh->mName.C_Str(), parent_entity);
-				entity.GetComponent<TransformComponent>().world_transform = transform;
-				UUID uuid = entity.GetComponent<IDComponent>().id;
-
-				MeshManager::GetInstance()->CreateMeshInstance(uuid, mesh);
-				entity.AddComponent<MeshFilterComponent>().mesh = mesh;
+				HE_CORE_ERROR("Failed to create mesh: {0}", ai_mesh->mName.C_Str());
+				return nullptr;
 			}
+
+			MeshManager::GetInstance()->SetMeshPath(mesh->GetName(), file.GetAbsolutePath());
+
+			// Set parent relationship in the mesh
+			mesh->SetParent(parent_mesh);
+
+			// Add this mesh as a child to the parent mesh
+			if (parent_mesh)
+			{
+				parent_mesh->AddChild(mesh);
+			}
+
+			// Upload geometry
+			b8 uploaded = MeshManager::GetInstance()->UploadMeshGeometry<VertexFormatTangent>(mesh);
+
+			if (!uploaded)
+			{
+				HE_CORE_WARN("Failed to upload mesh geometry: {0}", mesh->GetName());
+			}
+
+			// Track all loaded meshes (even if upload failed)
+			s_all_loaded_meshes.push_back(mesh);
+
+			return mesh;
 		}
 
 		void AssetManager::ExtractTextures(const aiScene* scene, const File& file)
@@ -238,6 +284,25 @@ namespace hellengine
 
 			default:                              return TextureType_Unknown;
 			}
+		}
+
+		void AssetManager::DebugPrintMeshHierarchy()
+		{
+			HE_GRAPHICS_INFO("=== Mesh Hierarchy Debug ===");
+			HE_GRAPHICS_INFO("Total meshes: {0}", s_all_loaded_meshes.size());
+			HE_GRAPHICS_INFO("Root meshes: {0}", s_loaded_root_meshes.size());
+
+			for (size_t i = 0; i < s_all_loaded_meshes.size(); ++i)
+			{
+				Mesh* mesh = s_all_loaded_meshes[i];
+				if (mesh)
+				{
+					Mesh* parent = mesh->GetParent();
+					const char* parent_name = parent ? parent->GetName().c_str() : "NULL";
+					HE_GRAPHICS_INFO("  [{0}] {1} - Parent: {2} - Vertices: {3}", i, mesh->GetName(), parent_name, mesh->GetRawData().positions.size());
+				}
+			}
+			HE_GRAPHICS_INFO("=== End Mesh Hierarchy Debug ===");
 		}
 
 	} // namespace resources

@@ -57,7 +57,7 @@
       <PrecompiledHeaderFile>hepch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>HE_PLATFORM_WINDOWS;YAML_CPP_STATIC_DEFINE;HE_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;dependencies\SPDLOG\include;..;dependencies\GLFW\include;dependencies\GLM\include;dependencies\STB\include;dependencies\ASSIMP\include;dependencies\KTX\include;dependencies\IMGUI;dependencies\IMGUIZMO\include;dependencies\ENTT\include;dependencies\YAML\include;C:\VulkanSDK\1.4.328.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;dependencies\ASSIMP\include;dependencies\DDS\include;dependencies\ENTT\include;..;dependencies\GLFW\include;dependencies\GLM\include;dependencies\IMGUI;dependencies\IMGUIZMO\include;dependencies\KTX\include;dependencies\SPDLOG\include;dependencies\STB\include;dependencies\YAML\include;C:\VulkanSDK\1.4.328.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <Optimization>Disabled</Optimization>
       <MinimalRebuild>false</MinimalRebuild>
@@ -80,7 +80,7 @@
       <PrecompiledHeaderFile>hepch.h</PrecompiledHeaderFile>
       <WarningLevel>Level3</WarningLevel>
       <PreprocessorDefinitions>HE_PLATFORM_WINDOWS;HE_RELEASE;NDEBUG;YAML_CPP_STATIC_DEFINE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>src;dependencies\SPDLOG\include;..;dependencies\GLFW\include;dependencies\GLM\include;dependencies\STB\include;dependencies\ASSIMP\include;dependencies\KTX\include;dependencies\IMGUI;dependencies\IMGUIZMO\include;dependencies\ENTT\include;dependencies\YAML\include;C:\VulkanSDK\1.4.328.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src;dependencies\ASSIMP\include;dependencies\DDS\include;dependencies\ENTT\include;..;dependencies\GLFW\include;dependencies\GLM\include;dependencies\IMGUI;dependencies\IMGUIZMO\include;dependencies\KTX\include;dependencies\SPDLOG\include;dependencies\STB\include;dependencies\YAML\include;C:\VulkanSDK\1.4.328.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <Optimization>Full</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
@@ -185,6 +185,7 @@
     <ClInclude Include="dependencies\ASSIMP\include\assimp\vector2.h" />
     <ClInclude Include="dependencies\ASSIMP\include\assimp\vector3.h" />
     <ClInclude Include="dependencies\ASSIMP\include\assimp\version.h" />
+    <ClInclude Include="dependencies\DDS\include\DDSTextureLoaderVk.h" />
     <ClInclude Include="dependencies\ENTT\include\entt\entt.hpp" />
     <ClInclude Include="dependencies\GLFW\include\GLFW\glfw3.h" />
     <ClInclude Include="dependencies\GLFW\include\GLFW\glfw3native.h" />
@@ -776,6 +777,7 @@
     <ClInclude Include="src\hepch.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="dependencies\DDS\include\DDSTextureLoaderVk.cpp" />
     <ClCompile Include="dependencies\GLM\include\glm\detail\glm.cpp">
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>

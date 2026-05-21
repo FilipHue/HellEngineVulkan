@@ -348,7 +348,9 @@ void Editor::ImportAsset()
 	File file = FileManager::OpenFile("All Supported\0*.fbx;*.obj;*.gltf;*.glb\0FBX Files\0*.fbx\0OBJ Files\0*.obj\0GLTF Files\0*.gltf;*.glb\0");
 	if (FileManager::Exists(file.GetAbsolutePath()))
 	{
-		AssetManager::LoadModel(file, false);
+		AssetManager::LoadModel(file);
+		AssetManager::DebugPrintMeshHierarchy();
+		SceneManager::GetInstance()->CreateEntitiesFromMeshes();
 		MeshManager::GetInstance()->UploadToGpu(material_texture_types);
 	}
 }

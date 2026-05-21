@@ -32,11 +32,27 @@ namespace hellengine
 			void SetMaterialInfo(MaterialInfo* info) { m_material_info = info; }
 			MaterialInfo* GetMaterialInfo() { return m_material_info; }
 
+			void SetParent(Mesh* parent) { m_parent = parent; }
+			Mesh* GetParent() { return m_parent; }
+			const Mesh* GetParent() const { return m_parent; }
+
+			void AddChild(Mesh* child) 
+			{ 
+				if (child)
+				{
+					m_children.push_back(child);
+				}
+			}
+			const std::vector<Mesh*>& GetChildren() const { return m_children; }
+
 		private:
 			std::string m_name;
 			RawVertexData m_verticies;
 			std::vector<u32> m_indices;
 			MaterialInfo* m_material_info;
+
+			Mesh* m_parent;
+			std::vector<Mesh*> m_children;
 		};
 
 	} // namespace graphics
