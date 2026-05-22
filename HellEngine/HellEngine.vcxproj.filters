@@ -2238,6 +2238,9 @@
     <ClInclude Include="src\hellengine\math\vertex\vertex.h">
       <Filter>src\hellengine\math\vertex</Filter>
     </ClInclude>
+    <ClInclude Include="src\hellengine\math\yaml_conversions.h">
+      <Filter>src\hellengine\math</Filter>
+    </ClInclude>
     <ClInclude Include="src\hellengine\platform\glfw\glfw_types.h">
       <Filter>src\hellengine\platform\glfw</Filter>
     </ClInclude>
@@ -2280,10 +2283,6 @@
     <ClInclude Include="src\hepch.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="src\hellengine\math\yaml_conversions.h" />
-    <ClInclude Include="src\hellengine\graphics\shadows\csm.h" />
-    <ClInclude Include="src\hellengine\graphics\shadows\csm_manager.h" />
-    <ClInclude Include="src\hellengine\graphics\shadows\csm_example.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dependencies\GLM\include\glm\detail\glm.cpp">
@@ -2580,8 +2579,6 @@
     <ClCompile Include="src\hepch.cpp">
       <Filter>src</Filter>
     </ClCompile>
-    <ClCompile Include="src\hellengine\graphics\shadows\csm.cpp" />
-    <ClCompile Include="src\hellengine\graphics\shadows\csm_manager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="dependencies\ASSIMP\include\assimp\config.h.in">
@@ -2590,18 +2587,5 @@
     <None Include="dependencies\ASSIMP\include\assimp\revision.h.in">
       <Filter>dependencies\ASSIMP\include\assimp</Filter>
     </None>
-    <None Include="src\hellengine\graphics\shadows\shaders\csm_depth.vert" />
-    <None Include="src\hellengine\graphics\shadows\shaders\csm_depth.geom" />
-    <None Include="src\hellengine\graphics\shadows\shaders\csm_depth.frag" />
-    <None Include="src\hellengine\graphics\shadows\shaders\csm_shadow_calc.glsl" />
-    <None Include="src\hellengine\graphics\shadows\README.md" />
-    <None Include="src\hellengine\graphics\shadows\VULKAN_DIFFERENCES.md" />
-    <None Include="src\hellengine\graphics\shadows\INTEGRATION_GUIDE.md" />
-    <None Include="docs\CSM_Integration_Summary.md" />
-    <None Include="docs\CSM_Editor_Update_Summary.md" />
-    <None Include="docs\Shadow_Debug_Visualization.md" />
-    <None Include="docs\CSM_Stability_Fix.md" />
-    <None Include="docs\CSM_Bounding_Sphere_Stability.md" />
-    <None Include="docs\CSM_Alex_Tardif_Approach.md" />
   </ItemGroup>
 </Project>
