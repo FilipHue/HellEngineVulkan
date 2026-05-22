@@ -10,6 +10,7 @@
 namespace hellengine
 {
 
+	using namespace graphics;
 	using namespace resources;
 	namespace ecs
 	{
@@ -18,7 +19,7 @@ namespace hellengine
 		{
 			if (m_scenes.find(name) != m_scenes.end())
 			{
-				HE_CORE_WARN("Scene with name {0} already exists", name);
+				HE_ECS_WARN("Scene with name {0} already exists", name);
 				return;
 			}
 
@@ -45,7 +46,7 @@ namespace hellengine
 			}
 			else
 			{
-				HE_CORE_WARN("Scene with name {0} does not exist", name);
+				HE_ECS_WARN("Scene with name {0} does not exist", name);
 			}
 		}
 
@@ -58,7 +59,7 @@ namespace hellengine
 			}
 			else
 			{
-				HE_CORE_WARN("Scene with name {0} does not exist", name);
+				HE_ECS_WARN("Scene with name {0} does not exist", name);
 				return nullptr;
 			}
 		}
@@ -70,7 +71,7 @@ namespace hellengine
 			{
 				if (m_scenes.find(new_name) != m_scenes.end())
 				{
-					HE_CORE_WARN("Scene with name {0} already exists", new_name);
+					HE_ECS_WARN("Scene with name {0} already exists", new_name);
 					return false;
 				}
 
@@ -86,18 +87,29 @@ namespace hellengine
 			}
 			else
 			{
-				HE_CORE_WARN("Scene with name {0} does not exist", old_name);
+				HE_ECS_WARN("Scene with name {0} does not exist", old_name);
 				return false;
 			}
+		}
+
+		b8 SceneManager::Exists(const std::string& name) const
+		{
+			if (m_scenes.find(name) != m_scenes.end())
+			{
+				return true;
+			}
+
+			return false;
 		}
 
 		void SceneManager::LoadScene(const std::string& file_path)
 		{
 			if (!FileManager::Exists(file_path))
 			{
-				HE_CORE_WARN("Cannot load scene: File {0} does not exist", file_path);
+				HE_ECS_WARN("Cannot load scene: File {0} does not exist", file_path);
 				return;
 			}
+
 			DeserializeScene(file_path);
 		}
 
@@ -109,7 +121,7 @@ namespace hellengine
 			}
 			else
 			{
-				HE_CORE_WARN("Cannot save: No active scene");
+				HE_ECS_WARN("Cannot save: No active scene");
 			}
 		}
 
@@ -120,16 +132,18 @@ namespace hellengine
 				std::string file_path = FileManager::SaveFile("YAML Scene (*.yaml)\0*.yaml\0");
 				if (!file_path.empty())
 				{
+					std::string file_stem = std::filesystem::path(file_path).stem().string();
+					RenameScene(m_active_scene->GetName(), file_stem);
 					SerializeScene(m_active_scene->GetName(), file_path);
 				}
 				else
 				{
-					HE_CORE_WARN("Save cancelled by user");
+					HE_ECS_WARN("Save cancelled by user");
 				}
 			}
 			else
 			{
-				HE_CORE_WARN("Cannot save: No active scene");
+				HE_ECS_WARN("Cannot save: No active scene");
 			}
 		}
 
@@ -137,71 +151,66 @@ namespace hellengine
 		{
 			if (!m_active_scene)
 			{
-				HE_CORE_WARN("CreateEntitiesFromMeshes: No active scene");
+				HE_ECS_WARN("CreateEntitiesFromMeshes: No active scene");
 				return;
 			}
 
-			std::vector<graphics::Mesh*> root_meshes = AssetManager::GetLoadedRootMeshes();
-			if (root_meshes.empty())
+			static u32 last_processed_mesh_index = 0;
+
+			std::vector<Mesh*> all_meshes = MeshManager::GetInstance()->GetAllMeshes();
+
+			if (last_processed_mesh_index >= all_meshes.size())
 			{
-				HE_CORE_WARN("CreateEntitiesFromMeshes: No root meshes found");
+				HE_ECS_INFO("No new meshes to create entities from");
 				return;
 			}
 
-			// Create a root entity for the imported file
+			std::vector<Mesh*> root_meshes;
+			for (size_t i = last_processed_mesh_index; i < all_meshes.size(); i++)
+			{
+				Mesh* mesh = all_meshes[i];
+				if (mesh && mesh->GetParent() == nullptr)
+				{
+					root_meshes.push_back(mesh);
+				}
+			}
+
+			last_processed_mesh_index = all_meshes.size();
+
 			std::string root_name = AssetManager::GetLastLoadedFilename();
-			if (root_name.empty())
+			if (root_name.empty() == true)
 			{
 				root_name = "Model";
 			}
 
 			Entity root_entity = m_active_scene->CreateGameObject(root_name, parent_entity);
 
-			// Recursively create entities for all root meshes
-			for (graphics::Mesh* root_mesh : root_meshes)
+			std::queue<std::pair<Mesh*, Entity>> queue;
+			for (Mesh* root_mesh : root_meshes)
 			{
 				if (root_mesh)
 				{
-					RecursiveCreateEntitiesFromMesh(root_mesh, root_entity);
+					queue.push({ root_mesh, root_entity });
 				}
 			}
 
-			HE_GRAPHICS_INFO("Created {0} root mesh entities under '{1}'", root_meshes.size(), root_name);
-		}
-
-		void SceneManager::RecursiveCreateEntitiesFromMesh(graphics::Mesh* mesh, Entity parent_entity)
-		{
-			if (!mesh || !m_active_scene)
+			while (!queue.empty())
 			{
-				HE_CORE_WARN("RecursiveCreateEntitiesFromMesh: mesh or scene is null");
-				return;
-			}
+				auto& [mesh, parent] = queue.front();
+				queue.pop();
 
-			HE_GRAPHICS_INFO("Creating entity from mesh: {0}", mesh->GetName());
+				Entity entity = m_active_scene->CreateGameObject(mesh->GetName(), parent);
+				entity.AddComponent<MeshFilterComponent>().mesh = mesh;
+				MeshManager::GetInstance()->CreateMeshInstance(entity.GetComponent<IDComponent>().id, mesh);
 
-			// Create entity for this mesh
-			Entity entity = m_active_scene->CreateGameObject(mesh->GetName(), parent_entity);
-
-			// Add MeshFilterComponent
-			entity.AddComponent<MeshFilterComponent>().mesh = mesh;
-
-			// Create mesh instance for rendering
-			UUID entity_uuid = entity.GetComponent<IDComponent>().id;
-			MeshManager::GetInstance()->CreateMeshInstance(entity_uuid, mesh);
-
-			HE_GRAPHICS_INFO("Created entity '{0}' for mesh with {1} vertices", mesh->GetName(), mesh->GetRawData().positions.size());
-
-			// Recursively create entities for all child meshes
-			const std::vector<graphics::Mesh*>& children = mesh->GetChildren();
-			for (graphics::Mesh* child : children)
-			{
-				if (child)
+				for (graphics::Mesh* child : mesh->GetChildren())
 				{
-					RecursiveCreateEntitiesFromMesh(child, entity);
+					if (child)
+					{
+						queue.push({ child, entity });
+					}
 				}
 			}
-
-			HE_GRAPHICS_INFO("Mesh '{0}' has {1} children", mesh->GetName(), children.size());
 		}
 
 		void SceneManager::SerializeScene(const std::string& name, const std::string& file_path)
@@ -209,7 +218,7 @@ namespace hellengine
 			Scene* scene = GetScene(name);
 			if (!scene)
 			{
-				HE_CORE_WARN("Cannot serialize: Scene with name {0} does not exist", name);
+				HE_ECS_WARN("Cannot serialize: Scene with name {0} does not exist", name);
 				return;
 			}
 
@@ -218,6 +227,11 @@ namespace hellengine
 			// Scene metadata
 			root["scene"]["name"] = scene->GetName();
 			root["scene"]["uuid"] = (u64)scene->GetUUID();
+
+			for (auto& model_path : AssetManager::GetLoadedModelPaths())
+			{
+				root["scene"]["assets"]["models"].push_back(model_path);
+			}
 
 			// Get hierarchy and registry
 			SceneHierarchy& hierarchy = const_cast<SceneHierarchy&>(scene->GetHierarchy());
@@ -298,7 +312,6 @@ namespace hellengine
 				if (mesh_filter.mesh != nullptr)
 				{
 					entity_node["mesh_filter"]["mesh_name"] = mesh_filter.mesh->GetName();
-					entity_node["mesh_filter"]["mesh_path"] = MeshManager::GetInstance()->GetMeshPath(mesh_filter.mesh->GetName());
 				}
 			}
 
@@ -343,7 +356,7 @@ namespace hellengine
 		{
 			if (!FileManager::Exists(file_path))
 			{
-				HE_CORE_ERROR("Scene file does not exist: {0}", file_path);
+				HE_ECS_ERROR("Scene file does not exist: {0}", file_path);
 				return;
 			}
 
@@ -351,7 +364,7 @@ namespace hellengine
 
 			if (!root["scene"])
 			{
-				HE_CORE_ERROR("Invalid scene file format: missing 'scene' node in {0}", file_path);
+				HE_ECS_ERROR("Invalid scene file format: missing 'scene' node in {0}", file_path);
 				return;
 			}
 
@@ -359,12 +372,32 @@ namespace hellengine
 			std::string scene_name = root["scene"]["name"].as<std::string>("Untitled Scene");
 			u64 scene_uuid = root["scene"]["uuid"].as<u64>(0);
 
+			if (Exists(scene_name))
+			{
+				HE_ECS_WARN("Scene with name {0} already exists. It will be overwritten.", scene_name);
+				DestroyScene(scene_name);
+			}
+
+			// Load assets
+			if (root["scene"]["assets"])
+			{
+				if (root["scene"]["assets"]["models"])
+				{
+					for (size_t i = 0; i < root["scene"]["assets"]["models"].size(); ++i)
+					{
+						std::string model_path = root["scene"]["assets"]["models"][i].as<std::string>();
+						File model_file = FileManager::ReadFile(model_path);
+						AssetManager::LoadModel(model_file);
+					}
+				}
+			}
+
 			// Create or get the scene
 			CreateScene(scene_name);
 			Scene* scene = GetScene(scene_name);
 			if (!scene)
 			{
-				HE_CORE_ERROR("Failed to create scene: {0}", scene_name);
+				HE_ECS_ERROR("Failed to create scene: {0}", scene_name);
 				return;
 			}
 
@@ -391,14 +424,14 @@ namespace hellengine
 				TextureType_Reflection;
 			MeshManager::GetInstance()->UploadToGpu(material_texture_types);
 
-			HE_CORE_INFO("Scene {0} deserialized from {1}", scene_name, file_path);
+			HE_ECS_INFO("Scene {0} deserialized from {1}", scene_name, file_path);
 		}
 
 		void SceneManager::DeserializeEntity(const YAML::Node& entity_node, Scene* scene, Entity parent_entity)
 		{
 			if (!entity_node.IsMap())
 			{
-				HE_CORE_WARN("Invalid entity node format");
+				HE_ECS_WARN("Invalid entity node format");
 				return;
 			}
 
@@ -467,15 +500,6 @@ namespace hellengine
 				if (entity_node["mesh_filter"]["mesh_name"])
 				{
 					std::string mesh_name = entity_node["mesh_filter"]["mesh_name"].as<std::string>();
-					std::string mesh_path = entity_node["mesh_filter"]["mesh_path"].as<std::string>();
-					static std::string last_path = "";
-					if (MeshManager::GetInstance()->GetMeshPath(mesh_name) != last_path || last_path == "")
-					{
-						AssetManager::LoadModel(FileManager::ReadFile(mesh_path));
-
-						last_path = MeshManager::GetInstance()->GetMeshPath(mesh_name);
-					}
-
 					MeshManager::GetInstance()->CreateMeshInstance(entity_uuid, MeshManager::GetInstance()->GetMeshByName(mesh_name));
 					loaded_mesh = MeshManager::GetInstance()->GetMeshByName(mesh_name);
 					if (loaded_mesh)

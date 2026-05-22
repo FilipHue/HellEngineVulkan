@@ -23,8 +23,8 @@ editor:
     min_bias: 0
     max_bias: 0.001
     normal_offset: 0
-    pcf_samples: 4
-    softness: 5
+    pcf_samples: 1
+    softness: 0.4
     cascade_distances:
       x: 10
       y: 30

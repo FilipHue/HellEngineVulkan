@@ -25,21 +25,18 @@ namespace hellengine
 			HE_API static Texture2D* LoadTexture2D(const File& file);
 			HE_API static TextureCubemap* LoadTextureCubemap(const File& file);
 
-			HE_API static std::vector<Mesh*> GetLoadedRootMeshes() { return s_loaded_root_meshes; }
-			HE_API static std::vector<Mesh*> GetAllLoadedMeshes() { return s_all_loaded_meshes; }
 			HE_API static std::string GetLastLoadedFilename() { return s_last_loaded_filename; }
-			HE_API static void DebugPrintMeshHierarchy();
+			HE_API static const std::vector<std::string>& GetLoadedModelPaths() { return s_loaded_model_paths; }
 
 		private:
-			static void ProcessNode(aiNode* node, const aiScene* scene, const glm::mat4& parent_transform, Mesh* parent_mesh, const File& file);
-			static void ProcessMesh(aiMesh* mesh, const aiScene* scene, const glm::mat4& transform, Mesh* parent_mesh, const File& file);
+			static Mesh* ProcessNode(const aiScene* scene, aiNode* node, const glm::mat4& parent_transform, Mesh* parent_mesh, const File& file);
+			static Mesh* ProcessMesh(const aiScene* scene, aiMesh* mesh, const glm::mat4& parent_transform, Mesh* parent_mesh, const File& file);
 
 			static void ExtractTextures(const aiScene* scene, const File& file);
 			static void ProcessMaterialTexture(aiMaterial* material, aiTextureType type, const File& file);
 
-			static std::vector<Mesh*> s_all_loaded_meshes;
-			static std::vector<Mesh*> s_loaded_root_meshes;
-			static std::string s_last_loaded_filename;
+			INLINE static std::string s_last_loaded_filename;
+			INLINE static std::vector<std::string> s_loaded_model_paths;
 		};
 
 		static TextureType GetTextureType(aiTextureType type);

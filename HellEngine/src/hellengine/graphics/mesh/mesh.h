@@ -43,6 +43,7 @@ namespace hellengine
 			RawVertexData m_verticies;
 			std::vector<u32> m_indices;
 			MaterialInfo* m_material_info;
+
 			Mesh* m_parent;
 			std::vector<Mesh*> m_children;
 		};

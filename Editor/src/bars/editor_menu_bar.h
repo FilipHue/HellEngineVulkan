@@ -55,9 +55,9 @@ static constexpr f32 SHADOW_MIN_BIAS_MIN = 0.0f;
 static constexpr f32 SHADOW_MIN_BIAS_MAX = 0.01f;
 static constexpr f32 SHADOW_MIN_BIAS_STEP = 0.0001f;
 
-static constexpr f32 SHADOW_MAX_BIAS_MIN = 0.001f;
+static constexpr f32 SHADOW_MAX_BIAS_MIN = 0.0f;
 static constexpr f32 SHADOW_MAX_BIAS_MAX = 0.1f;
-static constexpr f32 SHADOW_MAX_BIAS_STEP = 0.001f;
+static constexpr f32 SHADOW_MAX_BIAS_STEP = 0.0001f;
 
 // Normal Offset
 static constexpr f32 SHADOW_NORMAL_OFFSET_MIN = 0.0f;
@@ -94,6 +94,8 @@ public:
 
 	void SetImportAssetCallback(const std::function<void()>& callback);
 	void SetCreateEmptyGameObjectCallback(const std::function<void()>& callback);
+
+	void OnKeyPressed(i32 key, i32 scancode, i32 mods);
 
 private:
 	void FileMenu(ImGuiStyle& style);

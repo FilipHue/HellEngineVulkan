@@ -50,6 +50,37 @@ void EditorMenuBar::SetCreateEmptyGameObjectCallback(const std::function<void()>
 	m_create_empty_gameobject_callback = callback;
 }
 
+void EditorMenuBar::OnKeyPressed(i32 key, i32 scancode, i32 mods)
+{
+	if (mods & MOD_KEY_CONTROL)
+	{
+		switch (key)
+		{
+			case KEY_N:
+			{
+				SceneManager::GetInstance()->CreateScene("Untitled");
+				break;
+			}
+			case KEY_S:
+			{
+				if (mods & MOD_KEY_SHIFT)
+				{
+					SceneManager::GetInstance()->SaveSceneAs();
+				}
+				else
+				{
+					SceneManager::GetInstance()->SaveScene(EDITOR_SCENE_PATH);
+				}
+				break;
+			}
+			default:
+			{
+				break;
+			}
+		}
+	}
+}
+
 void EditorMenuBar::FileMenu(ImGuiStyle& style)
 {
 	if (ImGui::BeginMenu("File"))

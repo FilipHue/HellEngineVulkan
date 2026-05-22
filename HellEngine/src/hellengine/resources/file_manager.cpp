@@ -26,7 +26,7 @@ namespace hellengine
 			file_stream.open(path);
 			if (!file_stream.is_open())
 			{
-				HE_CORE_ERROR("Failed to open file: {0}", path);
+				HE_RESOURCE_ERROR("Failed to open file: {0}", path);
 				return File();
 			}
 
@@ -124,7 +124,7 @@ namespace hellengine
 			std::ofstream file_stream(path);
 			if (!file_stream.is_open())
 			{
-				HE_CORE_ERROR("Failed to open file for writing: {0}", path);
+				HE_RESOURCE_ERROR("Failed to open file for writing: {0}", path);
 				return;
 			}
 

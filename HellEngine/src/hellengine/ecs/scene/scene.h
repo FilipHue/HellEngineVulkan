@@ -55,7 +55,6 @@ namespace hellengine
             SceneRegistry   m_registry;
             SceneHierarchy  m_hierarchy;
 
-            // O(1) UUID -> entt handle (recommended)
             std::unordered_map<u64, entt::entity> m_entity_lookup;
 
             std::string m_name;

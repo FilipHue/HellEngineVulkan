@@ -258,6 +258,8 @@ b8 Editor::OnEventKeyPressed(EventContext& event)
 		}
 	}
 
+	m_menu_bar->OnKeyPressed(event.data.key_event.key, event.data.key_event.scancode, event.data.key_event.mods);
+
 	return false;
 }
 
@@ -349,7 +351,6 @@ void Editor::ImportAsset()
 	if (FileManager::Exists(file.GetAbsolutePath()))
 	{
 		AssetManager::LoadModel(file);
-		AssetManager::DebugPrintMeshHierarchy();
 		SceneManager::GetInstance()->CreateEntitiesFromMeshes();
 		MeshManager::GetInstance()->UploadToGpu(material_texture_types);
 	}

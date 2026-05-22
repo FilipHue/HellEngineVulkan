@@ -31,6 +31,7 @@ namespace hellengine
 			HE_API Scene* GetActiveScene() const { return m_active_scene; }
 
 			HE_API b8 RenameScene(const std::string& old_name, const std::string& new_name);
+			HE_API b8 Exists(const std::string& name) const;
 
 			HE_API void LoadScene(const std::string& file_path);
 			HE_API void SaveScene(const std::string& root_dir);
@@ -44,7 +45,6 @@ namespace hellengine
 			HE_API static SceneManager* GetInstance();
 
 		private:
-			void RecursiveCreateEntitiesFromMesh(graphics::Mesh* mesh, Entity parent_entity);
 			void SerializeEntity(YAML::Node& entities_node, u32 entity_index, Entity entity, SceneHierarchy& hierarchy);
 			void DeserializeEntity(const YAML::Node& entity_node, Scene* scene, Entity parent_entity = Entity());
 

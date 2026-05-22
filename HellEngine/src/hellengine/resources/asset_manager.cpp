@@ -11,17 +11,11 @@ namespace hellengine
 
 	namespace resources
 	{
-		std::vector<Mesh*> AssetManager::s_all_loaded_meshes;
-		std::vector<Mesh*> AssetManager::s_loaded_root_meshes;
-		std::string AssetManager::s_last_loaded_filename;
 
 		void AssetManager::LoadModel(const File& file)
 		{
-			HE_GRAPHICS_INFO("Loading asset: {0}", file.GetRelativePath());
+			HE_RESOURCE_INFO("Loading asset: {0}", file.GetRelativePath());
 
-			// Clear previously loaded meshes
-			s_all_loaded_meshes.clear();
-			s_loaded_root_meshes.clear();
 			s_last_loaded_filename = file.GetStem();
 
 			Assimp::Importer* importer = new Assimp::Importer();
@@ -33,25 +27,17 @@ namespace hellengine
 			const aiScene* scene = importer->ReadFile(file.GetRelativePath(), import_options);
 			if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 			{
-				HE_CORE_ERROR("\tAssimp error: {0}", importer->GetErrorString());
+				HE_RESOURCE_ERROR("\tAssimp error: {0}", importer->GetErrorString());
 				return;
 			}
 
 			ExtractTextures(scene, file);
 
-			// Process meshes and build hierarchy - no entity creation
-			ProcessNode(scene->mRootNode, scene, glm::mat4(1.0f), nullptr, file);
+			Mesh* root = ProcessNode(scene, scene->mRootNode, glm::mat4(1.0f), nullptr, file);
 
-			// Identify root meshes (meshes with no parent)
-			for (Mesh* mesh : s_all_loaded_meshes)
-			{
-				if (mesh && mesh->GetParent() == nullptr)
-				{
-					s_loaded_root_meshes.push_back(mesh);
-				}
-			}
+			s_loaded_model_paths.push_back(file.GetRelativePath());
 
-			HE_GRAPHICS_INFO("\tLoaded {0} meshes, {1} roots", s_all_loaded_meshes.size(), s_loaded_root_meshes.size());
+			HE_RESOURCE_INFO("\tLoaded");
 		}
 
 		Texture2D* AssetManager::LoadTexture2D(const File& file)
@@ -74,24 +60,54 @@ namespace hellengine
 			return TextureManager::GetInstance()->CreateTextureCubemap(file.GetName(), file);
 		}
 
-		void AssetManager::ProcessNode(aiNode* node, const aiScene* scene, const glm::mat4& parent_transform, Mesh* parent_mesh, const File& file)
+		Mesh* AssetManager::ProcessNode(const aiScene* ai_scene, aiNode* node, const glm::mat4& parent_transform, Mesh* parent_mesh, const File& file)
 		{
 			glm::mat4 local = glm::transpose(glm::make_mat4(&node->mTransformation.a1));
 			glm::mat4 world = parent_transform * local;
 
+			Mesh* root_mesh = nullptr;
+
 			for (u32 i = 0; i < node->mNumMeshes; i++)
 			{
-				aiMesh* ai_mesh = scene->mMeshes[node->mMeshes[i]];
-				ProcessMesh(ai_mesh, scene, world, parent_mesh, file);
+				u32 mesh_index = node->mMeshes[i];
+				aiMesh* ai_mesh = ai_scene->mMeshes[mesh_index];
+
+				Mesh* mesh = ProcessMesh(ai_scene, ai_mesh, world, parent_mesh, file);
+				if (mesh == nullptr)
+				{
+					continue;
+				}
+
+				if (root_mesh == nullptr)
+				{
+					root_mesh = mesh;
+					root_mesh->SetParent(parent_mesh);
+					if (parent_mesh != nullptr)
+					{
+						parent_mesh->AddChild(root_mesh);
+					}
+				}
+				else
+				{
+					mesh->SetParent(root_mesh);
+					root_mesh->AddChild(mesh);
+				}
 			}
 
 			for (u32 i = 0; i < node->mNumChildren; i++)
 			{
-				ProcessNode(node->mChildren[i], scene, world, parent_mesh, file);
+				Mesh* child_mesh = ProcessNode(ai_scene, node->mChildren[i], world, root_mesh, file);
+
+				if ((child_mesh != nullptr) && (root_mesh == nullptr))
+				{
+					root_mesh = child_mesh;
+				}
 			}
+
+			return root_mesh;
 		}
 
-		void AssetManager::ProcessMesh(aiMesh* ai_mesh, const aiScene* scene, const glm::mat4& transform, Mesh* parent_mesh, const File& file)
+		Mesh* AssetManager::ProcessMesh(const aiScene* ai_scene, aiMesh* ai_mesh, const glm::mat4& transform, Mesh* parent_mesh, const File& file)
 		{
 			// Vertices
 			RawVertexData verticies = {};
@@ -136,7 +152,7 @@ namespace hellengine
 			}
 
 			// Material
-			aiMaterial* ai_material = scene->mMaterials[ai_mesh->mMaterialIndex];
+			aiMaterial* ai_material = ai_scene->mMaterials[ai_mesh->mMaterialIndex];
 			MaterialInfo* mesh_mat_info = new MaterialInfo();
 
 			for (int t = aiTextureType_NONE; t <= AI_TEXTURE_TYPE_MAX; ++t) {
@@ -179,13 +195,6 @@ namespace hellengine
 			// Specular-to-roughness conversion happens in shader (1.0 - specular)
 
 			Mesh* mesh = MeshManager::GetInstance()->CreateMesh(ai_mesh->mName.C_Str(), verticies, indices, mesh_mat_info);
-			if (!mesh)
-			{
-				HE_CORE_ERROR("Failed to create mesh: {0}", ai_mesh->mName.C_Str());
-				return;
-			}
-
-			MeshManager::GetInstance()->SetMeshPath(mesh->GetName(), file.GetAbsolutePath());
 
 			// Set parent relationship in the mesh
 			mesh->SetParent(parent_mesh);
@@ -198,14 +207,12 @@ namespace hellengine
 
 			// Upload geometry
 			b8 uploaded = MeshManager::GetInstance()->UploadMeshGeometry<VertexFormatTangent>(mesh);
-
 			if (!uploaded)
 			{
-				HE_CORE_WARN("Failed to upload mesh geometry: {0}", mesh->GetName());
+				HE_RESOURCE_WARN("Failed to upload mesh geometry: {0}", mesh->GetName());
 			}
 
-			// Track all loaded meshes (even if upload failed)
-			s_all_loaded_meshes.push_back(mesh);
+			return mesh;
 		}
 
 		void AssetManager::ExtractTextures(const aiScene* scene, const File& file)
@@ -261,30 +268,6 @@ namespace hellengine
 			case aiTextureType_TRANSMISSION:      return TextureType_Transmission;
 
 			default:                              return TextureType_Unknown;
-			}
-		}
-
-		void AssetManager::DebugPrintMeshHierarchy()
-		{
-			HE_GRAPHICS_INFO("=== Mesh Hierarchy Debug ===");
-			HE_GRAPHICS_INFO("Total meshes loaded: {0}", s_all_loaded_meshes.size());
-			HE_GRAPHICS_INFO("Root meshes: {0}", s_loaded_root_meshes.size());
-
-			for (Mesh* root : s_loaded_root_meshes)
-			{
-				HE_GRAPHICS_INFO("Root: {0} ({1} vertices)", root->GetName(), root->GetRawData().positions.size());
-
-				std::function<void(Mesh*, int)> print_hierarchy = [&](Mesh* mesh, int depth)
-				{
-					for (Mesh* child : mesh->GetChildren())
-					{
-						std::string indent(depth * 2, ' ');
-						HE_GRAPHICS_INFO("{0}Child: {1} ({2} vertices)", indent, child->GetName(), child->GetRawData().positions.size());
-						print_hierarchy(child, depth + 1);
-					}
-				};
-
-				print_hierarchy(root, 1);
 			}
 		}
 

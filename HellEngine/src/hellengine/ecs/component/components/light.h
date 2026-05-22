@@ -37,6 +37,46 @@ namespace hellengine
 			b8 cast_shadows = false;
 		};
 
+		struct DirectionalLightComponent
+		{
+			DEFAULT_ALL(DirectionalLightComponent);
+
+			glm::vec3 color = glm::vec3(1.0f, 1.0f, 1.0f);
+			f32 intensity = 20.0f;
+
+			b8 enabled = true;
+			b8 cast_shadows = false;
+		};
+
+		struct PointLightComponent
+		{
+			DEFAULT_ALL(PointLightComponent);
+
+			glm::vec3 color = glm::vec3(1.0f, 1.0f, 1.0f);
+			f32 intensity = 20.0f;
+			f32 range = 100.0f;
+			f32 attenuation = 1.0f;
+
+			b8 enabled = true;
+			b8 cast_shadows = false;
+		};
+
+		struct SpotLightComponent
+		{
+			DEFAULT_ALL(SpotLightComponent);
+
+			glm::vec3 color = glm::vec3(1.0f, 1.0f, 1.0f);
+			f32 intensity = 20.0f;
+			f32 range = 100.0f;
+			f32 attenuation = 1.0f;
+
+			f32 inner_cone_angle = glm::radians(30.0f);
+			f32 outer_cone_angle = glm::radians(45.0f);
+
+			b8 enabled = true;
+			b8 cast_shadows = false;
+		};
+
 	} // namespace ecs
 
 } // namespace hellengine
