@@ -2,6 +2,8 @@
 
 // Internal
 #include "hellengine/hellengine.h"
+
+#include "../editor_settings.h"
 #include "editor_inspector.h"
 
 using namespace hellengine;

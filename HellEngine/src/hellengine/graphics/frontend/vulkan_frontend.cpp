@@ -27,7 +27,7 @@ namespace hellengine
 			m_texture_manager->Shutdown();
 		}
 
-		b8 VulkanFrontend::CreateMesh(std::string name, std::vector<VertexFormatBase> vertices, std::vector<u32> indices)
+		b8 VulkanFrontend::CreateMesh(std::string name, std::vector<VertexFormatSimple> vertices, std::vector<u32> indices)
 		{
 			//return m_mesh_manager->CreateMesh(name, vertices, indices);
 			return false;

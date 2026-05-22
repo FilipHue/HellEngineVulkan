@@ -29,6 +29,7 @@ namespace hellengine
             void DestroyEntity(Entity entity);
 
             Entity CreateGameObject(const std::string& name, Entity parent);
+            Entity CreateGameObjectWithUUID(const std::string& name, Entity parent, UUID id);
             void DestroyGameObject(Entity entity);
             void ReparentGameObject(Entity child, Entity parent);
 
@@ -54,7 +55,6 @@ namespace hellengine
             SceneRegistry   m_registry;
             SceneHierarchy  m_hierarchy;
 
-            // O(1) UUID -> entt handle (recommended)
             std::unordered_map<u64, entt::entity> m_entity_lookup;
 
             std::string m_name;

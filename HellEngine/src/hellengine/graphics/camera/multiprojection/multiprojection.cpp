@@ -104,10 +104,20 @@ namespace hellengine
 			RecalculateViewMatrix();
 		}
 
+		f32 MultiProjectionCamera::GetNear() const
+		{
+			return m_near;
+		}
+
 		void MultiProjectionCamera::SetNear(f32 near_z)
 		{
 			m_near = near_z;
 			RecalculateProjectionMatrix();
+		}
+
+		f32 MultiProjectionCamera::GetFar() const
+		{
+			return m_far;
 		}
 
 		void MultiProjectionCamera::SetFar(f32 far_z)
@@ -220,12 +230,12 @@ namespace hellengine
 		{
 			if (m_type == ProjectionType::Perspective)
 			{
-				m_projection = glm::perspective(glm::radians(m_fov), m_aspect_ratio, m_near, m_far);
+				m_projection = glm::perspectiveZO(glm::radians(m_fov), m_aspect_ratio, m_near, m_far);
 				m_projection[1][1] *= -1;
 			}
 			else if (m_type == ProjectionType::Orthographic)
 			{
-				m_projection = glm::ortho(m_ortho_left, m_ortho_right, m_ortho_bottom, m_ortho_up, m_near, m_far);
+				m_projection = glm::orthoZO(m_ortho_left, m_ortho_right, m_ortho_bottom, m_ortho_up, m_near, m_far);
 			}
 		}
 

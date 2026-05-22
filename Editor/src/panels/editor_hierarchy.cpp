@@ -297,6 +297,72 @@ void EditorHierarchy::DrawUtilityPanel()
 
         if (ImGui::BeginMenu("3D Object"))
         {
+            if (ImGui::BeginMenu("Light"))
+            {
+                if (ImGui::MenuItem("Point Light"))
+                {
+                    Entity light = SceneManager::GetInstance()->GetActiveScene()->CreateGameObject("Point Light", m_selected_game_object);
+                    auto& lightComp = light.AddComponent<LightComponent>();
+                    lightComp.type = LightType_Point;
+                    lightComp.color = glm::vec3(1.0f, 1.0f, 1.0f);
+                    lightComp.intensity = 50.0f;
+                    lightComp.range = 50.0f;
+                    lightComp.attenuation = 1.0f;
+                    lightComp.enabled = true;
+                    lightComp.cast_shadows = true;  // Enable shadows by default
+
+                    // Set inspector to show new light
+                    m_selected_game_object = light;
+                    m_inspector_panel->SetSelectedEntity(light);
+                }
+
+                if (ImGui::MenuItem("Directional Light"))
+                {
+                    Entity light = SceneManager::GetInstance()->GetActiveScene()->CreateGameObject("Directional Light", m_selected_game_object);
+                    auto& lightComp = light.AddComponent<LightComponent>();
+                    lightComp.type = LightType_Directional;
+                    lightComp.color = glm::vec3(1.0f, 0.95f, 0.85f); // Warm sunlight
+                    lightComp.intensity = 3.0f;
+                    lightComp.enabled = true;
+                    lightComp.cast_shadows = true;  // Enable shadows by default
+
+                    // Rotate to shine down at an angle (like sun)
+                    auto& transform = light.GetComponent<TransformComponent>();
+                    transform.local_rotation = glm::vec3(glm::radians(-45.0f), glm::radians(30.0f), 0.0f);
+                    transform.is_dirty = true;
+
+                    // Set inspector to show new light
+                    m_selected_game_object = light;
+                    m_inspector_panel->SetSelectedEntity(light);
+                }
+
+                if (ImGui::MenuItem("Spot Light"))
+                {
+                    Entity light = SceneManager::GetInstance()->GetActiveScene()->CreateGameObject("Spot Light", m_selected_game_object);
+                    auto& lightComp = light.AddComponent<LightComponent>();
+                    lightComp.type = LightType_Spot;
+                    lightComp.color = glm::vec3(1.0f, 1.0f, 1.0f);
+                    lightComp.intensity = 100.0f;
+                    lightComp.range = 30.0f;
+                    lightComp.attenuation = 1.0f;
+                    lightComp.inner_cone_angle = glm::radians(15.0f);
+                    lightComp.outer_cone_angle = glm::radians(25.0f);
+                    lightComp.enabled = true;
+                    lightComp.cast_shadows = true;  // Enable shadows by default
+
+                    // No rotation by default (points in -Z direction)
+                    auto& transform = light.GetComponent<TransformComponent>();
+                    transform.local_rotation = glm::vec3(0.0f, 0.0f, 0.0f);
+                    transform.is_dirty = true;
+
+                    // Set inspector to show new light
+                    m_selected_game_object = light;
+                    m_inspector_panel->SetSelectedEntity(light);
+                }
+
+                ImGui::EndMenu();
+            }
+
             ImGui::EndMenu();
         }
 

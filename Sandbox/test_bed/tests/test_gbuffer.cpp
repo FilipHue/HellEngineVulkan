@@ -30,8 +30,8 @@ void TestGBuffer::Setup()
 	CreatePipeline();
 	CreateDescriptorSets();
 
-	m_scene_model->UploadToGPU<VertexFormatBase>();
-	m_glass_model->UploadToGPU<VertexFormatBase>();
+	m_scene_model->UploadToGPU<VertexFormatSimple>();
+	m_glass_model->UploadToGPU<VertexFormatSimple>();
 	m_scene_model->GenerateDescriptorSets(m_gbuffer_pipeline, 2);
 	m_scene_model->GenerateDescriptorSets(m_glass_pipeline, 3);
 	m_glass_model->GenerateDescriptorSets(m_glass_pipeline, 3);
@@ -209,8 +209,8 @@ b8 TestGBuffer::OnMouseScrolled(EventContext& event)
 
 void TestGBuffer::LoadResources()
 {
-	m_scene_model = AssetManager::LoadModel(FileManager::ReadFile(CONCAT_PATHS(MODEL_PATH, "samplebuilding.gltf")));
-	m_glass_model = AssetManager::LoadModel(FileManager::ReadFile(CONCAT_PATHS(MODEL_PATH, "samplebuilding_glass.gltf")));
+	AssetManager::LoadModel(FileManager::ReadFile(CONCAT_PATHS(MODEL_PATH, "samplebuilding.gltf")));
+	AssetManager::LoadModel(FileManager::ReadFile(CONCAT_PATHS(MODEL_PATH, "samplebuilding_glass.gltf")));
 	m_glass_texture = AssetManager::LoadTexture2D(FileManager::ReadFile(CONCAT_PATHS(TEXTURE_PATH, "colored_glass_rgba.ktx")));
 }
 
@@ -396,8 +396,8 @@ void TestGBuffer::CreatePipeline()
 			{0, DescriptorType_UniformBuffer, ShaderStage_Fragment}
 		}
 	};
-	pipeline_info.vertex_binding_description = VertexFormatBase::GetBindingDescription();
-	pipeline_info.vertex_attribute_descriptions = VertexFormatBase::GetAttributeDescriptions();
+	pipeline_info.vertex_binding_description = VertexFormatSimple::GetBindingDescription();
+	pipeline_info.vertex_attribute_descriptions = VertexFormatSimple::GetAttributeDescriptions();
 	pipeline_info.topology = PipelinePrimitiveTopology_TriangleList;
 	pipeline_info.cull_mode = PipelineCullMode_None;
 	pipeline_info.front_face = PipelineFrontFace_CounterClockwise;
@@ -439,8 +439,8 @@ void TestGBuffer::CreatePipeline()
 	m_composition_pipeline = m_backend->CreatePipeline(pipeline_info, shader_info);
 
 	// Glass pipeline
-	pipeline_info.vertex_binding_description = VertexFormatBase::GetBindingDescription();
-	pipeline_info.vertex_attribute_descriptions = VertexFormatBase::GetAttributeDescriptions();
+	pipeline_info.vertex_binding_description = VertexFormatSimple::GetBindingDescription();
+	pipeline_info.vertex_attribute_descriptions = VertexFormatSimple::GetAttributeDescriptions();
 
 	pipeline_info.layout = {
 		{

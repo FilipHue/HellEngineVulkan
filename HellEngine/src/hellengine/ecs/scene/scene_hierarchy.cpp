@@ -6,6 +6,7 @@
 
 namespace hellengine
 {
+
     namespace ecs
     {
         SceneHierarchy::SceneHierarchy() { NO_OP; }
@@ -330,4 +331,5 @@ namespace hellengine
         }
 
     } // namespace ecs
+
 } // namespace hellengine

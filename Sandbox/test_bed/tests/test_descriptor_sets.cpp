@@ -226,8 +226,8 @@ void TestDescriptorSet::CreatePipeline()
 			{ 1, DescriptorType_CombinedImageSampler, ShaderStage_Fragment }
 		}
 	};
-	pipeline_info.vertex_binding_description = VertexFormatBase::GetBindingDescription();
-	pipeline_info.vertex_attribute_descriptions = VertexFormatBase::GetAttributeDescriptions();
+	pipeline_info.vertex_binding_description = VertexFormatSimple::GetBindingDescription();
+	pipeline_info.vertex_attribute_descriptions = VertexFormatSimple::GetAttributeDescriptions();
 	pipeline_info.topology = PipelinePrimitiveTopology_TriangleList;
 	pipeline_info.cull_mode = PipelineCullMode_None;
 	pipeline_info.front_face = PipelineFrontFace_CounterClockwise;

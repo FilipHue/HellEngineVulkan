@@ -27,7 +27,7 @@ void TestStencil::Setup()
 	CreatePipeline();
 	CreateDescriptorSets();
 
-	m_model->UploadToGPU<VertexFormatBase>();
+	m_model->UploadToGPU<VertexFormatSimple>();
 	m_model->GenerateModelResources(m_pipeline_toon, 2);
 }
 
@@ -197,8 +197,8 @@ void TestStencil::CreatePipeline()
 			DescriptorSetFlags_None
 		}
 	};
-	pipeline_info.vertex_binding_description = VertexFormatBase::GetBindingDescription();
-	pipeline_info.vertex_attribute_descriptions = VertexFormatBase::GetAttributeDescriptions();
+	pipeline_info.vertex_binding_description = VertexFormatSimple::GetBindingDescription();
+	pipeline_info.vertex_attribute_descriptions = VertexFormatSimple::GetAttributeDescriptions();
 
 	pipeline_info.depth_stencil_info.stencil_test_enable = true;
 	pipeline_info.depth_stencil_info.depth_test_enable = true;

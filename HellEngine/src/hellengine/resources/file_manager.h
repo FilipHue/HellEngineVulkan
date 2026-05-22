@@ -21,8 +21,17 @@ namespace hellengine
 			HE_API static File OpenFile(const char* path);
 			HE_API static File OpenFile(const std::string& path);
 
+			HE_API static std::string SaveFile(const char* filter);
+			HE_API static std::string SaveFile(const std::string& filter);
+
+			HE_API static void WriteFile(const char* path, const std::string& content);
+			HE_API static void WriteFile(const std::string& path, const std::string& content);
+
 			HE_API static b8 Exists(const char* path);
 			HE_API static b8 Exists(const std::string& path);
+			HE_API static b8 Exists(const File& file);
+
+			HE_API static std::string GetAbsolutePath(const char* path);
 
 		private:
 			FileManager() = delete;
@@ -34,14 +43,14 @@ namespace hellengine
 			File() = default;
 			~File() = default;
 
-			HE_API const std::string& GetRelativePath() const { return relative_file_path; }
-			HE_API const std::string& GetAbsolutePath() const { return absolute_file_path; }
-			HE_API const std::string& GetRelativeDirectory() const { return relative_directory_path; }
-			HE_API const std::string& GetAbsoluteDirectory() const { return absolute_directory_path; }
-			HE_API const std::string& GetName() const { return name; }
-			HE_API const std::string& GetStem() const { return stem; }
-			HE_API const std::string& GetExtension() const { return extension; }
-			HE_API const std::string& GetContent() const { return content; }
+			HE_API const std::string GetRelativePath() const { return relative_file_path; }
+			HE_API const std::string GetAbsolutePath() const { return absolute_file_path; }
+			HE_API const std::string GetRelativeDirectory() const { return relative_directory_path; }
+			HE_API const std::string GetAbsoluteDirectory() const { return absolute_directory_path; }
+			HE_API const std::string GetName() const { return name; }
+			HE_API const std::string GetStem() const { return stem; }
+			HE_API const std::string GetExtension() const { return extension; }
+			HE_API const std::string GetContent() const { return content; }
 			HE_API u64 GetSize() const { return size; }
 
 		private:

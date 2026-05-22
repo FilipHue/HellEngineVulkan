@@ -1,4 +1,8 @@
+#include "hepch.h"
 #include "editor_viewport.h"
+
+// Internal
+#include "../bars/editor_menu_bar.h"
 
 EditorViewport::EditorViewport() : Viewport("Viewport")
 {
@@ -20,67 +24,63 @@ void EditorViewport::Init(VulkanBackend* backend, VulkanFrontend* frontend, Edit
 	m_depth_color = { 1.0f, 0.0f };
 
 	m_can_pick = true;
+
+	m_gizmo_icon_texture = m_frontend->CreateTexture2D(
+		"ICON_GIZMO",
+		FileManager::ReadFile(CONCAT_PATHS(EDITOR_TEXTURES_PATH, "icon_gizmos.png"))
+	);
+
+	m_gizmo_icon = ImGui_ImplVulkan_AddTexture(
+		m_gizmo_icon_texture->GetSampler(),
+		m_gizmo_icon_texture->GetImageView(),
+		VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+	);
 }
 
 void EditorViewport::RenderBegin()
 {
-	// Update grid camera uniform buffer before rendering
 	m_backend->UpdateUniformBuffer(m_grid_buffer, &m_grid_data, sizeof(GridCameraData));
+
+	m_backend->BeginDynamicRenderingWithAttachments(m_viewport_dri);
+
+	m_backend->SetViewport({ { 0.0f, 0.0f, (f32)m_size.x, (f32)m_size.y, 0.0f, 1.0f } });
+	m_backend->SetScissor({ { { 0, 0 }, { m_size.x, m_size.y } } });
 }
 
 void EditorViewport::RenderUpdate()
 {
-	// Execute the entire render graph - viewport pass then grid pass
-	if (m_render_graph)
-	{
-		m_render_graph->Execute(m_backend);
-	}
 }
 
 void EditorViewport::RenderEnd()
 {
-	// Render graph handles everything now
+	m_backend->EndDynamicRenderingWithAttachments(m_viewport_dri);
+
+	if (m_editor_settings && m_editor_settings->show_grid)
+	{
+		DrawGrid();
+	}
 }
 
 void EditorViewport::SetViewportClearColor(const glm::vec4& color)
 {
 	m_clear_color = color;
-
-	// Update the resource clear value in the render graph
-	if (m_render_graph)
-	{
-		auto* color_resource = m_render_graph->GetResource("viewport_color");
-		if (color_resource)
-		{
-			color_resource->clear_value.color = { m_clear_color.r, m_clear_color.g, m_clear_color.b, m_clear_color.a };
-		}
-	}
 }
 
 void EditorViewport::SetViewportClearDepth(const glm::vec2& depth)
 {
 	m_depth_color = depth;
-
-	// Update the resource clear value in the render graph
-	if (m_render_graph)
-	{
-		auto* depth_resource = m_render_graph->GetResource("viewport_depth");
-		if (depth_resource)
-		{
-			depth_resource->clear_value.depthStencil = { m_depth_color.r, (u32)m_depth_color.g };
-		}
-	}
 }
 
-void EditorViewport::SetViewportEditorReferences(MultiProjectionCamera* camera)
+void EditorViewport::SetViewportEditorReferences(MultiProjectionCamera* camera, EditorSettings* editor_settings)
 {
 	m_editor_camera = camera;
+	m_editor_settings = editor_settings;
 }
 
 void EditorViewport::CreateViewportResources()
 {
 	CreatePipelines();
-	SetupRenderGraph();
+	CreateAttachments();
 	CreateDescriptors();
 }
 
@@ -123,197 +123,96 @@ void EditorViewport::CreatePipelines()
 	PipelineManager::GetInstance()->CreatePipeline(C_PIPELINE_GRID, pipeline_info, shader_info);
 }
 
-void EditorViewport::SetupRenderGraph()
+void EditorViewport::CreateAttachments()
 {
-	m_render_graph = std::make_unique<RenderGraph>();
-
-	// ==========================================
-	// STEP 1: CREATE PHYSICAL TEXTURES
-	// ==========================================
-
-	m_viewport_color_texture = m_frontend->CreateTexture2D(VIEWPORT_COLOR, VK_FORMAT_R16G16B16A16_SFLOAT, m_size.x, m_size.y);
-	m_viewport_pick_texture = m_frontend->CreateTexture2D(VIEWPORT_PICK, VK_FORMAT_R32_UINT, m_size.x, m_size.y);
-	m_viewport_depth_texture = m_frontend->CreateTexture2D(VIEWPORT_DEPTH, VK_FORMAT_D32_SFLOAT, m_size.x, m_size.y);
-
-	// ==========================================
-	// STEP 2: IMPORT RESOURCES INTO RENDER GRAPH
-	// ==========================================
-
-	ImportPhysicalResources();
-
-	// ==========================================
-	// STEP 3: DEFINE VIEWPORT MAIN PASS
-	// ==========================================
-
-	RenderPassDescriptor viewport_pass{};
-	viewport_pass.name = "viewport_main";
-	viewport_pass.execution_order = 0;
-
-	// Bind color attachments (viewport color + pick)
-	// Using UNDEFINED as initial_layout with LOAD_OP_CLEAR is valid and tells Vulkan
-	// we don't care about previous contents - it will transition from any layout
-	viewport_pass.color_attachments.push_back({
-		"viewport_color",
-		ResourceUsage::ColorAttachment,
-		VK_ATTACHMENT_LOAD_OP_CLEAR,  // CLEAR allows UNDEFINED initial_layout
-		VK_ATTACHMENT_STORE_OP_STORE,
-		VK_IMAGE_LAYOUT_UNDEFINED,  // Don't care about previous contents, will clear anyway
-		VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL  // Transition to COLOR_ATTACHMENT for rendering
-	});
-
-	viewport_pass.color_attachments.push_back({
-		"viewport_pick",
-		ResourceUsage::ColorAttachment,
-		VK_ATTACHMENT_LOAD_OP_CLEAR,
-		VK_ATTACHMENT_STORE_OP_STORE,
-		VK_IMAGE_LAYOUT_UNDEFINED,
-		VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL  // For potential reading later
-	});
-
-	// Bind depth attachment  
-	viewport_pass.depth_attachment = PassResourceBinding{
-		"viewport_depth",
-		ResourceUsage::DepthAttachment,
-		VK_ATTACHMENT_LOAD_OP_CLEAR,
-		VK_ATTACHMENT_STORE_OP_STORE,
-		VK_IMAGE_LAYOUT_UNDEFINED,  // CLEAR allows UNDEFINED initial_layout
-		VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL
-	};
-
-	// Execution callback - render the scene
-	viewport_pass.execute = [this](VulkanBackend* backend, const RenderPassDescriptor& pass) {
-		// Render scene meshes with PBR pipeline
-		if (m_scene_descriptor)
-		{
-			backend->BindPipeline(PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_PBR));
-			backend->BindDescriptorSet(PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_PBR), m_scene_descriptor);
-			MeshManager::GetInstance()->DrawMeshes(PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_PBR));
-		}
-	};
-
-	m_render_graph->AddPass(viewport_pass);
-
-	// ==========================================
-	// STEP 4: DEFINE GRID OVERLAY PASS
-	// ==========================================
-
-	RenderPassDescriptor grid_pass{};
-	grid_pass.name = "viewport_grid";
-	grid_pass.execution_order = 1;
-
-	// Grid renders on top of viewport color (LOAD previous content)
-	grid_pass.color_attachments.push_back({
-		"viewport_color",
-		ResourceUsage::ColorAttachment,
-		VK_ATTACHMENT_LOAD_OP_LOAD,      // IMPORTANT: Load existing content from viewport pass
-		VK_ATTACHMENT_STORE_OP_STORE,
-		VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,  // Previous pass left it in this layout
-		VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL   // Final transition for ImGui
-	});
-
-	// Use depth from previous pass
-	grid_pass.depth_attachment = PassResourceBinding{
-		"viewport_depth",
-		ResourceUsage::DepthAttachment,
-		VK_ATTACHMENT_LOAD_OP_LOAD,      // Load depth from viewport pass
-		VK_ATTACHMENT_STORE_OP_DONT_CARE,
-		VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,  // Previous pass left it in this layout
-		VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-	};
-
-	// Grid depends on viewport pass
-	grid_pass.dependencies.push_back({
-		"viewport_main",
-		VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-		VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT
-	});
-
-	// Grid execution callback
-	grid_pass.execute = [this](VulkanBackend* backend, const RenderPassDescriptor& pass) {
-		// Bind pipeline and descriptor set
-		backend->BindPipeline(PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_GRID));
-		backend->BindDescriptorSet(PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_GRID), m_grid_descriptor);
-
-		// Draw grid (fullscreen quad)
-		backend->Draw(6, 1, 0, 0);
-	};
-
-	m_render_graph->AddPass(grid_pass);
-
-	// ==========================================
-	// STEP 5: BUILD THE GRAPH
-	// ==========================================
-
-	auto result = m_render_graph->Build();
-	if (result != GraphBuildResult::Success)
+	// Viewport
 	{
-		HE_CORE_ERROR("Failed to build render graph for EditorViewport: {}", (u32)result);
-	}
-}
+		m_viewport_color_texture = m_frontend->CreateTexture2D(VIEWPORT_COLOR, VK_FORMAT_R16G16B16A16_SFLOAT, m_size.x, m_size.y);
+		m_viewport_pick_texture = m_frontend->CreateTexture2D(VIEWPORT_PICK, VK_FORMAT_R32_UINT, m_size.x, m_size.y);
+		m_viewport_depth_texture = m_frontend->CreateTexture2D(VIEWPORT_DEPTH, VK_FORMAT_D32_SFLOAT, m_size.x, m_size.y);
 
-void EditorViewport::ImportPhysicalResources()
-{
-	// Import viewport color texture
-	m_render_graph->ImportResource(
-		"viewport_color",
-		m_viewport_color_texture->GetHandle(),
-		m_viewport_color_texture->GetImageView(),
-		m_viewport_color_texture->GetFormat(),
-		{ m_size.x, m_size.y },
-		ResourceUsage::ColorAttachment
-	);
+		m_viewport_color_attachment = {
+			m_viewport_color_texture->GetHandle(),
+			m_viewport_color_texture->GetImageView(),
+			m_viewport_color_texture->GetFormat(),
+			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+			VK_ATTACHMENT_LOAD_OP_CLEAR,
+			VK_ATTACHMENT_STORE_OP_STORE,
+			{ { m_clear_color.r, m_clear_color.g, m_clear_color.b, m_clear_color.a } },
+			VK_IMAGE_LAYOUT_UNDEFINED,
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+		};
 
-	HE_CORE_INFO("Imported viewport_color: image=0x{:x}, view=0x{:x}", 
-		(u64)m_viewport_color_texture->GetHandle(), 
-		(u64)m_viewport_color_texture->GetImageView());
+		m_viewport_pick_attachment = {
+			m_viewport_pick_texture->GetHandle(),
+			m_viewport_pick_texture->GetImageView(),
+			m_viewport_pick_texture->GetFormat(),
+			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+			VK_ATTACHMENT_LOAD_OP_CLEAR,
+			VK_ATTACHMENT_STORE_OP_STORE,
+			{ { 0.0f, 0.0f, 0.0f, 0.0f } },
+			VK_IMAGE_LAYOUT_UNDEFINED,
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+		};
 
-	// Set clear value for color
-	auto* color_resource = m_render_graph->GetResource("viewport_color");
-	if (color_resource)
-	{
-		color_resource->clear_value.color = { m_clear_color.r, m_clear_color.g, m_clear_color.b, m_clear_color.a };
+		m_viewport_depth_attachment = {
+			m_viewport_depth_texture->GetHandle(),
+			m_viewport_depth_texture->GetImageView(),
+			m_viewport_depth_texture->GetFormat(),
+			VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
+			VK_ATTACHMENT_LOAD_OP_CLEAR,
+			VK_ATTACHMENT_STORE_OP_STORE,
+			{ { m_depth_color.r, m_depth_color.g } },
+			VK_IMAGE_LAYOUT_UNDEFINED,
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+		};
+
+		m_viewport_dri = {
+			{ m_viewport_color_attachment, m_viewport_pick_attachment },
+			m_viewport_depth_attachment,
+			0,
+			{ m_size.x, m_size.y }
+		};
 	}
 
-	// Import viewport pick texture
-	m_render_graph->ImportResource(
-		"viewport_pick",
-		m_viewport_pick_texture->GetHandle(),
-		m_viewport_pick_texture->GetImageView(),
-		m_viewport_pick_texture->GetFormat(),
-		{ m_size.x, m_size.y },
-		ResourceUsage::ColorAttachment
-	);
-
-	// Set clear value for pick (black)
-	auto* pick_resource = m_render_graph->GetResource("viewport_pick");
-	if (pick_resource)
+	// Viewport grid
 	{
-		pick_resource->clear_value.color = { 0.0f, 0.0f, 0.0f, 0.0f };
+		m_grid_color_attachment = {
+			m_viewport_color_texture->GetHandle(),
+			m_viewport_color_texture->GetImageView(),
+			m_viewport_color_texture->GetFormat(),
+			VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+			VK_ATTACHMENT_LOAD_OP_LOAD,
+			VK_ATTACHMENT_STORE_OP_STORE,
+			{ { m_clear_color.r, m_clear_color.g, m_clear_color.b, m_clear_color.a } },
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+		};
+
+		m_grid_depth_attachment = {
+			m_viewport_depth_texture->GetHandle(),
+			m_viewport_depth_texture->GetImageView(),
+			m_viewport_depth_texture->GetFormat(),
+			VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
+			VK_ATTACHMENT_LOAD_OP_LOAD,
+			VK_ATTACHMENT_STORE_OP_DONT_CARE,
+			{ { m_depth_color.r, m_depth_color.g } },
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+			VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+		};
+
+		m_grid_dri = {
+			{ m_grid_color_attachment },
+			m_grid_depth_attachment,
+			0,
+			{ m_size.x, m_size.y }
+		};
 	}
-
-	// Import viewport depth texture
-	m_render_graph->ImportResource(
-		"viewport_depth",
-		m_viewport_depth_texture->GetHandle(),
-		m_viewport_depth_texture->GetImageView(),
-		m_viewport_depth_texture->GetFormat(),
-		{ m_size.x, m_size.y },
-		ResourceUsage::DepthAttachment
-	);
-
-	// Set clear value for depth
-	auto* depth_resource = m_render_graph->GetResource("viewport_depth");
-	if (depth_resource)
-	{
-		depth_resource->clear_value.depthStencil = { m_depth_color.r, (u32)m_depth_color.g };
-	}
-
-	HE_CORE_INFO("EditorViewport: Resources imported into render graph");
 }
 
 void EditorViewport::CreateDescriptors()
 {
-	// Viewport descriptor for ImGui display
+	// Viewport
 	{
 		m_viewport_descriptor = m_backend->CreateDescriptorSet(PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_EDITOR), 0);
 
@@ -332,7 +231,7 @@ void EditorViewport::CreateDescriptors()
 		m_handle = (void*)m_viewport_descriptor->GetHandle();
 	}
 
-	// Grid uniform buffer and descriptor
+	// Viewport grid
 	{
 		m_grid_data.proj = m_editor_camera->GetProjection();
 		m_grid_data.view = m_editor_camera->GetView();
@@ -354,6 +253,92 @@ void EditorViewport::CreateDescriptors()
 	}
 }
 
+void EditorViewport::DrawToolbar()
+{
+	constexpr f32 buttonSize = 24.0f;
+	constexpr f32 iconMargin = 4.0f;
+	constexpr f32 rightPadding = 6.0f;
+
+	const f32 textureWidth = static_cast<f32>(m_gizmo_icon_texture->GetWidth());
+	const f32 textureHeight = static_cast<f32>(m_gizmo_icon_texture->GetHeight());
+
+	const f32 maxIconSize = buttonSize - iconMargin;
+
+	const f32 scale = std::min(
+		maxIconSize / textureWidth,
+		maxIconSize / textureHeight
+	);
+
+	ImVec2 iconSize = ImVec2(
+		textureWidth * scale,
+		textureHeight * scale
+	);
+
+	// Right align button
+	const f32 cursorX =
+		ImGui::GetWindowContentRegionMax().x -
+		buttonSize -
+		rightPadding;
+
+	ImGui::SetCursorPosX(cursorX);
+
+	ImGui::PushID("ViewportGizmosToggle");
+
+	ImGui::PushStyleVar(
+		ImGuiStyleVar_FramePadding,
+		ImVec2(
+			(buttonSize - iconSize.x) * 0.5f,
+			(buttonSize - iconSize.y) * 0.5f
+		)
+	);
+
+	ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 4.0f);
+
+	ImGui::PushStyleColor(
+		ImGuiCol_Button,
+		m_editor_settings->show_gizmos
+		? ImVec4(0.25f, 0.45f, 0.85f, 0.9f)
+		: ImVec4(0.12f, 0.12f, 0.12f, 0.75f)
+	);
+
+	ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.35f, 0.55f, 0.95f, 0.95f));
+	ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.20f, 0.35f, 0.70f, 1.0f));
+
+	ImTextureID icon = reinterpret_cast<ImTextureID>(m_gizmo_icon);
+
+	if (ImGui::ImageButton("##GizmosIcon", icon, iconSize))
+	{
+		m_editor_settings->show_gizmos = !m_editor_settings->show_gizmos;
+	}
+
+	if (ImGui::IsItemHovered())
+	{
+		ImGui::SetTooltip("Toggle Gizmos");
+	}
+
+	ImGui::PopStyleColor(3);
+	ImGui::PopStyleVar(2);
+
+	ImGui::PopID();
+
+	ImGui::Separator();
+}
+
+void EditorViewport::DrawGrid()
+{
+	m_backend->BeginDynamicRenderingWithAttachments(m_grid_dri);
+
+	m_backend->SetViewport({ { 0.0f, 0.0f, (f32)m_size.x, (f32)m_size.y, 0.0f, 1.0f } });
+	m_backend->SetScissor({ { { 0, 0 }, { m_size.x, m_size.y } } });
+
+	m_backend->BindPipeline(PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_GRID));
+	m_backend->BindDescriptorSet(PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_GRID), m_grid_descriptor);
+
+	m_backend->Draw(6, 1, 0, 0);
+
+	m_backend->EndDynamicRenderingWithAttachments(m_grid_dri);
+}
+
 void EditorViewport::UpdateGridCameraData()
 {
 	m_grid_data.view = m_editor_camera->GetView();
@@ -363,26 +348,48 @@ void EditorViewport::UpdateGridCameraData()
 
 void EditorViewport::OnViewportResize()
 {
-	// Destroy old textures
 	m_frontend->DestroyTexture2D(VIEWPORT_COLOR);
 	m_frontend->DestroyTexture2D(VIEWPORT_PICK);
 	m_frontend->DestroyTexture2D(VIEWPORT_DEPTH);
 
-	// Recreate textures with new size
 	m_viewport_color_texture = m_frontend->CreateTexture2D(VIEWPORT_COLOR, VK_FORMAT_R16G16B16A16_SFLOAT, m_size.x, m_size.y);
 	m_viewport_pick_texture = m_frontend->CreateTexture2D(VIEWPORT_PICK, VK_FORMAT_R32_UINT, m_size.x, m_size.y);
 	m_viewport_depth_texture = m_frontend->CreateTexture2D(VIEWPORT_DEPTH, VK_FORMAT_D32_SFLOAT, m_size.x, m_size.y);
 
-	// Re-import resources into render graph
-	ImportPhysicalResources();
+	m_viewport_color_attachment.image = m_viewport_color_texture->GetHandle();
+	m_viewport_color_attachment.image_view = m_viewport_color_texture->GetImageView();
+	m_viewport_color_attachment.format = m_viewport_color_texture->GetFormat();
 
-	// Rebuild the render graph with new resources
-	if (m_render_graph)
-	{
-		m_render_graph->Rebuild();
-	}
+	m_viewport_pick_attachment.image = m_viewport_pick_texture->GetHandle();
+	m_viewport_pick_attachment.image_view = m_viewport_pick_texture->GetImageView();
+	m_viewport_pick_attachment.format = m_viewport_pick_texture->GetFormat();
 
-	// Update ImGui descriptor
+	m_viewport_depth_attachment.image = m_viewport_depth_texture->GetHandle();
+	m_viewport_depth_attachment.image_view = m_viewport_depth_texture->GetImageView();
+	m_viewport_depth_attachment.format = m_viewport_depth_texture->GetFormat();
+
+	m_grid_color_attachment.image = m_viewport_color_texture->GetHandle();
+	m_grid_color_attachment.image_view = m_viewport_color_texture->GetImageView();
+	m_grid_color_attachment.format = m_viewport_color_texture->GetFormat();
+
+	m_grid_depth_attachment.image = m_viewport_depth_texture->GetHandle();
+	m_grid_depth_attachment.image_view = m_viewport_depth_texture->GetImageView();
+	m_grid_depth_attachment.format = m_viewport_depth_texture->GetFormat();
+
+	m_viewport_dri = {
+		{ m_viewport_color_attachment, m_viewport_pick_attachment },
+		m_viewport_depth_attachment,
+		0,
+		{ m_size.x, m_size.y }
+	};
+
+	m_grid_dri = {
+		{ m_grid_color_attachment },
+		m_grid_depth_attachment,
+		0,
+		{ m_size.x, m_size.y }
+	};
+
 	DescriptorSetWriteData editor_write_data{};
 	editor_write_data.type = DescriptorType_CombinedImageSampler;
 	editor_write_data.binding = 0;

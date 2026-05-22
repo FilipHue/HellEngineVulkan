@@ -30,8 +30,8 @@ void TestOffscreen::Setup()
 	CreatePipeline();
 	CreateDescriptorSets();
 
-	m_chinese_dragon_model->UploadToGPU<VertexFormatBase>();
-	m_plane_model->UploadToGPU<VertexFormatBase>();
+	m_chinese_dragon_model->UploadToGPU<VertexFormatSimple>();
+	m_plane_model->UploadToGPU<VertexFormatSimple>();
 	m_chinese_dragon_model->GenerateDescriptorSets(m_shaded_pipeline, 3);
 	m_chinese_dragon_model->GenerateDescriptorSets(m_offscreen_pipeline, 3);
 	m_plane_model->GenerateDescriptorSets(m_mirror_pipeline, 3);
@@ -382,8 +382,8 @@ void TestOffscreen::CreatePipeline()
 		}
 	};
 
-	pipeline_info.vertex_binding_description = VertexFormatBase::GetBindingDescription();
-	pipeline_info.vertex_attribute_descriptions = VertexFormatBase::GetAttributeDescriptions();
+	pipeline_info.vertex_binding_description = VertexFormatSimple::GetBindingDescription();
+	pipeline_info.vertex_attribute_descriptions = VertexFormatSimple::GetAttributeDescriptions();
 	pipeline_info.topology = PipelinePrimitiveTopology_TriangleList;
 	pipeline_info.cull_mode = PipelineCullMode_Back;
 	pipeline_info.front_face = PipelineFrontFace_CounterClockwise;

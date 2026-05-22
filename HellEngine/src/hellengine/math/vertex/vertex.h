@@ -23,15 +23,38 @@ namespace hellengine
 			std::vector<glm::vec3> bitangents;
 		};
 
-		struct VertexFormatBase
+		struct VertexGuizmo
+		{
+			glm::vec3 position;
+			glm::vec4 color;
+
+			VertexGuizmo() : position(0.0f), color(0.0f) {}
+			VertexGuizmo(glm::vec3 position, glm::vec4 color) : position(position), color(color) {}
+
+			HE_API static VkVertexInputBindingDescription GetBindingDescription();
+			HE_API static std::vector<VkVertexInputAttributeDescription> GetAttributeDescriptions();
+		};
+
+		struct VertexFormatPosition
+		{
+			glm::vec3 position;
+
+			VertexFormatPosition() : position(0.0f) {}
+			VertexFormatPosition(glm::vec3 position) : position(position) {}
+
+			HE_API static VkVertexInputBindingDescription GetBindingDescription();
+			HE_API static std::vector<VkVertexInputAttributeDescription> GetAttributeDescriptions();
+		};
+
+		struct VertexFormatSimple
 		{
 			glm::vec3 position;
 			glm::vec4 color;
 			glm::vec2 tex_coord;
 			glm::vec3 normal;
 
-			VertexFormatBase() : position(0.0f), color(0.0f), tex_coord(0.0f), normal(0.0f) {}
-			VertexFormatBase(glm::vec3 position, glm::vec4 color, glm::vec2 tex_coord, glm::vec3 normal = glm::vec3(0.0f, 1.0f, 0.0f)) : position(position), color(color), tex_coord(tex_coord), normal(normal) {}
+			VertexFormatSimple() : position(0.0f), color(0.0f), tex_coord(0.0f), normal(0.0f) {}
+			VertexFormatSimple(glm::vec3 position, glm::vec4 color, glm::vec2 tex_coord, glm::vec3 normal = glm::vec3(0.0f, 1.0f, 0.0f)) : position(position), color(color), tex_coord(tex_coord), normal(normal) {}
 
 			HE_API static VkVertexInputBindingDescription GetBindingDescription();
 			HE_API static std::vector<VkVertexInputAttributeDescription> GetAttributeDescriptions();

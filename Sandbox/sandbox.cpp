@@ -575,8 +575,8 @@ void SandboxApplication::CreatePipelines()
 			}
 		};
 
-		pipeline_info.vertex_binding_description = VertexFormatBase::GetBindingDescription();
-		pipeline_info.vertex_attribute_descriptions = VertexFormatBase::GetAttributeDescriptions();
+		pipeline_info.vertex_binding_description = VertexFormatSimple::GetBindingDescription();
+		pipeline_info.vertex_attribute_descriptions = VertexFormatSimple::GetAttributeDescriptions();
 
 		pipeline_info.dynamic_rendering_info = {
 			false,
@@ -616,8 +616,8 @@ void SandboxApplication::CreatePipelines()
 			}
 		};
 
-		pipeline_info.vertex_binding_description = VertexFormatBase::GetBindingDescription();
-		pipeline_info.vertex_attribute_descriptions = VertexFormatBase::GetAttributeDescriptions();
+		pipeline_info.vertex_binding_description = VertexFormatSimple::GetBindingDescription();
+		pipeline_info.vertex_attribute_descriptions = VertexFormatSimple::GetAttributeDescriptions();
 
 		pipeline_info.dynamic_rendering_info = {
 			false,
@@ -650,8 +650,8 @@ void SandboxApplication::CreatePipelines()
 			}
 		};
 
-		pipeline_info.vertex_binding_description = VertexFormatBase::GetBindingDescription();
-		pipeline_info.vertex_attribute_descriptions = VertexFormatBase::GetAttributeDescriptions();
+		pipeline_info.vertex_binding_description = VertexFormatSimple::GetBindingDescription();
+		pipeline_info.vertex_attribute_descriptions = VertexFormatSimple::GetAttributeDescriptions();
 
 		pipeline_info.dynamic_rendering_info = {
 			false,

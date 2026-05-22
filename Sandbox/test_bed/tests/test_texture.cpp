@@ -229,8 +229,8 @@ void TestTexture::CreatePipelines()
 		}
 	};
 
-	pipeline_info.vertex_binding_description = VertexFormatBase::GetBindingDescription();
-	pipeline_info.vertex_attribute_descriptions = VertexFormatBase::GetAttributeDescriptions();
+	pipeline_info.vertex_binding_description = VertexFormatSimple::GetBindingDescription();
+	pipeline_info.vertex_attribute_descriptions = VertexFormatSimple::GetAttributeDescriptions();
 
 	ShaderStageInfo shader_info = {};
 

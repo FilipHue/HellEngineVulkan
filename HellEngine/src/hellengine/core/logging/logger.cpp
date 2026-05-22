@@ -8,8 +8,9 @@ namespace hellengine
 	{
 
 		Shared<spdlog::logger> Logger::s_core_logger;
-		Shared<spdlog::logger> Logger::s_graphics_logger;
 		Shared<spdlog::logger> Logger::s_ecs_logger;
+		Shared<spdlog::logger> Logger::s_graphics_logger;
+		Shared<spdlog::logger> Logger::s_resource_logger;
 		Shared<spdlog::logger> Logger::s_client_logger;
 
 		void Logger::Init()
@@ -25,17 +26,23 @@ namespace hellengine
 			s_core_logger->set_level(spdlog::level::trace);
 			s_core_logger->flush_on(spdlog::level::trace);
 
+			s_ecs_logger = MakeShared<spdlog::logger>(ECS_LOGGER_NAME, begin(logSinks), end(logSinks));
+			spdlog::register_logger(s_ecs_logger);
+
+			s_ecs_logger->set_level(spdlog::level::trace);
+			s_ecs_logger->flush_on(spdlog::level::trace);
+
 			s_graphics_logger = MakeShared<spdlog::logger>(GRAPHICS_LOGGER_NAME, begin(logSinks), end(logSinks));
 			spdlog::register_logger(s_graphics_logger);
 
 			s_graphics_logger->set_level(spdlog::level::trace);
 			s_graphics_logger->flush_on(spdlog::level::trace);
 
-			s_ecs_logger = MakeShared<spdlog::logger>(ECS_LOGGER_NAME, begin(logSinks), end(logSinks));
-			spdlog::register_logger(s_ecs_logger);
+			s_resource_logger = MakeShared<spdlog::logger>(RESOURCE_LOGGER_NAME, begin(logSinks), end(logSinks));
+			spdlog::register_logger(s_resource_logger);
 
-			s_ecs_logger->set_level(spdlog::level::trace);
-			s_ecs_logger->flush_on(spdlog::level::trace);
+			s_resource_logger->set_level(spdlog::level::trace);
+			s_resource_logger->flush_on(spdlog::level::trace);
 
 			s_client_logger = MakeShared<spdlog::logger>(CLIENT_LOGGER_NAME, begin(logSinks), end(logSinks));
 			spdlog::register_logger(s_client_logger);
@@ -54,14 +61,19 @@ namespace hellengine
 			return s_core_logger;
 		}
 
+		Shared<spdlog::logger>& Logger::GetEcsLogger()
+		{
+			return s_ecs_logger;
+		}
+
 		Shared<spdlog::logger>& Logger::GetGraphicsLogger()
 		{
 			return s_graphics_logger;
 		}
 
-		Shared<spdlog::logger>& Logger::GetEcsLogger()
+		Shared<spdlog::logger>& Logger::GetResourceLogger()
 		{
-			return s_ecs_logger;
+			return s_resource_logger;
 		}
 
 		Shared<spdlog::logger>& Logger::GetClientLogger()

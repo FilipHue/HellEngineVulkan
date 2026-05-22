@@ -80,7 +80,7 @@ namespace hellengine
 			}
 		}
 
-		void MeshManager::CreateDescriptors(VulkanPipeline* pipeline, u32 set)
+		void MeshManager::CreateDescriptors(VulkanPipeline* pipeline)
 		{
 			// Create descriptor set for materials
 			{
@@ -196,7 +196,7 @@ namespace hellengine
 			CreatePackedData();
 		}
 
-		template b8 MeshManager::UploadMeshGeometry<VertexFormatBase>(Mesh* mesh);
+		template b8 MeshManager::UploadMeshGeometry<VertexFormatSimple>(Mesh* mesh);
 		template b8 MeshManager::UploadMeshGeometry<VertexFormatTangent>(Mesh* mesh);
 
 		template<typename VertexT>
@@ -346,6 +346,16 @@ namespace hellengine
 					info.lightmap_index = material_info->Get(TextureType_Lightmap & types);
 					info.reflection_index = material_info->Get(TextureType_Reflection & types);
 
+					info.base_color_index = material_info->Get(TextureType_BaseColor & types);
+					info.normal_camera_index = material_info->Get(TextureType_NormalCamera & types);
+					info.emission_color_index = material_info->Get(TextureType_EmissionColor & types);
+					info.metalness_index = material_info->Get(TextureType_Metalness & types);
+					info.diffuse_roughness_index = material_info->Get(TextureType_DiffuseRoughness & types);
+					info.ambient_occlusion_index = material_info->Get(TextureType_AmbientOcclusion & types);
+					info.sheen_index = material_info->Get(TextureType_Sheen & types);
+					info.clearcoat_index = material_info->Get(TextureType_Clearcoat & types);
+					info.transmission_index = material_info->Get(TextureType_Transmission & types);
+
 					m_mesh_gpu_info.push_back(info);
 				}
 
@@ -383,7 +393,7 @@ namespace hellengine
 					{
 						DescriptorSetWriteData image_data{};
 						image_data.type = DescriptorType_CombinedImageSampler;
-						image_data.binding = 0;
+						image_data.binding = 1;
 						image_data.data.image.image_views = m_descriptor_image_views.data();
 						image_data.data.image.samplers = m_descriptor_image_samplers.data();
 
@@ -422,6 +432,7 @@ namespace hellengine
 			u32 draw_id = 0;
 			while (current_pool < (u32)m_pools.size())
 			{
+				m_pools[current_pool].number_of_instances = 0;
 				while (current_instance < (u32)m_mesh_instances_allocation.size())
 				{
 					MeshInstanceAllocation* instance = m_mesh_instances_allocation[current_instance];
@@ -430,6 +441,7 @@ namespace hellengine
 						break;
 					}
 
+					m_pools[current_pool].number_of_instances++;
 					VkDrawIndexedIndirectCommand command{};
 					command.indexCount = instance->buffer_allocation->index_count;
 					command.instanceCount = 1;
@@ -560,8 +572,8 @@ namespace hellengine
 			}
 
 			m_backend->BindDescriptorSet(pipeline, m_materials_descriptor);
-			m_backend->BindDescriptorSet(pipeline, m_textures_descriptor);
 			m_backend->BindDescriptorSet(pipeline, m_per_draw_data_descriptor);
+			m_backend->BindDescriptorSet(pipeline, m_textures_descriptor);
 
 			VkDeviceSize indirect_offset = 0;
 
@@ -573,10 +585,10 @@ namespace hellengine
 				m_backend->DrawIndexedIndirect(
 					m_draw_commands_buffer,
 					static_cast<u32>(indirect_offset),
-					(u32)m_mesh_instances_allocation.size(),
+					pool.number_of_instances,
 					sizeof(VkDrawIndexedIndirectCommand));
 
-				indirect_offset += sizeof(VkDrawIndexedIndirectCommand) * (u32)m_mesh_instances_allocation.size();
+				indirect_offset += sizeof(VkDrawIndexedIndirectCommand) * pool.number_of_instances;
 			}
 		}
 
@@ -592,6 +604,7 @@ namespace hellengine
 			pool.index_buffer = m_backend->CreateIndexBufferEmpty(MAX_MEMORY_INDICES);
 			pool.vertex_count = 0;
 			pool.index_count = 0;
+			pool.number_of_instances = 0;
 
 			m_pools.push_back(pool);
 		}
@@ -610,9 +623,21 @@ namespace hellengine
 			if (!indices.empty())      hash = fnv1a_hash_combine(hash, fnv1a_hash(indices.data(), indices.size()));
 
 			hash = fnv1a_hash_combine(hash, (u64)v.positions.size());
-			hash = fnv1a_hash_combine(hash, (u64)indices.size());
+				hash = fnv1a_hash_combine(hash, (u64)indices.size());
 
-			return hash;
+				return hash;
+		}
+
+		Mesh* MeshManager::GetMeshByName(const std::string& mesh_name) const
+		{
+			for (Mesh* mesh : m_meshes)
+			{
+				if (mesh && mesh->GetName() == mesh_name)
+				{
+					return mesh;
+				}
+			}
+			return nullptr;
 		}
 
 	} // namespace graphics

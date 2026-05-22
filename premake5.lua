@@ -47,6 +47,7 @@ project "HellEngine"
         "%{IncludeDirs.IMGUI}",
         "%{IncludeDirs.IMGUIZMO}",
         "%{IncludeDirs.ENTT}",
+        "%{IncludeDirs.YAML}",
 
         "%{IncludeDirs.VULKAN}"
     }
@@ -59,28 +60,32 @@ project "HellEngine"
     -- }
 
     filter "files:HellEngine/dependencies/GLM/include/**.c*"
-        flags { "NoPCH" }
+        enablepch "Off"
 
     filter "files:HellEngine/dependencies/GLAD/glad.c"
-        flags { "NoPCH" }
+        enablepch "Off"
 
     filter "files:HellEngine/dependencies/STB/**.c*"
-        flags { "NoPCH" }
+        enablepch "Off"
 
     filter "files:HellEngine/dependencies/KTX/**.c*"
-        flags { "NoPCH" }
+        enablepch "Off"
 
     filter "files:HellEngine/dependencies/IMGUI/**.c*"
-        flags { "NoPCH" }
+        enablepch "Off"
 
     filter "files:HellEngine/dependencies/IMGUIZMO/**.c*"
-        flags { "NoPCH" }
+        enablepch "Off"
+
+    filter "files:HellEngine/dependencies/YAML/**.c*"
+        enablepch "Off"
 
     filter "system:windows"
         cppdialect "C++20"
         defines 
         { 
             "HE_PLATFORM_WINDOWS",
+            "YAML_CPP_STATIC_DEFINE",
             -- "HE_BUILD_DLL",
             -- "HE_DLL"
         }
@@ -90,10 +95,7 @@ project "HellEngine"
             "/Zc:__cplusplus"
         }
 
-        flags
-        {
-            "MultiProcessorCompile"
-        }
+        multiprocessorcompile ("On")
 
     filter "configurations:Debug"
         runtime "Debug"
@@ -102,7 +104,7 @@ project "HellEngine"
 
     filter "configurations:Release"
         runtime "Release"
-        defines {"HE_RELEASE", "NDEBUG"}
+        defines {"HE_RELEASE", "NDEBUG", "YAML_CPP_STATIC_DEFINE"}
         optimize "On"
 
 project "Editor"
@@ -132,6 +134,7 @@ project "Editor"
         "HellEngine/dependencies/IMGUI",
         "HellEngine/dependencies/IMGUIZMO/include",
         "HellEngine/dependencies/ENTT/include",
+        "HellEngine/dependencies/YAML/include",
         "%{IncludeDirs.VULKAN}"
     }
 
@@ -141,6 +144,7 @@ project "Editor"
         "%{LibraryDirectories.GLFW}",
         "%{LibraryDirectories.ASSIMP}",
         "%{LibraryDirectories.KTX}",
+        "%{LibraryDirectories.YAML}",
         "%{LibraryDirectories.VulkanSDK}"
     }
 
@@ -156,28 +160,26 @@ project "Editor"
             "HE_PLATFORM_WINDOWS",
         }
         buildoptions { "/Zc:__cplusplus" }
-        flags { "MultiProcessorCompile" }
+        multiprocessorcompile ("On")
 
     filter "configurations:Debug"
         runtime "Debug"
-        defines "HE_DEBUG"
+        defines {"HE_DEBUG", "HE_EDITOR", "YAML_CPP_STATIC_DEFINE"}
         symbols "On"
-
-        -- Ignore conflicting runtime library from external dependencies
-        ignoredefaultlibraries { "msvcrt.lib" }
-
+        
         links
         {
             "%{Library.SPDLOG}",
             "%{Library.GLFW}",
             "%{Library.ASSIMP}",
             "%{Library.KTX}",
+            "%{Library.YAMLD}",
             "%{Library.Vulkan}"
         }
 
     filter "configurations:Release"
         runtime "Release"
-        defines {"HE_RELEASE", "NDEBUG"}
+        defines {"HE_RELEASE", "NDEBUG", "HE_DEBUG", "YAML_CPP_STATIC_DEFINE"}
         optimize "On"
         
         links
@@ -186,6 +188,7 @@ project "Editor"
             "%{Library.GLFW}",
             "%{Library.ASSIMP}",
             "%{Library.KTX}",
+            "%{Library.YAML}",
             "%{Library.Vulkan}"
         }
 
@@ -218,6 +221,7 @@ project "Sandbox"
         "HellEngine/dependencies/IMGUI",
         "HellEngine/dependencies/IMGUIZMO/include",
         "HellEngine/dependencies/ENTT/include",
+        "HellEngine/dependencies/YAML/include",
         "%{IncludeDirs.VULKAN}"
     }
 
@@ -227,6 +231,7 @@ project "Sandbox"
         "%{LibraryDirectories.GLFW}",
         "%{LibraryDirectories.ASSIMP}",
         "%{LibraryDirectories.KTX}",
+        "%{LibraryDirectories.YAML}",
         "%{LibraryDirectories.VulkanSDK}"
     }
 
@@ -242,15 +247,12 @@ project "Sandbox"
             "HE_PLATFORM_WINDOWS",
         }
         buildoptions { "/Zc:__cplusplus" }
-        flags { "MultiProcessorCompile" }
+        multiprocessorcompile ("On")
 
     filter "configurations:Debug"
         runtime "Debug"
-        defines "HE_DEBUG"
+        defines {"HE_DEBUG", "YAML_CPP_STATIC_DEFINE"}
         symbols "On"
-
-        -- Ignore conflicting runtime library from external dependencies
-        ignoredefaultlibraries { "msvcrt.lib" }
 
         links
         {
@@ -258,12 +260,13 @@ project "Sandbox"
             "%{Library.GLFW}",
             "%{Library.ASSIMP}",
             "%{Library.KTX}",
+            "%{Library.YAMLD}",
             "%{Library.Vulkan}"
         }
 
     filter "configurations:Release"
         runtime "Release"
-        defines {"HE_RELEASE", "NDEBUG"}
+        defines {"HE_RELEASE", "NDEBUG", "YAML_CPP_STATIC_DEFINE"}
         optimize "On"
 
         links
@@ -272,6 +275,7 @@ project "Sandbox"
             "%{Library.GLFW}",
             "%{Library.ASSIMP}",
             "%{Library.KTX}",
+            "%{Library.YAML}",
             "%{Library.Vulkan}"
         }
 

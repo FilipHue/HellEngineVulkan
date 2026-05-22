@@ -1,12 +1,20 @@
 #pragma once
 
+constexpr auto EDITOR_ASSET_PATH = "assets/editor";
+constexpr auto EDITOR_TEXTURE_PATH = "assets/textures";
 constexpr auto EDITOR_SHADER_PATH = "assets/editor/shaders";
 constexpr auto EDITOR_MODEL_PATH = "assets/models";
+constexpr auto EDITOR_SCENE_PATH = "assets/scenes";
 
 constexpr auto VIEWPORT_COLOR = "EDITOR_VIEWPORT_COLOR_ATTACHMENT";
 constexpr auto VIEWPORT_PICK = "EDITOR_VIEWPORT_PICK_ATTACHMENT";
 constexpr auto VIEWPORT_DEPTH = "EDITOR_VIEWPORT_DEPTH_ATTACHMENT";
 
 constexpr auto C_PIPELINE_PBR = "PBR";
+constexpr auto C_PIPELINE_GBUFFER = "GBuffer";
+constexpr auto C_PIPELINE_GLOBAL_ILLUMINATION = "GlobalIllumination";
 constexpr auto C_PIPELINE_EDITOR = "Editor";
 constexpr auto C_PIPELINE_GRID = "Editor_Grid";
+constexpr auto C_PIPELINE_WIREFRAME = "Editor_Wireframe";
+constexpr auto C_PIPELINE_GIZMO = "Editor_Light_Gizmo";
+constexpr auto C_PIPELINE_SHADOW_DEPTH = "Editor_Shadow_Depth";

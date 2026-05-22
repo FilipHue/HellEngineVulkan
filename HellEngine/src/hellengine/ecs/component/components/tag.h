@@ -12,7 +12,6 @@ namespace hellengine
 		struct TagComponent
 		{
 			DEFAULT_ALL(TagComponent);
-			TagComponent(std::string tag) { tag = tag; }
 
 			std::string tag;
 		};

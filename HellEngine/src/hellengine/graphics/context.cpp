@@ -260,7 +260,8 @@ namespace hellengine
 
 		void VulkanContext::BeginDynamicRenderingWithAttachments(const DynamicRenderingInfo& info)
 		{
-			HE_ASSERT(info.color_attachments.size() > 0, "Dynamic rendering requires at least one color attachment!");
+			HE_ASSERT(info.color_attachments.size() > 0 || info.depth_attachment.has_value(), 
+				"Dynamic rendering requires at least one color attachment or a depth attachment!");
 
 			std::vector<VkRenderingAttachmentInfo> color_attachments;
 			for (u32 i = 0; i < info.color_attachments.size(); i++)
@@ -297,7 +298,7 @@ namespace hellengine
 			rendering_info.layerCount = 1;
 			rendering_info.viewMask = 0;	
 			rendering_info.colorAttachmentCount = (u32)color_attachments.size();
-			rendering_info.pColorAttachments = color_attachments.data();
+			rendering_info.pColorAttachments = color_attachments.size() > 0 ? color_attachments.data() : VK_NULL_HANDLE;
 			rendering_info.pDepthAttachment = info.depth_attachment.has_value() ? &depth_attachment_info : VK_NULL_HANDLE;
 
 			for (u32 i = 0; i < info.color_attachments.size(); i++)

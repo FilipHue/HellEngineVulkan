@@ -362,3 +362,8 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Other
+
+# Assets/Models folders (too large for git)
+**/assets/models/

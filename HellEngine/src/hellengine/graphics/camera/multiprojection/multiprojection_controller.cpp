@@ -12,6 +12,9 @@ namespace hellengine
 			m_camera = nullptr;
 			m_translation_speed = 5.0f;
 			m_mouse_sensitivity = 0.1f;
+			m_last_mouse_x = 0.0f;
+			m_last_mouse_y = 0.0f;
+			m_is_active = false;
 		}
 
 		MultiProjectionController::~MultiProjectionController()
@@ -37,6 +40,13 @@ namespace hellengine
 
 		void MultiProjectionController::SetActive(b8 active)
 		{
+			if (active && !m_is_active)
+			{
+				// Anchor mouse delta when entering freelook so first movement doesn't snap
+				m_last_mouse_x = Input::GetMouseX();
+				m_last_mouse_y = Input::GetMouseY();
+			}
+
 			m_is_active = active;
 		}
 

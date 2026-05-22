@@ -79,7 +79,7 @@ private:
 	u8* m_texture_data;
 
     // Mesh
-    std::vector<VertexFormatBase> m_vertices;
+    std::vector<VertexFormatSimple> m_vertices;
     std::vector<u32> m_indices;
 };
 #endif // _TEST_BED_ENABLED

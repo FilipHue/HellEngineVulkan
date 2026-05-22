@@ -3,8 +3,6 @@
 // Internal
 #include "hellengine/hellengine.h"
 
-#include "shared.h"
-
 #include "bars/editor_menu_bar.h"
 #include "panels/editor_hierarchy.h"
 #include "panels/editor_inspector.h"
@@ -21,13 +19,6 @@ using namespace ui;
 using namespace math;
 using namespace resources;
 using namespace tools;
-
-ALIGN_AS(64) struct GlobalShaderData
-{
-	glm::mat4 proj;
-	glm::mat4 view;
-	glm::vec3 camera_position;
-};
 
 class Editor : public Application
 {
@@ -61,15 +52,89 @@ public:
 	b8 OnEventMouseScrolled(EventContext& event);
 
 private:
+	// TODO : These functions should be moved to SceneManager
+	void ImportAsset();
+	void CreateEmptyGameObject();
+
 	void CreateResources();
 	void CreatePipelines();
 	void CreateDescriptors();
 
+	void DestroyResources();
+
+	// Editor
+	void CreateEditorPipeline();
+	void CreateEditorResources();
+	void DestroyEditorResources();
+	void CreateEditorDescriptors();
+	void UpdateEditorDescriptors();
+	void RenderEditor();
+
 	void CreateEditorUI();
 
+	// PBR
+	void CreatePBRPipeline();
+	void CreatePBRResources();
+	void DestroyPBRResources();
+	void CreatePBRDescriptors();
+	void UpdatePBRDescriptors();
+	void RenderPBR();
+
+	// GBuffer
+	void CreateGBufferPipeline();
+	void CreateGBufferResources();
+	void DestroyGBufferResources();
+	void CreateGBufferDescriptors();
+	void UpdateGBufferDescriptors();
+	void RenderGBuffer();
+
+	// Global Illumination
+	void CreateGIPipeline();
+	void CreateGIResources();
+	void DestroyGIResources();
+	void CreateGIDescriptors();
+	void UpdateGIDescriptors();
+	void RenderGI();
+
+	// Shadow Maps
+	void CreateShadowPipeline();
+	void CreateShadowResources();
+	void DestroyShadowResources();
+	void CreateShadowDescriptors();
+	void UpdateShadowDescriptors();
+	void RenderShadowMaps();
+
+	// Debug Visualization
+	void CreateDebugPipeline();
+	void CreateDebugResources();
+	void DestroyDebugResources();
+	void CreateDebugDescriptors();
+	void UpdateDebugDescriptors();
+	void UpdateDebug();
+	void RenderDebug();
+
+	// Final Blit
 	void DrawToSwapchain();
 
-	void ShowGuizmo();
+	// Gizmos
+	void ShowTransformGizmo();
+	
+	// Other
+	void UpdateLights();
+	glm::mat4 ComputeCascadeMatrix(
+		MultiProjectionCamera& camera,
+		const glm::uvec2& viewportSize,
+		const glm::vec3& lightDir,
+		f32 cascadeNear,
+		f32 cascadeFar,
+		f32 shadowMapSize);
+	void ComputeDirectionalLightCascades(
+		MultiProjectionCamera& camera,
+		const glm::uvec2& viewportSize,
+		const ShadowSettings& shadowSettings,
+		const glm::vec3& lightDir,
+		u32 lightIndex,
+		LightGPUData& gpuLight);
 
 private:
 	// Editor
@@ -87,10 +152,40 @@ private:
 	EditorViewport* m_viewport_panel;
 	EditorMenuBar* m_menu_bar;
 
+	// Editor state
+	EditorSettings m_editor_settings;
+
 	// PBR Pipeline
-	DescriptorSet* m_pbr_global_descriptor;
-	UniformBuffer* m_pbr_global_ubo;
+	DescriptorSet* m_pbr_descriptor;
+	DescriptorSet* m_pbr_gi_descriptor;
+	UniformBuffer* m_pbr_global_data_ubo;
+	UniformBuffer* m_pbr_lights_data_ubo;
+	UniformBuffer* m_pbr_gi_data_ubo;
+	UniformBuffer* m_pbr_shadow_data_ubo;
 
-	GlobalShaderData m_global_shader_data;
+	// GBuffer Pipeline
+	VulkanTexture2D* m_gbuffer_position = nullptr;
+	VulkanTexture2D* m_gbuffer_normal = nullptr;
+	VulkanTexture2D* m_gbuffer_albedo_ao = nullptr;
+	VulkanTexture2D* m_gbuffer_depth = nullptr;
+
+	// Global illumination
+	VulkanTexture2D* m_gi_texture = nullptr;
+
+	DescriptorSet* m_gi_descriptor;
+
+	DynamicRenderingInfo m_gbuffer_rendering_info;
+	DynamicRenderingInfo m_gi_rendering_info;
+
+	GlobalData m_global_data;
+	LightsUBOData m_lights_data;
+
+	// Shadow Maps
+	std::vector<VulkanTexture2D*> m_shadow_maps;
+	DescriptorSet* m_textures_descriptor;
+
+	Buffer* m_gizmo_vb;
+	Buffer* m_gizmo_ib;
+	std::vector<VertexGuizmo> m_gizmo_vertices;
+	std::vector<u32> m_gizmo_indices;
 };
-

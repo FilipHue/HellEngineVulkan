@@ -14,7 +14,6 @@ namespace hellengine
 		struct IDComponent
 		{
 			DEFAULT_ALL(IDComponent);
-			IDComponent(UUID id) { id = id; }
 
 			UUID id;
 		};

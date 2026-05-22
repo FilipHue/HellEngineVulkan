@@ -28,7 +28,7 @@ void TestPushConstants::Setup()
 
 	LoadResources();
 	SetupSpheres();
-	m_model->UploadToGPU<VertexFormatBase>();
+	m_model->UploadToGPU<VertexFormatSimple>();
 }
 
 void TestPushConstants::ProcessUpdate(f32 dt)
@@ -189,8 +189,8 @@ void TestPushConstants::CreatePipelines()
 		}
 	};
 
-	pipeline_info.vertex_binding_description = VertexFormatBase::GetBindingDescription();
-	pipeline_info.vertex_attribute_descriptions = VertexFormatBase::GetAttributeDescriptions();
+	pipeline_info.vertex_binding_description = VertexFormatSimple::GetBindingDescription();
+	pipeline_info.vertex_attribute_descriptions = VertexFormatSimple::GetAttributeDescriptions();
 
 	pipeline_info.push_constant_ranges = {
 		{ ShaderStage_Vertex, 0, sizeof(SphereData) }

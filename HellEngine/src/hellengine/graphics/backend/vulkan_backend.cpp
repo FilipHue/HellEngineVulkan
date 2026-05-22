@@ -183,7 +183,7 @@ namespace hellengine
 			return m_context->CreateVertexBuffer(nullptr, size);
 		}
 
-		template HE_API VulkanBuffer* VulkanBackend::CreateVertexBuffer(VertexFormatBase* vertices, u32 vertices_count);
+		template HE_API VulkanBuffer* VulkanBackend::CreateVertexBuffer(VertexFormatSimple* vertices, u32 vertices_count);
 		template HE_API VulkanBuffer* VulkanBackend::CreateVertexBuffer(VertexFormatTangent* vertices, u32 vertices_count);
 		template HE_API VulkanBuffer* VulkanBackend::CreateVertexBuffer(Particle* vertices, u32 vertices_count);
 		template <typename T>

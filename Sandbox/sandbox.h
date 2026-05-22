@@ -63,7 +63,7 @@ struct AABB
 
 struct WireframeCubeData
 {
-	std::vector<VertexFormatBase> vertices;
+	std::vector<VertexFormatSimple> vertices;
 	std::vector<u32> indices;
 
 	Buffer* vertex_buffer = nullptr;
@@ -171,7 +171,7 @@ struct ShapeManager
 {
 	struct ShapeData
 	{
-		std::vector<VertexFormatBase> vertices;
+		std::vector<VertexFormatSimple> vertices;
 		std::vector<u32> indices;
 		Buffer* vertex_buffer = nullptr;
 		Buffer* index_buffer = nullptr;
@@ -580,7 +580,7 @@ struct PhysicsWorld
 	std::vector<BVHNode> nodes;
 
 	// debug mesh CPU
-	std::vector<VertexFormatBase> debug_vertices;
+	std::vector<VertexFormatSimple> debug_vertices;
 	std::vector<u32> debug_indices;
 
 	// debug mesh GPU

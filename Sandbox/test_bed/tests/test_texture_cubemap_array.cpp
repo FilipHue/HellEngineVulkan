@@ -186,13 +186,13 @@ void TestTextureCubemapArray::LoadResources()
 	m_cubemap_texture = m_frontend->CreateTextureCubemapArray("CubemapArray", FileManager::ReadFile(CONCAT_PATHS(TEXTURE_PATH, "cubemap_array.ktx")));
 
 	m_cube_model = AssetManager::LoadModel(FileManager::ReadFile(CONCAT_PATHS(MODEL_PATH, "cube.gltf")));
-	m_cube_model->UploadToGPU<VertexFormatBase>();
+	m_cube_model->UploadToGPU<VertexFormatSimple>();
 
 	m_model_names = { "sphere.gltf", "teapot.gltf", "torusknot.gltf", "venus.gltf" };
 	for (u32 i = 0; i < m_model_names.size(); i++)
 	{
 		m_models.push_back(AssetManager::LoadModel(FileManager::ReadFile(CONCAT_PATHS(MODEL_PATH, m_model_names[i]))));
-		m_models[i]->UploadToGPU<VertexFormatBase>();
+		m_models[i]->UploadToGPU<VertexFormatSimple>();
 	}
 }
 
@@ -222,8 +222,8 @@ void TestTextureCubemapArray::CreatePipelines()
 		}
 	};
 
-	pipeline_info.vertex_binding_description = VertexFormatBase::GetBindingDescription();
-	pipeline_info.vertex_attribute_descriptions = VertexFormatBase::GetAttributeDescriptions();
+	pipeline_info.vertex_binding_description = VertexFormatSimple::GetBindingDescription();
+	pipeline_info.vertex_attribute_descriptions = VertexFormatSimple::GetAttributeDescriptions();
 
 	pipeline_info.depth_stencil_info = {
 		false,

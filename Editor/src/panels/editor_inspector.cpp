@@ -218,6 +218,108 @@ void EditorInspector::DrawEntityComponents()
 
             ImGui::PopItemWidth();
         });
+
+    DrawComponent<LightComponent>("Light", m_selected_entity,
+        [](LightComponent& c)
+        {
+            // Light Type Dropdown
+            const char* light_types[] = { "Point", "Directional", "Spot" };
+            i32 current_type = static_cast<i32>(c.type);
+
+            ImGui::PushItemWidth(-FLT_MIN);
+            if (ImGui::Combo("Type", &current_type, light_types, 3))
+            {
+                c.type = static_cast<LightType>(current_type);
+            }
+            ImGui::PopItemWidth();
+
+            ImGui::Spacing();
+            ImGui::Separator();
+            ImGui::Text("General");
+            ImGui::Spacing();
+
+            // Color Picker
+            ImGui::ColorEdit3("Color", &c.color.x);
+
+            // Intensity
+            ImGui::DragFloat("Intensity", &c.intensity, 0.1f, 0.0f, 1000.0f, "%.2f");
+
+            // Enabled Toggle
+            ImGui::Checkbox("Enabled", reinterpret_cast<bool*>(&c.enabled));
+
+            // Type-specific properties
+            if (c.type == LightType_Point)
+            {
+                ImGui::Spacing();
+                ImGui::Separator();
+                ImGui::Text("Point Light Properties");
+                ImGui::Spacing();
+
+                ImGui::DragFloat("Range", &c.range, 1.0f, 0.1f, 500.0f, "%.2f");
+                ImGui::DragFloat("Attenuation", &c.attenuation, 0.01f, 0.0f, 10.0f, "%.3f");
+            }
+            else if (c.type == LightType_Directional)
+            {
+                ImGui::Spacing();
+                ImGui::Separator();
+                ImGui::Text("Directional Light Properties");
+                ImGui::Spacing();
+                ImGui::TextWrapped("Direction is controlled by the Transform rotation.");
+            }
+            else if (c.type == LightType_Spot)
+            {
+                ImGui::Spacing();
+                ImGui::Separator();
+                ImGui::Text("Spot Light Properties");
+                ImGui::Spacing();
+
+                ImGui::DragFloat("Range", &c.range, 1.0f, 0.1f, 500.0f, "%.2f");
+                ImGui::DragFloat("Attenuation", &c.attenuation, 0.01f, 0.0f, 10.0f, "%.3f");
+
+                ImGui::Spacing();
+                ImGui::Text("Cone Shape");
+
+                f32 inner_degrees = glm::degrees(c.inner_cone_angle);
+                f32 outer_degrees = glm::degrees(c.outer_cone_angle);
+
+                if (ImGui::SliderFloat("Inner Angle", &inner_degrees, 0.0f, 89.0f, "%.1f°"))
+                {
+                    c.inner_cone_angle = glm::radians(inner_degrees);
+                    // Ensure inner <= outer
+                    if (c.inner_cone_angle > c.outer_cone_angle)
+                    {
+                        c.outer_cone_angle = c.inner_cone_angle;
+                    }
+                }
+
+                if (ImGui::SliderFloat("Outer Angle", &outer_degrees, 1.0f, 90.0f, "%.1f°"))
+                {
+                    c.outer_cone_angle = glm::radians(outer_degrees);
+                    // Ensure outer >= inner
+                    if (c.outer_cone_angle < c.inner_cone_angle)
+                    {
+                        c.inner_cone_angle = c.outer_cone_angle;
+                    }
+                }
+
+                // Show cone spread (difference between outer and inner)
+                f32 cone_spread = outer_degrees - inner_degrees;
+                ImGui::BeginDisabled();
+                ImGui::DragFloat("Cone Spread", &cone_spread, 0.0f, 0.0f, 90.0f, "%.1f°");
+                ImGui::EndDisabled();
+                if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+                {
+                    ImGui::SetTooltip("Difference between outer and inner cone angles.\nControls the softness of the spotlight edge.");
+                }
+
+                ImGui::TextWrapped("Direction is controlled by the Transform rotation.");
+            }
+
+            // Shadow Toggle
+            ImGui::Spacing();
+            ImGui::Separator();
+            ImGui::Checkbox("Cast Shadows", reinterpret_cast<bool*>(&c.cast_shadows));
+        });
 }
 
 void EditorInspector::DrawTransformVec3(const std::string& label, glm::vec3& value, f32 reset_value)

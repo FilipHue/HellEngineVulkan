@@ -1,0 +1,40 @@
+editor:
+  show_grid: true
+  show_gizmos: true
+  render_mode: 0
+  gi_settings:
+    enabled: 0
+    sample_count: 4
+    ray_distance: 20
+    intensity: 2
+    thickness: 2
+    falloff: 2.86
+    bias: 0.05
+    temporal_weight: 0.95
+    debug_visualization:
+      x: 0
+      y: 0
+      z: 0
+      w: 0
+  shadow_settings:
+    enabled: 1
+    shadow_map_size: 2048
+    cascade_split_lambda: 0.75
+    min_bias: 0
+    max_bias: 0.001
+    normal_offset: 0
+    pcf_samples: 1
+    softness: 0.4
+    cascade_distances:
+      x: 10
+      y: 30
+      z: 300
+      w: 1000
+window:
+  show_hierarchy: true
+  show_inspector: true
+  show_editor_settings: true
+  show_render_settings: true
+  show_gi_settings: true
+  show_shadow_settings: true
+  show_about_window: false

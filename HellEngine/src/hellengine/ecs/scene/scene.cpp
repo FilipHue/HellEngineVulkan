@@ -6,6 +6,7 @@
 
 namespace hellengine
 {
+
     namespace ecs
     {
         Scene::Scene()
@@ -41,10 +42,9 @@ namespace hellengine
         {
             Entity entity = { m_registry.create(), this };
 
-			entity.AddComponent<IDComponent>(id).id = id;
+			entity.AddComponent<IDComponent>().id = id;
 
-            auto& tag = entity.AddComponent<TagComponent>(name);
-            tag.tag = name;
+            auto& tag = entity.AddComponent<TagComponent>().tag = name;
 
             entity.AddComponent<TransformComponent>();
 
@@ -82,6 +82,22 @@ namespace hellengine
             return entity;
         }
 
+        Entity Scene::CreateGameObjectWithUUID(const std::string& name, Entity parent, UUID id)
+        {
+            HE_ASSERT(IsValid(parent) || parent == NULL_ENTITY, "Parent entity is not valid in the current scene");
+
+            Entity entity = CreateEntityWithUUID(id, name);
+            UUID child_id = entity.GetComponent<IDComponent>().id;
+
+            if (parent)
+            {
+                UUID parent_id = parent.GetComponent<IDComponent>().id;
+                m_hierarchy.AttachNode(child_id, parent_id);
+            }
+
+            return entity;
+        }
+
         void Scene::DestroyGameObject(Entity entity)
         {
             HE_ASSERT(IsValid(entity), "Entity is not valid in the current scene");
@@ -100,7 +116,9 @@ namespace hellengine
                 stack.pop_back();
 
                 if (!m_hierarchy.Exists(cur))
+                {
                     continue;
+                }
 
                 preorder.push_back(cur);
 
@@ -171,7 +189,7 @@ namespace hellengine
             {
                 UUID      id;
                 glm::mat4 parentWorld;
-                bool      parentDirty;
+                b8      parentDirty;
             };
 
             std::vector<StackEntry> stack;
@@ -190,11 +208,14 @@ namespace hellengine
                 stack.pop_back();
 
                 Entity e = GetEntity(current.id);
-                if (!e) continue;
+                if (!e)
+                {
+                    continue;
+                }
 
                 TransformComponent* tc = m_registry.try_get<TransformComponent>(e.GetHandle());
 
-                bool dirtyHere = current.parentDirty;
+                b8 dirtyHere = current.parentDirty;
                 if (tc)
                 {
                     dirtyHere |= tc->is_dirty;
@@ -233,4 +254,5 @@ namespace hellengine
         }
 
     } // namespace ecs
+
 } // namespace hellengine

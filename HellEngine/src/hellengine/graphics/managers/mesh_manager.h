@@ -18,7 +18,7 @@ namespace hellengine
 		constexpr u32 MAX_TEXTURES = 100000;
 		constexpr u32 MAX_VERTICES = 1000000;
 		constexpr u32 MAX_INDICES = MAX_VERTICES * 6;
-		constexpr u64 MIN_MEMORY_ALIGNMENT = lcm_array<2>({ sizeof(VertexFormatBase), sizeof(VertexFormatTangent) });
+		constexpr u64 MIN_MEMORY_ALIGNMENT = lcm_array<2>({ sizeof(VertexFormatSimple), sizeof(VertexFormatTangent) });
 		constexpr u64 MAX_MEMORY_VERTICES = MAX_VERTICES * MIN_MEMORY_ALIGNMENT;
 		constexpr u64 MAX_MEMORY_INDICES = MAX_INDICES * MIN_MEMORY_ALIGNMENT;
 
@@ -34,6 +34,7 @@ namespace hellengine
 			u32 index_count = 0;
 
 			std::vector<u32> mesh_list;
+			u32 number_of_instances = 0;
 		};
 
 		struct MeshBufferAllocation
@@ -90,7 +91,7 @@ namespace hellengine
 			void Init(VulkanBackend* backend);
 			void Shutdown();
 
-			void CreateDescriptors(VulkanPipeline* pipeline, u32 set);
+			void CreateDescriptors(VulkanPipeline* pipeline);
 
 			Mesh* CreateMesh(std::string name, RawVertexData vertices, std::vector<u32> indices, MaterialInfo* material);
 			void CreateMeshInstance(UUID id, Mesh* mesh, MaterialInfo* material = nullptr);
@@ -109,8 +110,21 @@ namespace hellengine
 
 			std::vector<Mesh*>& GetAllMeshes() { return m_meshes; }
 			const std::vector<Mesh*>& GetAllMeshes() const { return m_meshes; }
+			VulkanDescriptorSet* GetTexturesDescriptor() const { return m_textures_descriptor; }
 
 			void SetMeshInstanceFilter(UUID id, Mesh* mesh);
+
+			void SetMeshPath(const std::string& mesh_name, const std::string& path) { m_mesh_path_map[mesh_name] = path; }
+			std::string GetMeshPath(const std::string& mesh_name) const
+			{
+				auto it = m_mesh_path_map.find(mesh_name);
+				if (it != m_mesh_path_map.end())
+				{
+					return it->second;
+				}
+				return "";
+			}
+			Mesh* GetMeshByName(const std::string& mesh_name) const;
 
 		private:
 			void CreatePool();
@@ -140,6 +154,8 @@ namespace hellengine
 
 			std::vector<VkImageView> m_descriptor_image_views;
 			std::vector<VkSampler>   m_descriptor_image_samplers;
+
+			std::unordered_map<std::string, std::string> m_mesh_path_map;
 
 			DeletionQueue m_deletion_queue;
 			VulkanBackend* m_backend = nullptr;

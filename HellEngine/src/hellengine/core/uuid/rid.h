@@ -1,7 +1,7 @@
 #pragma once
 
 // Internal
-#include <hellengine/core/uuid/uuid.h>
+#include <hellengine/core/typedefs.h>
 
 namespace hellengine
 {
@@ -9,36 +9,44 @@ namespace hellengine
 	namespace core
 	{
 
-		class ResourceId
+		class RID
 		{
 		public:
-			ResourceId() = default;
-			explicit ResourceId(const UUID& uuid) : m_uuid(uuid) {}
+			RID() : m_id(0) {}
+			RID(u64 id) : m_id(id) {}
 
-			b8 IsValid() const { return m_uuid != 0; }
-			UUID GetUUID() const { return m_uuid; }
-			bool operator ==(const ResourceId& other) const { return m_uuid == other.m_uuid; }
-			bool operator !=(const ResourceId& other) const { return m_uuid != other.m_uuid; }
+			operator u64() const { return m_id; }
+			operator void* () const { return (void*)(uintptr_t)m_id; }
 
-			static ResourceId Generate() { return ResourceId(UUID::Generate()); }
-			static ResourceId Invalid() { return ResourceId(UUID(0)); }
+			b8 operator ==(const RID& other) const { return m_id == other.m_id; }
+			b8 operator !=(const RID& other) const { return m_id != other.m_id; }
+			b8 operator <(const RID& other) const { return m_id < other.m_id; }
+			b8 operator >(const RID& other) const { return m_id > other.m_id; }
+			b8 operator <=(const RID& other) const { return m_id <= other.m_id; }
+			b8 operator >=(const RID& other) const { return m_id >= other.m_id; }
+
+			b8 IsValid() const { return m_id != 0; }
+			void Invalidate() { m_id = 0; }
+
+			u64 GetID() const { return m_id; }
 
 		private:
-			UUID m_uuid;
+			u64 m_id;
 		};
 
 	} // namespace core
 
 } // namespace hellengine
 
-namespace std
-{
+namespace std {
+
 	template<>
-	struct hash<hellengine::core::ResourceId>
+	struct hash<hellengine::core::RID>
 	{
-		size_t operator()(const hellengine::core::ResourceId& id) const noexcept
+		std::size_t operator()(const hellengine::core::RID& rid) const
 		{
-			return std::hash<u64>()((u64)id.GetUUID());
+			return hash<u64>()(rid.GetID());
 		}
 	};
-}
+
+} // namespace std

@@ -106,11 +106,7 @@ private:
 	DynamicRenderingInfo m_glass_rendering_info;
 	DynamicRenderingInfo m_final_rendering_info;
 
-    // Model
-    Model* m_scene_model;
-    Model* m_glass_model;
-
-    // Texture
-    Texture2D m_glass_texture;
+	// Texture
+	Texture2D m_glass_texture;
 };
 #endif // _TEST_BED_ENABLED
