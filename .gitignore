@@ -367,4 +367,3 @@ FodyWeavers.xsd
 
 # Assets/Models folders (too large for git)
 **/assets/models/
-assets/models/
