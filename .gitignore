@@ -364,4 +364,7 @@ MigrationBackup/
 FodyWeavers.xsd
 
 # Other
+
+# Assets/Models folders (too large for git)
+**/assets/models/
 assets/models/
