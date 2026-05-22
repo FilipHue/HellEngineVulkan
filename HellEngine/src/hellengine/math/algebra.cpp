@@ -19,7 +19,7 @@ namespace hellengine
 						const glm::vec4 pt = inv * glm::vec4(
 							2.0f * x - 1.0f,
 							2.0f * y - 1.0f,
-							2.0f * z - 1.0f,
+							static_cast<f32>(z),
 							1.0f
 						);
 						frustum_corners[index++] = pt / pt.w;

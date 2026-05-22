@@ -44,6 +44,9 @@ namespace hellengine
 			HE_API f32 GetFar() const;
 			HE_API void SetFar(f32 far_z);
 
+			HE_API f32 GetFov() const { return m_fov; }
+			HE_API f32 GetAspectRatio() const { return m_aspect_ratio; }
+
 			HE_API ProjectionType GetType() const;
 
 			// Controls perspective

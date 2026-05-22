@@ -1781,9 +1781,7 @@ void Editor::UpdateLights()
 				glm::mat4 lightView = glm::lookAt(worldPos, worldPos + forward, up);
 
 				// FOV must be the full cone angle (outer * 2), in radians
-				f32 fov = glm::clamp(lightComp.outer_cone_angle * 2.0f,
-					glm::radians(1.0f),
-					glm::radians(179.0f));
+				f32 fov = glm::clamp(lightComp.outer_cone_angle * 2.0f, glm::radians(1.0f), glm::radians(179.0f));
 				f32 nearPlane = 0.1f;
 				f32 farPlane = effectiveRange;
 
@@ -1824,7 +1822,12 @@ glm::mat4 Editor::ComputeCascadeMatrix(
 		? static_cast<f32>(viewportSize.x) / static_cast<f32>(viewportSize.y)
 		: 1.0f;
 
-	glm::mat4 cameraProj = glm::perspectiveZO(glm::radians(60.0f), aspect, cascadeNear, cascadeFar);
+	glm::mat4 cameraProj = glm::perspectiveZO(
+		glm::radians(camera.GetFov()),
+		aspect,
+		cascadeNear,
+		cascadeFar
+	);
 	cameraProj[1][1] *= -1.0f; // Vulkan Y-flip
 
 	const glm::mat4 cameraView = camera.GetView();
@@ -1833,78 +1836,95 @@ glm::mat4 Editor::ComputeCascadeMatrix(
 	// -----------------------------------------------------------------
 	// Compute frustum center (average of the 8 corners)
 	// -----------------------------------------------------------------
-	glm::vec3 center(0.0f);
+	glm::vec3 frustumCenter(0.0f);
 	for (const glm::vec3& corner : corners)
-		center += corner;
-	center /= 8.0f;
+		frustumCenter += corner;
+	frustumCenter /= static_cast<f32>(corners.size());
 
 	// -----------------------------------------------------------------
-	// Stable up vector (avoid degenerate cross product when light is near vertical)
+	// Compute bounding sphere radius around frustum center
+	// This ensures consistent projection size (Alex Tardif's approach)
+	// -----------------------------------------------------------------
+	f32 radius = 0.0f;
+	for (const glm::vec3& corner : corners)
+	{
+		f32 distance = glm::length(corner - frustumCenter);
+		radius = glm::max(radius, distance);
+	}
+
+	// -----------------------------------------------------------------
+	// Round up radius to nearest texel-sized unit
+	// This prevents sub-texel changes in projection size
+	// -----------------------------------------------------------------
+	f32 texelSizeWorldSpace = (radius * 2.0f) / shadowMapSize;
+	radius = std::ceil(radius / texelSizeWorldSpace) * texelSizeWorldSpace;
+
+	// -----------------------------------------------------------------
+	// Stable up vector
 	// -----------------------------------------------------------------
 	glm::vec3 up(0.0f, 1.0f, 0.0f);
 	if (glm::abs(glm::dot(up, lightDir)) > 0.95f)
 		up = glm::vec3(0.0f, 0.0f, 1.0f);
 
 	// -----------------------------------------------------------------
-	// Bounding sphere around frustum center (rotation-invariant => stable
-	// cascade size as the camera rotates, no swimming artifacts).
+	// CRITICAL: Create light view and snap center to texel grid
+	// This is the key to eliminating shadow shimmering (Alex Tardif)
 	// -----------------------------------------------------------------
-	f32 radius = 0.0f;
-	for (const glm::vec3& corner : corners)
-		radius = glm::max(radius, glm::length(corner - center));
-	radius = glm::ceil(radius);
+
+	// Eye position for light view (pull back along light direction)
+	glm::vec3 lightPos = frustumCenter - lightDir * radius;
+
+	// Create light view matrix
+	glm::mat4 lightView = glm::lookAt(lightPos, frustumCenter, up);
+
+	// Transform frustum center to light space
+	glm::vec4 frustumCenterLS = lightView * glm::vec4(frustumCenter, 1.0f);
+
+	// Snap to texel grid in light space
+	frustumCenterLS.x = std::floor(frustumCenterLS.x / texelSizeWorldSpace) * texelSizeWorldSpace;
+	frustumCenterLS.y = std::floor(frustumCenterLS.y / texelSizeWorldSpace) * texelSizeWorldSpace;
+	// Don't snap Z - it doesn't affect pixel alignment
+
+	// Transform snapped center back to world space
+	glm::vec4 snappedCenterWS = glm::inverse(lightView) * frustumCenterLS;
+
+	// Recreate light view with snapped center
+	lightPos = glm::vec3(snappedCenterWS) - lightDir * radius;
+	lightView = glm::lookAt(lightPos, glm::vec3(snappedCenterWS), up);
 
 	// -----------------------------------------------------------------
-	// Snap frustum center to shadow map texel grid to reduce shimmering
-	// -----------------------------------------------------------------
-	const f32 texelSize = (radius * 2.0f) / shadowMapSize;
-
-	const glm::mat4 tempLightView = glm::lookAt(center, center + lightDir, up);
-
-	glm::vec3 centerLS = glm::vec3(tempLightView * glm::vec4(center, 1.0f));
-	centerLS.x = std::floor(centerLS.x / texelSize) * texelSize;
-	centerLS.y = std::floor(centerLS.y / texelSize) * texelSize;
-
-	glm::vec3 snappedCenter = glm::vec3(glm::inverse(tempLightView) * glm::vec4(centerLS, 1.0f));
-
-	// -----------------------------------------------------------------
-	// Final light view: "eye" at the snapped frustum center, looking along the light dir.
-	// No hardcoded pull-back distance; the Z range is derived from the frustum corners.
-	// -----------------------------------------------------------------
-	const glm::mat4 lightView = glm::lookAt(snappedCenter, snappedCenter + lightDir, up);
-
-	// -----------------------------------------------------------------
-	// Compute actual Z extents of the frustum in light space, then pad them
-	// so shadow casters between the light and the visible frustum are included.
+	// Compute min/max Z in light space for tight depth bounds
 	// -----------------------------------------------------------------
 	f32 minZ = std::numeric_limits<f32>::max();
 	f32 maxZ = std::numeric_limits<f32>::lowest();
+
 	for (const glm::vec3& corner : corners)
 	{
-		f32 z = (lightView * glm::vec4(corner, 1.0f)).z;
-		minZ = glm::min(minZ, z);
-		maxZ = glm::max(maxZ, z);
+		glm::vec4 cornerLS = lightView * glm::vec4(corner, 1.0f);
+		minZ = glm::min(minZ, cornerLS.z);
+		maxZ = glm::max(maxZ, cornerLS.z);
 	}
 
-	constexpr f32 zMult = 10.0f; // extend Z range to catch off-frustum shadow casters
-	if (minZ < 0.0f) minZ *= zMult; else minZ /= zMult;
-	if (maxZ < 0.0f) maxZ /= zMult; else maxZ *= zMult;
-
-	const f32 padding = radius * 0.1f;
+	// Extend the depth range to catch shadow casters outside frustum
+	// (Alex Tardif mentions using bounding boxes for this)
+	constexpr f32 zMult = 10.0f;
+	if (minZ < 0.0f)
+		minZ *= zMult;
+	else
+		minZ /= zMult;
+	if (maxZ < 0.0f)
+		maxZ /= zMult;
+	else
+		maxZ *= zMult;
 
 	// -----------------------------------------------------------------
-	// Orthographic projection for the shadow pass.
-	// glm::orthoZO produces [0, 1] depth (Vulkan-compatible).
-	// In light view space the camera looks down +Z (since we used
-	// lookAt(eye, eye + lightDir, up)), so corners along the light direction
-	// have positive Z. glm::orthoZO expects near/far as positive distances
-	// along -Z by default; we negate to map correctly.
+	// Create orthographic projection using the bounding sphere radius
+	// Symmetric bounds ensure stable projection (Alex Tardif's approach)
 	// -----------------------------------------------------------------
 	glm::mat4 lightProj = glm::orthoZO(
-		-radius - padding, radius + padding,
-		-radius - padding, radius + padding,
-		-maxZ,
-		-minZ
+		-radius, radius,   // Symmetric X bounds
+		-radius, radius,   // Symmetric Y bounds
+		-maxZ, -minZ       // Tight Z bounds from frustum
 	);
 
 	lightProj[1][1] *= -1.0f; // Vulkan Y-flip
@@ -1921,11 +1941,10 @@ void Editor::ComputeDirectionalLightCascades(
 	LightGPUData& gpuLight)
 {
 	// -----------------------------------------------------------------
-	// Camera near/far. Ideally pull these from the camera itself; using the
-	// same values you initialized the perspective with in CreateResources.
+	// Use actual camera near/far values
 	// -----------------------------------------------------------------
-	const f32 cameraNear = 0.1f;
-	const f32 cameraFar = 1000.0f;
+	const f32 cameraNear = camera.GetNear();
+	const f32 cameraFar = camera.GetFar();
 	const f32 lambda = shadowSettings.cascade_split_lambda;
 	const f32 shadowMapSize = static_cast<f32>(shadowSettings.shadow_map_size);
 
@@ -1948,9 +1967,9 @@ void Editor::ComputeDirectionalLightCascades(
 	// -----------------------------------------------------------------
 	// Build a cascade matrix for each slice [previousSplit, currentSplit]
 	// -----------------------------------------------------------------
-	f32 cascadeNear = cameraNear;
 	for (u32 cascade = 0; cascade < MAX_SHADOW_CASCADES; ++cascade)
 	{
+		f32 cascadeNear = (cascade == 0) ? cameraNear : splits[cascade - 1];
 		const f32 cascadeFar = splits[cascade];
 
 		gpuLight.cascade_matrices[cascade] = ComputeCascadeMatrix(

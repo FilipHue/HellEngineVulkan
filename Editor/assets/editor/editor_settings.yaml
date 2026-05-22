@@ -3,8 +3,8 @@ editor:
   show_gizmos: true
   render_mode: 0
   gi_settings:
-    enabled: 1
-    sample_count: 256
+    enabled: 0
+    sample_count: 4
     ray_distance: 20
     intensity: 2
     thickness: 2

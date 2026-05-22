@@ -427,6 +427,7 @@ void main()
         };
         case 4u:
         {
+            // Shadow Map Debug Visualization - Enhanced
             color = vec3(0.0);
             bool anyLight = false;
 
@@ -467,18 +468,41 @@ void main()
                         uint shadowMapIndex = uint(light.shadow_params.x) + cascadeIndex;
                         float depth = texture(shadowMaps[shadowMapIndex], projCoords.xy).r;
 
-                        vec3 cascadeTint;
-                        if      (cascadeIndex == 0u) cascadeTint = vec3(1.0, 0.4, 0.4); // red
-                        else if (cascadeIndex == 1u) cascadeTint = vec3(0.4, 1.0, 0.4); // green
-                        else if (cascadeIndex == 2u) cascadeTint = vec3(0.4, 0.4, 1.0); // blue
-                        else                         cascadeTint = vec3(1.0, 1.0, 0.4); // yellow
+                        // Enhanced depth visualization with better contrast
+                        // Remap depth from [0,1] to a more visible range
+                        float remappedDepth = pow(depth, 0.5); // Gamma correction for better visibility
 
-                        color += vec3(depth) * cascadeTint;
+                        // Cascade color coding (brighter, more saturated)
+                        vec3 cascadeTint;
+                        if      (cascadeIndex == 0u) cascadeTint = vec3(1.0, 0.2, 0.2); // Bright red
+                        else if (cascadeIndex == 1u) cascadeTint = vec3(0.2, 1.0, 0.2); // Bright green
+                        else if (cascadeIndex == 2u) cascadeTint = vec3(0.2, 0.2, 1.0); // Bright blue
+                        else                         cascadeTint = vec3(1.0, 1.0, 0.2); // Bright yellow
+
+                        // Combine depth with cascade tint
+                        color = mix(vec3(0.0), cascadeTint, remappedDepth);
+
+                        // Add cascade boundary visualization (thin colored border)
+                        float borderWidth = 0.02;
+                        if (projCoords.x < borderWidth || projCoords.x > 1.0 - borderWidth ||
+                            projCoords.y < borderWidth || projCoords.y > 1.0 - borderWidth)
+                        {
+                            color = cascadeTint; // Full bright color at edges
+                        }
+
+                        // Visualize depth comparison issue (if current fragment is behind shadow)
+                        float fragDepth = projCoords.z;
+                        if (fragDepth > depth + 0.001) // In shadow
+                        {
+                            color *= 0.3; // Darken shadowed areas
+                        }
+
                         anyLight = true;
                     }
                     else
                     {
-                        color += vec3(1.0, 0.0, 1.0); // magenta = outside cascade
+                        // Outside cascade bounds - bright magenta for visibility
+                        color = vec3(1.0, 0.0, 1.0);
                         anyLight = true;
                     }
                 }
@@ -498,24 +522,31 @@ void main()
                         uint shadowMapIndex = uint(light.shadow_params.x);
                         float depth = texture(shadowMaps[shadowMapIndex], projCoords.xy).r;
 
-                        vec3 lightTint = (lightType == 2.0)
-                            ? vec3(0.4, 1.0, 1.0)   // cyan   = spot
-                            : vec3(1.0, 0.6, 0.2);  // orange = point
+                        // Enhanced depth visualization
+                        float remappedDepth = pow(depth, 0.5);
 
-                        color += vec3(depth) * lightTint;
+                        vec3 lightTint = (lightType == 2.0)
+                            ? vec3(0.2, 1.0, 1.0)   // Bright cyan   = spot
+                            : vec3(1.0, 0.5, 0.1);  // Bright orange = point
+
+                        color = mix(vec3(0.0), lightTint, remappedDepth);
                         anyLight = true;
                     }
                     else
                     {
-                        color += vec3(0.5, 0.0, 0.5); // dark magenta = outside frustum
+                        // Outside frustum - bright dark magenta
+                        color = vec3(0.7, 0.0, 0.7);
                         anyLight = true;
                     }
                 }
             }
 
-            // No shadow-casting lights found
+            // No shadow-casting lights found - show grid pattern
             if (!anyLight)
-                color = vec3(0.2);
+            {
+                float grid = mod(floor(vPosWS.x) + floor(vPosWS.z), 2.0);
+                color = vec3(0.15 + 0.05 * grid);
+            }
 
             break;
         }

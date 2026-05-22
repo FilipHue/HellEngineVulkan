@@ -160,7 +160,7 @@ namespace hellengine
 
 		void PerspectiveCamera::RecalculateProjectionMatrix()
 		{
-			m_projection = glm::perspective(glm::radians(m_fov), m_aspect_ratio, m_near, m_far);
+			m_projection = glm::perspectiveZO(glm::radians(m_fov), m_aspect_ratio, m_near, m_far);
 			m_projection[1][1] *= -1;
 		}
 

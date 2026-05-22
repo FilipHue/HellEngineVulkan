@@ -20,6 +20,11 @@ namespace hellengine
 			HE_API void SetAspect(f32 width, f32 height);
 			HE_API void SetFov(f32 fov);
 
+			HE_API f32 GetFov() const { return m_fov; }
+			HE_API f32 GetAspectRatio() const { return m_aspect_ratio; }
+			HE_API f32 GetNear() const { return m_near; }
+			HE_API f32 GetFar() const { return m_far; }
+
 			HE_API glm::vec3& GetPosition();
 			HE_API const glm::vec3& GetPosition() const;
 			HE_API void SetPosition(glm::vec3 position);
