@@ -27,6 +27,7 @@ Editor::Editor(ApplicationConfiguration* configuration) : Application(configurat
 	m_gbuffer_normal = nullptr;
 	m_gbuffer_albedo_ao = nullptr;
 	m_gbuffer_depth = nullptr;
+	m_gbuffer_lighting = nullptr;
 
 	// Global Illumination
 	m_gi_descriptor = nullptr;
@@ -443,7 +444,7 @@ void Editor::CreateEditorPipeline()
 	pipeline_info.dynamic_states = { PipelineDynamicState_Viewport, PipelineDynamicState_Scissor };
 	pipeline_info.layout = {
 		{
-			{ { 0, DescriptorType_CombinedImageSampler, 1, ShaderStage_Fragment, DescriptorBindingFlags_None } },	// Full-screen texture
+			{ { 0, DescriptorType_CombinedImageSampler, 1, ShaderStage_Fragment, DescriptorBindingFlags_None } },
 			DescriptorSetFlags_None
 		}
 	};
@@ -533,13 +534,13 @@ void Editor::CreatePBRPipeline()
 		},
 		{
 			{
-				{ 0, DescriptorType_StorageBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind }	// Per-draw data
+				{ 0, DescriptorType_StorageBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind }
 			},
 			DescriptorSetFlags_UpdateAfterBindPool
 		},
 		{
 			{
-				{ 0, DescriptorType_StorageBuffer, 1, ShaderStage_Vertex | ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },	// Per-object data
+				{ 0, DescriptorType_StorageBuffer, 1, ShaderStage_Vertex | ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
 			},
 			DescriptorSetFlags_UpdateAfterBindPool
 		},
@@ -575,7 +576,6 @@ void Editor::CreatePBRPipeline()
 
 void Editor::CreatePBRResources()
 {
-	// Initialize global data (camera + world)
 	m_global_data = {};
 	m_global_data.camera.projection = m_editor_camera.GetProjection();
 	m_global_data.camera.view = m_editor_camera.GetView();
@@ -585,16 +585,13 @@ void Editor::CreatePBRResources()
 
 	m_pbr_global_data_ubo = m_backend->CreateUniformBufferMappedPersistent(sizeof(GlobalData), 1);
 
-	// Initialize lights UBO with default data
 	m_lights_data = {};
 	m_lights_data.light_count = 0;
 
 	m_pbr_lights_data_ubo = m_backend->CreateUniformBufferMappedPersistent(sizeof(LightsUBOData), 1);
 
-	// Initialize GI settings UBO with default data
 	m_pbr_gi_data_ubo = m_backend->CreateUniformBufferMappedPersistent(sizeof(GlobalIlluminationSettings), 1);
 
-	// Initialize shadow settings UBO with default data
 	m_pbr_shadow_data_ubo = m_backend->CreateUniformBufferMappedPersistent(sizeof(ShadowSettings), 1);
 }
 
@@ -613,46 +610,61 @@ void Editor::CreatePBRDescriptors()
 
 void Editor::UpdatePBRDescriptors()
 {
+	VkBuffer     buf1 = m_pbr_global_data_ubo->GetHandle();
+	VkDeviceSize off1 = 0;
+	VkDeviceSize range1 = sizeof(GlobalData);
+
 	DescriptorSetWriteData data1{};
 	data1.type = DescriptorType_UniformBuffer;
 	data1.binding = 0;
-	data1.data.buffer.buffers = new VkBuffer(m_pbr_global_data_ubo->GetHandle());
-	data1.data.buffer.offsets = new VkDeviceSize(0);
-	data1.data.buffer.ranges = new VkDeviceSize(sizeof(GlobalData));
+	data1.data.buffer.buffers = &buf1;
+	data1.data.buffer.offsets = &off1;
+	data1.data.buffer.ranges = &range1;
+
+	VkBuffer     buf2 = m_pbr_lights_data_ubo->GetHandle();
+	VkDeviceSize off2 = 0;
+	VkDeviceSize range2 = sizeof(LightsUBOData);
 
 	DescriptorSetWriteData data2{};
 	data2.type = DescriptorType_UniformBuffer;
 	data2.binding = 1;
-	data2.data.buffer.buffers = new VkBuffer(m_pbr_lights_data_ubo->GetHandle());
-	data2.data.buffer.offsets = new VkDeviceSize(0);
-	data2.data.buffer.ranges = new VkDeviceSize(sizeof(LightsUBOData));
+	data2.data.buffer.buffers = &buf2;
+	data2.data.buffer.offsets = &off2;
+	data2.data.buffer.ranges = &range2;
+
+	VkBuffer     buf3 = m_pbr_gi_data_ubo->GetHandle();
+	VkDeviceSize off3 = 0;
+	VkDeviceSize range3 = sizeof(GlobalIlluminationSettings);
 
 	DescriptorSetWriteData data3{};
 	data3.type = DescriptorType_UniformBuffer;
 	data3.binding = 2;
-	data3.data.buffer.buffers = new VkBuffer(m_pbr_gi_data_ubo->GetHandle());
-	data3.data.buffer.offsets = new VkDeviceSize(0);
-	data3.data.buffer.ranges = new VkDeviceSize(sizeof(GlobalIlluminationSettings));
+	data3.data.buffer.buffers = &buf3;
+	data3.data.buffer.offsets = &off3;
+	data3.data.buffer.ranges = &range3;
+
+	VkBuffer     buf4 = m_pbr_shadow_data_ubo->GetHandle();
+	VkDeviceSize off4 = 0;
+	VkDeviceSize range4 = sizeof(ShadowSettings);
 
 	DescriptorSetWriteData data4{};
 	data4.type = DescriptorType_UniformBuffer;
 	data4.binding = 3;
-	data4.data.buffer.buffers = new VkBuffer(m_pbr_shadow_data_ubo->GetHandle());
-	data4.data.buffer.offsets = new VkDeviceSize(0);
-	data4.data.buffer.ranges = new VkDeviceSize(sizeof(ShadowSettings));
+	data4.data.buffer.buffers = &buf4;
+	data4.data.buffer.offsets = &off4;
+	data4.data.buffer.ranges = &range4;
+
+	VkImageView  view5 = m_gi_texture->GetImageView();
+	VkSampler    samp5 = m_gi_texture->GetSampler();
 
 	DescriptorSetWriteData data5{};
 	data5.type = DescriptorType_CombinedImageSampler;
 	data5.binding = 4;
-	data5.data.image.image_views = new VkImageView(m_gi_texture->GetImageView());
-	data5.data.image.samplers = new VkSampler(m_gi_texture->GetSampler());
+	data5.data.image.image_views = &view5;
+	data5.data.image.samplers = &samp5;
 
 	std::vector<DescriptorSetWriteData> write_data = {
-		data1,
-		data2,
-		data3,
-		data4,
-		data5
+		data1, data2, data3, data4, data5
 	};
 
 	m_backend->WriteDescriptor(&m_pbr_descriptor, write_data);
@@ -733,6 +745,7 @@ void Editor::CreateGBufferPipeline()
 		{
 			VK_FORMAT_R16G16B16A16_SFLOAT,
 			VK_FORMAT_R16G16B16A16_SFLOAT,
+			VK_FORMAT_R16G16B16A16_SFLOAT,
 			VK_FORMAT_R16G16B16A16_SFLOAT
 		},
 		VK_FORMAT_D32_SFLOAT
@@ -758,29 +771,31 @@ void Editor::CreateGBufferResources()
 	m_gbuffer_position = TextureManager::GetInstance()->CreateTexture2D(
 		"GBuffer_Position",
 		VK_FORMAT_R16G16B16A16_SFLOAT,
-		width,
-		height
+		width, height
 	);
 
 	m_gbuffer_normal = TextureManager::GetInstance()->CreateTexture2D(
 		"GBuffer_Normal",
 		VK_FORMAT_R16G16B16A16_SFLOAT,
-		width,
-		height
+		width, height
 	);
 
 	m_gbuffer_albedo_ao = TextureManager::GetInstance()->CreateTexture2D(
 		"GBuffer_AlbedoAO",
 		VK_FORMAT_R16G16B16A16_SFLOAT,
-		width,
-		height
+		width, height
 	);
 
 	m_gbuffer_depth = TextureManager::GetInstance()->CreateTexture2D(
 		"GBuffer_Depth",
 		VK_FORMAT_D32_SFLOAT,
-		width,
-		height
+		width, height
+	);
+
+	m_gbuffer_lighting = TextureManager::GetInstance()->CreateTexture2D(
+		"GBuffer_Lighting",
+		VK_FORMAT_R16G16B16A16_SFLOAT,
+		width, height
 	);
 }
 
@@ -790,11 +805,13 @@ void Editor::DestroyGBufferResources()
 	TextureManager::GetInstance()->DestroyTexture2D("GBuffer_Normal");
 	TextureManager::GetInstance()->DestroyTexture2D("GBuffer_AlbedoAO");
 	TextureManager::GetInstance()->DestroyTexture2D("GBuffer_Depth");
+	TextureManager::GetInstance()->DestroyTexture2D("GBuffer_Lighting");
 
 	m_gbuffer_position = nullptr;
 	m_gbuffer_normal = nullptr;
 	m_gbuffer_albedo_ao = nullptr;
 	m_gbuffer_depth = nullptr;
+	m_gbuffer_lighting = nullptr;
 }
 
 void Editor::CreateGBufferDescriptors()
@@ -810,7 +827,12 @@ void Editor::RenderGBuffer()
 	Pipeline* gbufferPipeline =
 		PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_GBUFFER);
 
-	if (!gbufferPipeline || !m_gbuffer_position || !m_gbuffer_normal || !m_gbuffer_albedo_ao || !m_gbuffer_depth)
+	if (!gbufferPipeline ||
+		!m_gbuffer_position ||
+		!m_gbuffer_normal ||
+		!m_gbuffer_albedo_ao ||
+		!m_gbuffer_depth ||
+		!m_gbuffer_lighting)
 	{
 		return;
 	}
@@ -836,6 +858,11 @@ void Editor::RenderGBuffer()
 	albedoAOAttachment.image_view = m_gbuffer_albedo_ao->GetImageView();
 	albedoAOAttachment.clear_value.color = { 0.0f, 0.0f, 0.0f, 1.0f };
 
+	DynamicRenderingAttachmentInfo lightingAttachment = positionAttachment;
+	lightingAttachment.image = m_gbuffer_lighting->GetHandle();
+	lightingAttachment.image_view = m_gbuffer_lighting->GetImageView();
+	lightingAttachment.clear_value.color = { 0.0f, 0.0f, 0.0f, 0.0f };
+
 	DynamicRenderingAttachmentInfo depthAttachment{};
 	depthAttachment.image = m_gbuffer_depth->GetHandle();
 	depthAttachment.image_view = m_gbuffer_depth->GetImageView();
@@ -852,7 +879,8 @@ void Editor::RenderGBuffer()
 	dri.color_attachments = {
 		positionAttachment,
 		normalAttachment,
-		albedoAOAttachment
+		albedoAOAttachment,
+		lightingAttachment
 	};
 	dri.depth_attachment = depthAttachment;
 
@@ -861,7 +889,6 @@ void Editor::RenderGBuffer()
 	m_backend->SetViewport({
 		{ 0.0f, 0.0f, (f32)m_viewport_last_size.x, (f32)m_viewport_last_size.y, 0.0f, 1.0f }
 		});
-
 	m_backend->SetScissor({
 		{ { 0, 0 }, { m_viewport_last_size.x, m_viewport_last_size.y } }
 		});
@@ -893,12 +920,13 @@ void Editor::CreateGIPipeline()
 	pipeline_info.layout = {
 		{
 			{
-				{ 0, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
-				{ 1, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
+				{ 0, DescriptorType_UniformBuffer,        1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
+				{ 1, DescriptorType_UniformBuffer,        1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
 				{ 2, DescriptorType_CombinedImageSampler, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
 				{ 3, DescriptorType_CombinedImageSampler, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
 				{ 4, DescriptorType_CombinedImageSampler, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
-				{ 5, DescriptorType_CombinedImageSampler, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind }
+				{ 5, DescriptorType_CombinedImageSampler, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
+				{ 6, DescriptorType_CombinedImageSampler, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind }
 			},
 			DescriptorSetFlags_UpdateAfterBindPool
 		}
@@ -934,8 +962,7 @@ void Editor::CreateGIResources()
 	m_gi_texture = TextureManager::GetInstance()->CreateTexture2D(
 		"GlobalIllumination",
 		VK_FORMAT_R16G16B16A16_SFLOAT,
-		width,
-		height
+		width, height
 	);
 }
 
@@ -954,57 +981,88 @@ void Editor::CreateGIDescriptors()
 
 void Editor::UpdateGIDescriptors()
 {
-	if ((m_gi_descriptor == nullptr) ||
-		(m_gi_texture == nullptr) ||
-		(m_gbuffer_position == nullptr) ||
-		(m_gbuffer_normal == nullptr) ||
-		(m_gbuffer_albedo_ao == nullptr) ||
-		(m_gbuffer_depth == nullptr))
+	if (!m_gi_descriptor ||
+		!m_gi_texture ||
+		!m_gbuffer_position ||
+		!m_gbuffer_normal ||
+		!m_gbuffer_albedo_ao ||
+		!m_gbuffer_depth ||
+		!m_gbuffer_lighting)
 	{
 		return;
 	}
 
+	VkBuffer     globalBuf = m_pbr_global_data_ubo->GetHandle();
+	VkDeviceSize globalOff = 0;
+	VkDeviceSize globalRange = sizeof(GlobalData);
+
 	DescriptorSetWriteData globalWrite{};
 	globalWrite.type = DescriptorType_UniformBuffer;
 	globalWrite.binding = 0;
-	globalWrite.data.buffer.buffers = new VkBuffer(m_pbr_global_data_ubo->GetHandle());
-	globalWrite.data.buffer.offsets = new VkDeviceSize(0);
-	globalWrite.data.buffer.ranges = new VkDeviceSize(sizeof(GlobalData));
+	globalWrite.data.buffer.buffers = &globalBuf;
+	globalWrite.data.buffer.offsets = &globalOff;
+	globalWrite.data.buffer.ranges = &globalRange;
+
+	VkBuffer     giBuf = m_pbr_gi_data_ubo->GetHandle();
+	VkDeviceSize giOff = 0;
+	VkDeviceSize giRange = sizeof(GlobalIlluminationSettings);
 
 	DescriptorSetWriteData giSettingsWrite{};
 	giSettingsWrite.type = DescriptorType_UniformBuffer;
 	giSettingsWrite.binding = 1;
-	giSettingsWrite.data.buffer.buffers = new VkBuffer(m_pbr_gi_data_ubo->GetHandle());
-	giSettingsWrite.data.buffer.offsets = new VkDeviceSize(0);
-	giSettingsWrite.data.buffer.ranges = new VkDeviceSize(sizeof(GlobalIlluminationSettings));
+	giSettingsWrite.data.buffer.buffers = &giBuf;
+	giSettingsWrite.data.buffer.offsets = &giOff;
+	giSettingsWrite.data.buffer.ranges = &giRange;
+
+	VkImageView posView = m_gbuffer_position->GetImageView();
+	VkSampler   posSamp = m_gbuffer_position->GetSampler();
 
 	DescriptorSetWriteData positionWrite{};
 	positionWrite.type = DescriptorType_CombinedImageSampler;
 	positionWrite.binding = 2;
-	positionWrite.data.image.image_views = new VkImageView(m_gbuffer_position->GetImageView());
-	positionWrite.data.image.samplers = new VkSampler(m_gbuffer_position->GetSampler());
+	positionWrite.data.image.image_views = &posView;
+	positionWrite.data.image.samplers = &posSamp;
+
+	VkImageView normView = m_gbuffer_normal->GetImageView();
+	VkSampler   normSamp = m_gbuffer_normal->GetSampler();
 
 	DescriptorSetWriteData normalWrite{};
 	normalWrite.type = DescriptorType_CombinedImageSampler;
 	normalWrite.binding = 3;
-	normalWrite.data.image.image_views = new VkImageView(m_gbuffer_normal->GetImageView());
-	normalWrite.data.image.samplers = new VkSampler(m_gbuffer_normal->GetSampler());
+	normalWrite.data.image.image_views = &normView;
+	normalWrite.data.image.samplers = &normSamp;
+
+	VkImageView albView = m_gbuffer_albedo_ao->GetImageView();
+	VkSampler   albSamp = m_gbuffer_albedo_ao->GetSampler();
 
 	DescriptorSetWriteData albedoAOWrite{};
 	albedoAOWrite.type = DescriptorType_CombinedImageSampler;
 	albedoAOWrite.binding = 4;
-	albedoAOWrite.data.image.image_views = new VkImageView(m_gbuffer_albedo_ao->GetImageView());
-	albedoAOWrite.data.image.samplers = new VkSampler(m_gbuffer_albedo_ao->GetSampler());
+	albedoAOWrite.data.image.image_views = &albView;
+	albedoAOWrite.data.image.samplers = &albSamp;
+
+	VkImageView depthView = m_gbuffer_depth->GetImageView();
+	VkSampler   depthSamp = m_gbuffer_depth->GetSampler();
 
 	DescriptorSetWriteData depthWrite{};
 	depthWrite.type = DescriptorType_CombinedImageSampler;
 	depthWrite.binding = 5;
-	depthWrite.data.image.image_views = new VkImageView(m_gbuffer_depth->GetImageView());
-	depthWrite.data.image.samplers = new VkSampler(m_gbuffer_depth->GetSampler());
+	depthWrite.data.image.image_views = &depthView;
+	depthWrite.data.image.samplers = &depthSamp;
+
+	VkImageView lightView = m_gbuffer_lighting->GetImageView();
+	VkSampler   lightSamp = m_gbuffer_lighting->GetSampler();
+
+	DescriptorSetWriteData lightingWrite{};
+	lightingWrite.type = DescriptorType_CombinedImageSampler;
+	lightingWrite.binding = 6;
+	lightingWrite.data.image.image_views = &lightView;
+	lightingWrite.data.image.samplers = &lightSamp;
 
 	std::vector<DescriptorSetWriteData> writes = {
 		globalWrite, giSettingsWrite, positionWrite,
-		normalWrite, albedoAOWrite, depthWrite
+		normalWrite, albedoAOWrite,   depthWrite,
+		lightingWrite
 	};
 
 	m_backend->WriteDescriptor(&m_gi_descriptor, writes);
@@ -1012,7 +1070,7 @@ void Editor::UpdateGIDescriptors()
 
 void Editor::RenderGI()
 {
-	if (!m_editor_settings.gi_settings.enabled || !m_gi_texture)
+	if (!m_gi_texture)
 	{
 		return;
 	}
@@ -1039,7 +1097,6 @@ void Editor::RenderGI()
 	m_backend->SetViewport({
 		{ 0.0f, 0.0f, (f32)m_viewport_last_size.x, (f32)m_viewport_last_size.y, 0.0f, 1.0f }
 		});
-
 	m_backend->SetScissor({
 		{ { 0, 0 }, { m_viewport_last_size.x, m_viewport_last_size.y } }
 		});
@@ -1067,23 +1124,23 @@ void Editor::CreateShadowPipeline()
 	pipeline_info.layout = {
 		{
 			{
-				{ 0, DescriptorType_UniformBuffer, 1, ShaderStage_Vertex | ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },	// Global data
-				{ 1, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },						// Lights data
-				{ 2, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },						// GI settings
-				{ 3, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },						// Shadow settings
-				{ 4, DescriptorType_CombinedImageSampler, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind }					// GI texture{}
+				{ 0, DescriptorType_UniformBuffer, 1, ShaderStage_Vertex | ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
+				{ 1, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
+				{ 2, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
+				{ 3, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
+				{ 4, DescriptorType_CombinedImageSampler, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind }
 			},
 			DescriptorSetFlags_UpdateAfterBindPool
 		},
 		{
 			{
-				{ 0, DescriptorType_StorageBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind }	// Per-draw data
+				{ 0, DescriptorType_StorageBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind }
 			},
 			DescriptorSetFlags_UpdateAfterBindPool
 		},
 		{
 			{
-				{ 0, DescriptorType_StorageBuffer, 1, ShaderStage_Vertex | ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },	// Per-object data
+				{ 0, DescriptorType_StorageBuffer, 1, ShaderStage_Vertex | ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
 			},
 			DescriptorSetFlags_UpdateAfterBindPool
 		},
@@ -1159,7 +1216,7 @@ void Editor::CreateShadowDescriptors()
 	}
 
 	std::vector<VkImageView> shadowMapViewValues;
-	std::vector<VkSampler> shadowMapSamplerValues;
+	std::vector<VkSampler>   shadowMapSamplerValues;
 	shadowMapViewValues.reserve(m_shadow_maps.size());
 	shadowMapSamplerValues.reserve(m_shadow_maps.size());
 
@@ -1193,7 +1250,7 @@ void Editor::RenderShadowMaps()
 	Pipeline* shadowPipeline = PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_SHADOW_DEPTH);
 	if (!shadowPipeline) return;
 
-	u32 shadowMapSize = m_editor_settings.shadow_settings.shadow_map_size;
+	u32  shadowMapSize = m_editor_settings.shadow_settings.shadow_map_size;
 	auto view = scene->GetRegistry().view<LightComponent, TransformComponent>();
 
 	u32 lightIndex = 0;
@@ -1214,7 +1271,7 @@ void Editor::RenderShadowMaps()
 		}
 
 		LightGPUData& gpuLight = m_lights_data.lights[lightIndex];
-		const u32 cascadeCount = light_component.type == LightType_Directional ? MAX_SHADOW_CASCADES : 1;
+		const u32     cascadeCount = light_component.type == LightType_Directional ? MAX_SHADOW_CASCADES : 1;
 
 		for (u32 cascade = 0; cascade < cascadeCount; ++cascade)
 		{
@@ -1253,11 +1310,9 @@ void Editor::RenderShadowMaps()
 			m_backend->SetScissor({ { { 0, 0 }, { shadowMapSize, shadowMapSize } } });
 
 			m_backend->BindPipeline(shadowPipeline);
-
-			// Required if shadow_depth.vert reads object/material/per-draw data from descriptor sets.
 			m_backend->BindDescriptorSet(shadowPipeline, m_pbr_descriptor);
-
 			m_backend->BindPushConstants(shadowPipeline, ShaderStage_Vertex, 0, sizeof(glm::mat4), &lightViewProj);
+
 			MeshManager::GetInstance()->DrawMeshes(shadowPipeline);
 
 			m_backend->EndDynamicRenderingWithAttachments(shadowDRI);
@@ -1294,13 +1349,13 @@ void Editor::CreateDebugPipeline()
 			},
 			{
 				{
-					{ 0, DescriptorType_StorageBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind }	// Per-draw data
+					{ 0, DescriptorType_StorageBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind }
 				},
 				DescriptorSetFlags_UpdateAfterBindPool
 			},
 			{
 				{
-					{ 0, DescriptorType_StorageBuffer, 1, ShaderStage_Vertex | ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },	// Per-object data
+					{ 0, DescriptorType_StorageBuffer, 1, ShaderStage_Vertex | ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
 				},
 				DescriptorSetFlags_UpdateAfterBindPool
 			},
@@ -1405,13 +1460,11 @@ void Editor::UpdateDebug()
 
 	UpdateLightGizmos();
 
-	// Upload to GPU
 	if (!m_gizmo_vertices.empty())
 	{
 		u32 vb_size = static_cast<u32>(m_gizmo_vertices.size() * sizeof(VertexGuizmo));
 		u32 ib_size = static_cast<u32>(m_gizmo_indices.size() * sizeof(u32));
 
-		// Update buffer contents
 		m_backend->UpdateVertexBuffer(m_gizmo_vb, 0, m_gizmo_vertices.data(), vb_size);
 		m_backend->UpdateIndexBuffer(m_gizmo_ib, 0, m_gizmo_indices.data(), ib_size);
 	}
@@ -1449,15 +1502,12 @@ void Editor::UpdateLightGizmos()
 			glm::vec3 world_position = glm::vec3(transform_component.world_transform[3]);
 			glm::vec4 light_color = glm::vec4(light_component.color, 1.0f);
 
-			/* Create point light geometry */
 			if (light_component.type == LightType_Point)
 			{
-				/* Draw wireframe sphere */
-				f32 radius = light_component.range * 0.1f;
+				f32       radius = light_component.range * 0.1f;
 				const u32 segments = 16;
 				const u32 rings = 8;
 
-				/* Generate sphere vertices */
 				for (u32 ring = 0; ring <= rings; ++ring)
 				{
 					f32 phi = glm::pi<f32>() * ring / rings;
@@ -1473,7 +1523,6 @@ void Editor::UpdateLightGizmos()
 					}
 				}
 
-				// Generate sphere line indices
 				for (u32 ring = 0; ring < rings; ++ring)
 				{
 					for (u32 seg = 0; seg < segments; ++seg)
@@ -1481,11 +1530,9 @@ void Editor::UpdateLightGizmos()
 						u32 curr = base_index + ring * (segments + 1) + seg;
 						u32 next = curr + segments + 1;
 
-						// Horizontal ring
 						m_gizmo_indices.push_back(curr);
 						m_gizmo_indices.push_back(curr + 1);
 
-						// Vertical line
 						m_gizmo_indices.push_back(curr);
 						m_gizmo_indices.push_back(next);
 					}
@@ -1493,20 +1540,17 @@ void Editor::UpdateLightGizmos()
 			}
 			else if (light_component.type == LightType_Directional)
 			{
-				// Draw direction arrow
 				glm::vec3 forward = glm::normalize(glm::vec3(transform_component.world_transform * glm::vec4(0.0f, 0.0f, -1.0f, 0.0f)));
-				f32 arrowLength = 2.0f;
-				f32 arrowHeadSize = 0.5f;
+				f32       arrowLength = 2.0f;
+				f32       arrowHeadSize = 0.5f;
 
 				glm::vec3 arrowEnd = world_position + forward * arrowLength;
 
-				// Arrow shaft
 				m_gizmo_vertices.push_back({ world_position, light_color });
 				m_gizmo_vertices.push_back({ arrowEnd, light_color });
 				m_gizmo_indices.push_back(base_index);
 				m_gizmo_indices.push_back(base_index + 1);
 
-				// Arrow head (4 lines forming a cone)
 				glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
 				glm::vec3 up = glm::cross(right, forward);
 
@@ -1532,18 +1576,15 @@ void Editor::UpdateLightGizmos()
 			}
 			else if (light_component.type == LightType_Spot)
 			{
-				// Draw cone
 				glm::vec3 forward = glm::normalize(glm::vec3(transform_component.world_transform * glm::vec4(0.0f, 0.0f, -1.0f, 0.0f)));
 				glm::vec3 right = glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
 				glm::vec3 up = glm::cross(right, forward);
 
-				f32 coneLength = light_component.range * 0.5f;
-				f32 coneRadius = tan(light_component.outer_cone_angle) * coneLength;
-
+				f32       coneLength = light_component.range * 0.5f;
+				f32       coneRadius = tan(light_component.outer_cone_angle) * coneLength;
 				const u32 segments = 16;
 				glm::vec3 coneBase = world_position + forward * coneLength;
 
-				// Cone base circle
 				for (u32 i = 0; i < segments; ++i)
 				{
 					f32 angle1 = 2.0f * glm::pi<f32>() * i / segments;
@@ -1557,7 +1598,6 @@ void Editor::UpdateLightGizmos()
 					m_gizmo_indices.push_back(base_index + i * 2);
 					m_gizmo_indices.push_back(base_index + i * 2 + 1);
 
-					// Lines from apex to base
 					if (i % 4 == 0)
 					{
 						m_gizmo_vertices.push_back({ world_position, light_color });
@@ -1608,7 +1648,7 @@ void Editor::ShowTransformGizmo()
 
 	glm::mat4 view = m_editor_camera.GetView();
 	glm::mat4 proj = m_editor_camera.GetProjection();
-	proj[1][1] *= -1.0f; // Invert Y axis for ImGuizmo
+	proj[1][1] *= -1.0f;
 
 	auto& tc = selected.GetComponent<TransformComponent>();
 
@@ -1658,7 +1698,6 @@ void Editor::ShowTransformGizmo()
 		glm::quat r;
 		glm::decompose(newLocal, s, r, t, skew, persp);
 
-		// Stabilize quaternion sign to reduce flip jitter
 		static glm::quat lastQ = glm::quat(1, 0, 0, 0);
 		if (glm::dot(lastQ, r) < 0.0f) r = -r;
 		lastQ = r;
@@ -1693,9 +1732,7 @@ void Editor::LoadLightData()
 	for (auto& entity : view)
 	{
 		if (lightIndex >= MAX_LIGHTS)
-		{
 			break;
-		}
 
 		auto& light_component = view.get<LightComponent>(entity);
 		auto& transform_component = view.get<TransformComponent>(entity);
@@ -1705,9 +1742,6 @@ void Editor::LoadLightData()
 
 		LightGPUData& gpuLight = m_lights_data.lights[lightIndex];
 
-		// ----------------------------------------------------------------
-		// World-space position and scale
-		// ----------------------------------------------------------------
 		glm::vec3 world_position = glm::vec3(transform_component.world_transform[3]);
 
 		f32 scaleX = glm::length(glm::vec3(transform_component.world_transform[0]));
@@ -1716,19 +1750,12 @@ void Editor::LoadLightData()
 		f32 maxWorldScale = glm::max(scaleX, glm::max(scaleY, scaleZ));
 		f32 effectiveRange = light_component.range * glm::max(maxWorldScale, 0.0001f);
 
-		// Clamp range to something sane so perspective matrix never degenerates
 		effectiveRange = glm::max(effectiveRange, 0.5f);
 
 		f32 lightType = static_cast<f32>(light_component.type);
 
-		// ----------------------------------------------------------------
-		// Forward direction (used by directional and spot)
-		// ----------------------------------------------------------------
 		glm::vec3 forward = -glm::normalize(glm::vec3(transform_component.world_transform[2]));
 
-		// ----------------------------------------------------------------
-		// Type-specific GPU data
-		// ----------------------------------------------------------------
 		if (light_component.type == LightType_Point)
 		{
 			gpuLight.position_type = glm::vec4(world_position, lightType);
@@ -1747,50 +1774,40 @@ void Editor::LoadLightData()
 			gpuLight.cone_attenuation.y = glm::cos(light_component.outer_cone_angle);
 		}
 
-		// ----------------------------------------------------------------
-		// Common properties
-		// ----------------------------------------------------------------
 		gpuLight.color_intensity = glm::vec4(light_component.color, light_component.intensity);
 		gpuLight.cone_attenuation.z = light_component.attenuation;
-		gpuLight.cone_attenuation.w = 1.0f; // enabled
+		gpuLight.cone_attenuation.w = 1.0f;
 
-		// shadow_params.x = base shadow map index for this light
 		gpuLight.shadow_params.x = static_cast<f32>(lightIndex * MAX_SHADOW_CASCADES);
 		gpuLight.shadow_params.y = m_editor_settings.shadow_settings.min_bias;
 		gpuLight.shadow_params.z = 1.0f;
 		gpuLight.shadow_params.w = light_component.cast_shadows ? 1.0f : 0.0f;
 
-		// ----------------------------------------------------------------
-		// Shadow matrix
-		// ----------------------------------------------------------------
 		if (light_component.cast_shadows && m_editor_settings.shadow_settings.enabled)
 		{
 			if (light_component.type == LightType_Directional)
 			{
 				LoadShadowData(forward, lightIndex, gpuLight);
-
 				gpuLight.shadow_matrix = gpuLight.cascade_matrices[0];
 			}
 			else if (light_component.type == LightType_Spot)
 			{
-				// Safe up vector — avoid degenerate lookAt when light points straight down/up
 				glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
 				if (glm::abs(glm::dot(up, forward)) > 0.95f)
 					up = glm::vec3(1.0f, 0.0f, 0.0f);
 
 				glm::mat4 lightView = glm::lookAt(world_position, world_position + forward, up);
 
-				// FOV must be the full cone angle (outer * 2), in radians
 				f32 fov = glm::clamp(light_component.outer_cone_angle * 2.0f, glm::radians(1.0f), glm::radians(179.0f));
 				f32 nearPlane = 0.1f;
 				f32 farPlane = effectiveRange;
 
 				glm::mat4 lightProj = glm::perspectiveZO(fov, 1.0f, nearPlane, farPlane);
-				lightProj[1][1] *= -1.0f; // Vulkan Y-flip
+				lightProj[1][1] *= -1.0f;
 
 				gpuLight.shadow_matrix = lightProj * lightView;
 			}
-			else // Point light — no shadow support yet
+			else
 			{
 				gpuLight.shadow_matrix = glm::mat4(1.0f);
 			}
@@ -1808,60 +1825,43 @@ void Editor::LoadLightData()
 
 glm::mat4 Editor::ComputeCascadeMatrix(const glm::vec3& lightDir, f32 cascadeNear, f32 cascadeFar, f32 shadowMapSize)
 {
-	const f32 aspect = m_viewport_last_size.y > 0 ? static_cast<f32>(m_viewport_last_size.x) / static_cast<f32>(m_viewport_last_size.y) : 1.0f;
+	const f32 aspect = m_viewport_last_size.y > 0
+		? static_cast<f32>(m_viewport_last_size.x) / static_cast<f32>(m_viewport_last_size.y)
+		: 1.0f;
 
-	/* Get perspective projection matrix with depth in [0, 1] */
 	glm::mat4 cameraProj = glm::perspectiveZO(
 		glm::radians(m_editor_camera.GetFov()),
 		aspect,
 		cascadeNear,
 		cascadeFar
 	);
-	/* Flip Y for Vulkan */
 	cameraProj[1][1] *= -1.0f;
 	glm::mat4 cameraView = m_editor_camera.GetView();
 
-	/* Get frustum corners in world space */
 	std::array<glm::vec3, 8> corners = Camera::GetFrustumCornersWorldSpace(cameraProj, cameraView);
-	/* Find */
 	glm::vec3 frustumCenter = Camera::GetFrustumCenter(corners);
-	f32 radius = Camera::GetFrustumRadius(corners, frustumCenter);
+	f32       radius = Camera::GetFrustumRadius(corners, frustumCenter);
 
-	/* Round up to the nearest texel-sized unit */
 	f32 texelSizeWorldSpace = (radius * 2.0f) / shadowMapSize;
 	radius = std::ceil(radius / texelSizeWorldSpace) * texelSizeWorldSpace;
 
-	/* Stable up vector */
 	glm::vec3 up(0.0f, 1.0f, 0.0f);
 	if (glm::abs(glm::dot(up, lightDir)) > 0.95f)
-	{
 		up = glm::vec3(0.0f, 0.0f, 1.0f);
-	}
 
-	/* Eye position for light view */
 	glm::vec3 lightPos = frustumCenter - lightDir * radius;
-
-	/* Create light view matrix */
 	glm::mat4 lightView = glm::lookAt(lightPos, frustumCenter, up);
 
-	/* Transform frustum center to light space */
 	glm::vec4 frustumCenterLS = lightView * glm::vec4(frustumCenter, 1.0f);
-
-	/* Snap to texel grid in light space */
 	frustumCenterLS.x = std::floor(frustumCenterLS.x / texelSizeWorldSpace) * texelSizeWorldSpace;
 	frustumCenterLS.y = std::floor(frustumCenterLS.y / texelSizeWorldSpace) * texelSizeWorldSpace;
 
-	/* Transform snapped center back to world space */
 	glm::vec4 snappedCenterWS = glm::inverse(lightView) * frustumCenterLS;
-
-	/* Recreate light view with snapped center */
 	lightPos = glm::vec3(snappedCenterWS) - lightDir * radius;
 	lightView = glm::lookAt(lightPos, glm::vec3(snappedCenterWS), up);
 
-	/* Compute min/max Z in light space for tight depth bounds */
 	f32 minZ = F32MAX;
 	f32 maxZ = F32MIN;
-
 	for (const glm::vec3& corner : corners)
 	{
 		glm::vec4 cornerLS = lightView * glm::vec4(corner, 1.0f);
@@ -1869,32 +1869,11 @@ glm::mat4 Editor::ComputeCascadeMatrix(const glm::vec3& lightDir, f32 cascadeNea
 		maxZ = glm::max(maxZ, cornerLS.z);
 	}
 
-	/* Extend the depth range to catch shadow casters outside frustum */
 	constexpr f32 zMult = 10.0f;
-	if (minZ < 0.0f)
-	{
-		minZ *= zMult;
-	}
-	else
-	{
-		minZ /= zMult;
-	}
-	if (maxZ < 0.0f)
-	{
-		maxZ /= zMult;
-	}
-	else
-	{
-		maxZ *= zMult;
-	}
+	if (minZ < 0.0f) minZ *= zMult; else minZ /= zMult;
+	if (maxZ < 0.0f) maxZ /= zMult; else maxZ *= zMult;
 
-	/* Create orthographic projection using the bounding sphere radius. Symmetric bounds ensure stable projection */
-	glm::mat4 lightProj = glm::orthoZO(
-		-radius, radius,
-		-radius, radius,
-		-maxZ, -minZ
-	);
-	/* Flip Y for Vulkan */
+	glm::mat4 lightProj = glm::orthoZO(-radius, radius, -radius, radius, -maxZ, -minZ);
 	lightProj[1][1] *= -1.0f;
 
 	return lightProj * lightView;
@@ -1908,7 +1887,6 @@ void Editor::LoadShadowData(const glm::vec3& lightDir, u32 lightIndex, LightGPUD
 	const f32 shadowMapSize = static_cast<f32>(m_editor_settings.shadow_settings.shadow_map_size);
 
 	glm::vec4 splits(0.0f);
-	/* Calculate cascade splits */
 	for (u32 i = 0; i < MAX_SHADOW_CASCADES; ++i)
 	{
 		f32 p = static_cast<f32>(i + 1) / static_cast<f32>(MAX_SHADOW_CASCADES);
@@ -1917,15 +1895,12 @@ void Editor::LoadShadowData(const glm::vec3& lightDir, u32 lightIndex, LightGPUD
 		splits[i] = lambda * logSplit + (1.0f - lambda) * uniformSplit;
 	}
 
-	/* Build a cascade matrix for each slice [previousSplit, currentSplit] */
 	for (u32 cascade = 0; cascade < MAX_SHADOW_CASCADES; ++cascade)
 	{
-		f32 cascadeNear = (cascade == 0) ? cameraNear : splits[cascade - 1];
+		f32       cascadeNear = (cascade == 0) ? cameraNear : splits[cascade - 1];
 		const f32 cascadeFar = splits[cascade];
 
 		gpuLight.cascade_matrices[cascade] = ComputeCascadeMatrix(lightDir, cascadeNear, cascadeFar, shadowMapSize);
-
-		cascadeNear = cascadeFar;
 	}
 
 	gpuLight.cascade_splits = splits;

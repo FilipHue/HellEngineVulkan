@@ -331,6 +331,16 @@ namespace hellengine
 			m_context->UpdateTexture(texture, data);
 		}
 
+		void VulkanBackend::TransitionTexture(VulkanTexture* texture, VkImageLayout old_layout, VkImageLayout new_layout)
+		{
+			m_context->TransitionTexture(texture, old_layout, new_layout);
+		}
+
+		void VulkanBackend::CopyTexture(VulkanTexture* src, VulkanTexture* dst) const
+		{
+			m_context->CopyTexture(src, dst);
+		}
+
 		template i32 VulkanBackend::ReadPixel<i32>(VulkanTexture* texture, u32 x, u32 y, u32 layer, u32 face);
 		template u32 VulkanBackend::ReadPixel<u32>(VulkanTexture* texture, u32 x, u32 y, u32 layer, u32 face);
 		template <typename T>

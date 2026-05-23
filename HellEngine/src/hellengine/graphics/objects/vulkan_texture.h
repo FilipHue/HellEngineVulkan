@@ -18,7 +18,7 @@ namespace hellengine
 
 			void Update(const VulkanInstance& instance, const VulkanDevice& device, const VulkanCommandPool& command_pool, const void* data);
 
-			void Destroy(const VulkanInstance& instance, const VulkanDevice& device);
+			virtual void Destroy(const VulkanInstance& instance, const VulkanDevice& device);
 
 			template<typename T>
 			T ReadPixel(const VulkanInstance& instance, const VulkanDevice& device, const VulkanCommandPool& command_pool, u32 x, u32 y, u32 layer = 0, u32 face = 0);
@@ -79,7 +79,15 @@ namespace hellengine
 			~VulkanTextureCubemap();
 
 			void Create(const VulkanInstance& instance, const VulkanDevice& device, const VulkanCommandPool& command_pool, VkFormat format, const char* path);
+			void Create(const VulkanInstance& instance, const VulkanDevice& device, const VulkanCommandPool& command_pool, VkFormat format, i32 size);
 			void CreateArray(const VulkanInstance& instance, const VulkanDevice& device, const VulkanCommandPool& command_pool, VkFormat format, const char* path);
+
+			VkImageView GetFaceImageView(u32 face) const { return m_face_image_views[face]; }
+
+			void Destroy(const VulkanInstance& instance, const VulkanDevice& device) override;
+
+		private:
+			std::vector<VkImageView> m_face_image_views;
 		};
 
 		VkImageAspectFlags GetAspectMaskFromVkFormat(VkFormat format);

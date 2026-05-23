@@ -800,6 +800,85 @@ namespace hellengine
 			texture->Update(m_instance, m_device, m_command_pool, data);
 		}
 
+		void VulkanContext::TransitionTexture(VulkanTexture* texture, VkImageLayout old_layout, VkImageLayout new_layout)
+		{
+			VkImageSubresourceRange range = {};
+			range.aspectMask = GetAspectMaskFromVkFormat(texture->GetFormat());
+			range.baseMipLevel = 0;
+			range.levelCount = texture->GetMipLevels();
+			range.baseArrayLayer = 0;
+			range.layerCount = texture->GetLayerCount();
+
+			VulkanImage::PrepareTransition(
+				m_frame_data[m_current_frame].command_buffer,
+				texture->GetHandle(),
+				range,
+				old_layout,
+				new_layout
+			);
+		}
+
+		void VulkanContext::CopyTexture(VulkanTexture* src_texture, VulkanTexture* dst_texture)
+		{
+			VkImageSubresourceRange src_range = {};
+			src_range.aspectMask = GetAspectMaskFromVkFormat(src_texture->GetFormat());
+			src_range.baseMipLevel = 0;
+			src_range.levelCount = src_texture->GetMipLevels();
+			src_range.baseArrayLayer = 0;
+			src_range.layerCount = src_texture->GetLayerCount();
+
+			VkImageSubresourceRange dst_range = {};
+			dst_range.aspectMask = GetAspectMaskFromVkFormat(dst_texture->GetFormat());
+			dst_range.baseMipLevel = 0;
+			dst_range.levelCount = dst_texture->GetMipLevels();
+			dst_range.baseArrayLayer = 0;
+			dst_range.layerCount = dst_texture->GetLayerCount();
+
+			// Transition both into transfer layouts within the frame command buffer
+			VulkanImage::PrepareTransition(m_frame_data[m_current_frame].command_buffer,
+				src_texture->GetHandle(), src_range,
+				VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+
+			VulkanImage::PrepareTransition(m_frame_data[m_current_frame].command_buffer,
+				dst_texture->GetHandle(), dst_range,
+				VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+
+			VkImageCopy copy_region = {};
+			copy_region.srcSubresource.aspectMask = src_range.aspectMask;
+			copy_region.srcSubresource.mipLevel = 0;
+			copy_region.srcSubresource.baseArrayLayer = 0;
+			copy_region.srcSubresource.layerCount = src_texture->GetLayerCount();
+			copy_region.srcOffset = { 0, 0, 0 };
+
+			copy_region.dstSubresource.aspectMask = dst_range.aspectMask;
+			copy_region.dstSubresource.mipLevel = 0;
+			copy_region.dstSubresource.baseArrayLayer = 0;
+			copy_region.dstSubresource.layerCount = dst_texture->GetLayerCount();
+			copy_region.dstOffset = { 0, 0, 0 };
+
+			copy_region.extent = {
+				src_texture->GetWidth(),
+				src_texture->GetHeight(),
+				src_texture->GetDepth()
+			};
+
+			vkCmdCopyImage(
+				m_frame_data[m_current_frame].command_buffer.GetHandle(),
+				src_texture->GetHandle(), VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+				dst_texture->GetHandle(), VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+				1, &copy_region
+			);
+
+			// Transition both back to SHADER_READ_ONLY_OPTIMAL within the same command buffer
+			VulkanImage::PrepareTransition(m_frame_data[m_current_frame].command_buffer,
+				src_texture->GetHandle(), src_range,
+				VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+
+			VulkanImage::PrepareTransition(m_frame_data[m_current_frame].command_buffer,
+				dst_texture->GetHandle(), dst_range,
+				VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		}
+
 		template i32 VulkanContext::ReadPixel<i32>(VulkanTexture* texture, u32 x, u32 y, u32 layer, u32 face);
 		template u32 VulkanContext::ReadPixel<u32>(VulkanTexture* texture, u32 x, u32 y, u32 layer, u32 face);
 		template<typename T>

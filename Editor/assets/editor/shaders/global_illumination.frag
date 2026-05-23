@@ -29,6 +29,7 @@ layout(set = 0, binding = 2) uniform sampler2D gPosition;
 layout(set = 0, binding = 3) uniform sampler2D gNormal;
 layout(set = 0, binding = 4) uniform sampler2D gAlbedoAO;
 layout(set = 0, binding = 5) uniform sampler2D gDepth;
+layout(set = 0, binding = 6) uniform sampler2D gLighting;
 
 vec3 ComputeGlobalIllumination(vec2 uv, GlobalIlluminationSettings settings, mat4 projection, mat4 view)
 {
@@ -36,6 +37,14 @@ vec3 ComputeGlobalIllumination(vec2 uv, GlobalIlluminationSettings settings, mat
     {
         return vec3(0.0);
     }
+
+    // Skip background pixels (no geometry)
+    float depth = texture(gDepth, uv).r;
+    if (depth >= 1.0) return vec3(0.0);
+
+    // Skip fully shadowed surfaces
+    vec3 directLight = texture(gLighting, uv).rgb;
+    if (dot(directLight, vec3(0.333)) < 0.001) return vec3(0.0);
 
     vec3 worldPos = texture(gPosition, uv).xyz;
     vec3 normal = normalize(texture(gNormal, uv).xyz * 2.0 - 1.0);
@@ -45,8 +54,6 @@ vec3 ComputeGlobalIllumination(vec2 uv, GlobalIlluminationSettings settings, mat
     float ao = albedoAO.a;
 
     uint sampleCount = max(settings.sample_count, 1u);
-
-    vec3 ambientLight = vec3(1.0);
 
     vec2 resolution = vec2(textureSize(gPosition, 0));
 
@@ -83,22 +90,23 @@ vec3 ComputeGlobalIllumination(vec2 uv, GlobalIlluminationSettings settings, mat
 
         float nDotRay = max(dot(normal, rayDir), 0.0);
         float hitFacing = max(dot(sceneNormal, -rayDir), 0.0);
+        if (hitFacing < 0.1) continue;
 
-        float distanceFalloff =
-            1.0 / (1.0 + pow(hitDistance, settings.falloff));
+        float distanceFalloff = 1.0 / (1.0 + pow(hitDistance, settings.falloff));
 
-        vec3 bouncedLight = ambientLight * sceneAlbedoAO.rgb;
+        vec3 sceneLighting = texture(gLighting, sampleUV).rgb;
+        vec3 bouncedLight = sceneLighting * sceneAlbedoAO.rgb;
 
         vec3 contribution =
-        bouncedLight *
-        nDotRay *
-        hitFacing *
-        distanceFalloff;
+            bouncedLight *
+            nDotRay *
+            hitFacing *
+            distanceFalloff;
 
-        contribution = min(contribution, vec3(0.25));
+        float lum = dot(contribution, vec3(0.2126, 0.7152, 0.0722));
+        if (lum > 0.25) contribution *= 0.25 / lum;
 
         gi += contribution;
-
         validSamples += 1.0;
     }
 

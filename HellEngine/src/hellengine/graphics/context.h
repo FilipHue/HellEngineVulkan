@@ -132,6 +132,9 @@ namespace hellengine
 
 			void UpdateTexture(VulkanTexture* texture, const void* data);
 
+			void TransitionTexture(VulkanTexture* texture, VkImageLayout old_layout, VkImageLayout new_layout);
+			void CopyTexture(VulkanTexture* src_texture, VulkanTexture* dst_texture);
+
 			template<typename T> T ReadPixel(VulkanTexture* texture, u32 x, u32 y, u32 layer = 0, u32 face = 0);
 
 			void DestroyTexture(VulkanTexture* texture) const;

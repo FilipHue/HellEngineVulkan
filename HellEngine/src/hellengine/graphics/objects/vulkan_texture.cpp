@@ -524,6 +524,68 @@ namespace hellengine
 			VulkanTexture::CreateSampler(instance, device, info, &m_sampler);
 		}
 
+		void VulkanTextureCubemap::Create(const VulkanInstance& instance, const VulkanDevice& device, const VulkanCommandPool& command_pool, VkFormat format, i32 size)
+		{
+			m_format = format;
+			m_channels = GetChannelCountFromVkFormat(m_format);
+			m_mip_levels = 1;
+			m_layer_count = 6;
+			m_faces = 1;
+
+			VkImageAspectFlags aspect = GetAspectMaskFromVkFormat(format);
+
+			// Cube map needs CUBE_COMPATIBLE flag and 6 array layers
+			// Usage covers both depth attachment (rendering into it) and sampled (reading in shader)
+			m_image.Create(
+				instance, device,
+				VK_IMAGE_TYPE_2D,
+				m_format,
+				{ (u32)size, (u32)size, 1 },
+				m_mip_levels,
+				m_layer_count,  // 6 faces as array layers
+				VK_SAMPLE_COUNT_1_BIT,
+				VK_IMAGE_TILING_OPTIMAL,
+				VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+				VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT,
+				0
+			);
+
+			// Cube image view — samples all 6 faces as a cube map in the shader
+			m_image.CreateImageView(
+				instance, device,
+				VK_IMAGE_VIEW_TYPE_CUBE,
+				m_format,
+				{ aspect, 0, m_mip_levels, 0, m_layer_count }
+			);
+
+			// Per-face image views — used when rendering into each face as a depth attachment
+			m_face_image_views.resize(6);
+			for (u32 face = 0; face < 6; ++face)
+			{
+				VkImageViewCreateInfo view_info = {};
+				view_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+				view_info.image = m_image.GetHandle();
+				view_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+				view_info.format = m_format;
+				view_info.subresourceRange.aspectMask = aspect;
+				view_info.subresourceRange.baseMipLevel = 0;
+				view_info.subresourceRange.levelCount = 1;
+				view_info.subresourceRange.baseArrayLayer = face;
+				view_info.subresourceRange.layerCount = 1;
+
+				VK_CHECK(vkCreateImageView(device.GetLogicalDevice(), &view_info, instance.GetAllocator(), &m_face_image_views[face]));
+			}
+
+			// Sampler with clamp-to-edge — important for cube map seams
+			ImageSamplerCreationInfo info = {};
+			info.max_lod = (f32)m_mip_levels;
+			info.address_mode[0] = ImageAddressMode_ClampToEdge;
+			info.address_mode[1] = ImageAddressMode_ClampToEdge;
+			info.address_mode[2] = ImageAddressMode_ClampToEdge;
+
+			VulkanTexture::CreateSampler(instance, device, info, &m_sampler);
+		}
+
 		void VulkanTextureCubemap::CreateArray(const VulkanInstance& instance, const VulkanDevice& device, const VulkanCommandPool& command_pool, VkFormat format, const char* path)
 		{
 			ktxResult result;
@@ -596,6 +658,22 @@ namespace hellengine
 			info.max_lod = (f32)m_mip_levels;
 
 			VulkanTexture::CreateSampler(instance, device, info, &m_sampler);
+		}
+
+		void VulkanTextureCubemap::Destroy(const VulkanInstance& instance, const VulkanDevice& device)
+		{
+			if (m_sampler != VK_NULL_HANDLE)
+			{
+				vkDestroySampler(device.GetLogicalDevice(), m_sampler, instance.GetAllocator());
+				m_sampler = VK_NULL_HANDLE;
+			}
+			for (VkImageView view : m_face_image_views)
+			{
+				if (view != VK_NULL_HANDLE)
+				{
+					vkDestroyImageView(device.GetLogicalDevice(), view, instance.GetAllocator());
+				}
+			}
 		}
 
 		VkImageAspectFlags GetAspectMaskFromVkFormat(VkFormat format)

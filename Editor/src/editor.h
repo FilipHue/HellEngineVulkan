@@ -119,7 +119,7 @@ private:
 
 	// Gizmos
 	void ShowTransformGizmo();
-	
+
 	// Lighting
 	void LoadLightData();
 	glm::mat4 ComputeCascadeMatrix(const glm::vec3& lightDir, f32 cascadeNear, f32 cascadeFar, f32 shadowMapSize);
@@ -157,8 +157,9 @@ private:
 	VulkanTexture2D* m_gbuffer_normal = nullptr;
 	VulkanTexture2D* m_gbuffer_albedo_ao = nullptr;
 	VulkanTexture2D* m_gbuffer_depth = nullptr;
+	VulkanTexture2D* m_gbuffer_lighting = nullptr;
 
-	// Global illumination
+	// Global Illumination
 	VulkanTexture2D* m_gi_texture = nullptr;
 
 	DescriptorSet* m_gi_descriptor;
