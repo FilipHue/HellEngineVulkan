@@ -67,7 +67,9 @@ void EditorHierarchy::Draw()
             ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, { style.ItemSpacing.x, style.ItemSpacing.y * 3.0f });
 
             if (ImGui::MenuItem("Create Scene"))
+            {
                 SceneManager::GetInstance()->CreateScene("Untitled");
+            }
 
             if (ImGui::MenuItem("Load Scene"))
             {
@@ -311,6 +313,14 @@ void EditorHierarchy::DrawUtilityPanel()
                     lightComp.enabled = true;
                     lightComp.cast_shadows = true;  // Enable shadows by default
 
+                    // After
+                    auto& registry = SceneManager::GetInstance()->GetActiveScene()->GetRegistry();
+                    registry.patch<TransformComponent>(light.GetHandle(), [](TransformComponent& tc)
+                        {
+							tc.local_position = glm::vec3(0.0f, 1.0f, 0.0f);
+                            tc.is_dirty = true;
+                        });
+
                     // Set inspector to show new light
                     m_selected_game_object = light;
                     m_inspector_panel->SetSelectedEntity(light);
@@ -327,9 +337,13 @@ void EditorHierarchy::DrawUtilityPanel()
                     lightComp.cast_shadows = true;  // Enable shadows by default
 
                     // Rotate to shine down at an angle (like sun)
-                    auto& transform = light.GetComponent<TransformComponent>();
-                    transform.local_rotation = glm::vec3(glm::radians(-45.0f), glm::radians(30.0f), 0.0f);
-                    transform.is_dirty = true;
+                    // After
+                    auto& registry = SceneManager::GetInstance()->GetActiveScene()->GetRegistry();
+                    registry.patch<TransformComponent>(light.GetHandle(), [](TransformComponent& tc)
+                        {
+                            tc.local_rotation = glm::vec3(glm::radians(-45.0f), glm::radians(30.0f), 0.0f);
+                            tc.is_dirty = true;
+                        });
 
                     // Set inspector to show new light
                     m_selected_game_object = light;
@@ -351,9 +365,13 @@ void EditorHierarchy::DrawUtilityPanel()
                     lightComp.cast_shadows = true;  // Enable shadows by default
 
                     // No rotation by default (points in -Z direction)
-                    auto& transform = light.GetComponent<TransformComponent>();
-                    transform.local_rotation = glm::vec3(0.0f, 0.0f, 0.0f);
-                    transform.is_dirty = true;
+                    // After
+                    auto& registry = SceneManager::GetInstance()->GetActiveScene()->GetRegistry();
+                    registry.patch<TransformComponent>(light.GetHandle(), [](TransformComponent& tc)
+                        {
+                            tc.local_position = glm::vec3(0.0f, 1.0f, 0.0f);
+                            tc.is_dirty = true;
+                        });
 
                     // Set inspector to show new light
                     m_selected_game_object = light;

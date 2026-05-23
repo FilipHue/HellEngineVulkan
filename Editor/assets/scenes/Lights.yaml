@@ -1,66 +1,10 @@
 scene:
   name: Lights
-  uuid: 18276286207981839357
+  uuid: 12749114146059164351
   assets:
     models:
       - D:\Projects\CC++\HellEngineVulkan\Editor\assets\models\Sponza\glTF\Sponza.gltf
 entities:
-  - id: 4705081256448519127
-    tag: Directional Light (Sun)
-    transform:
-      position:
-        x: 0
-        y: 0
-        z: 0
-      rotation:
-        x: -0.7853982
-        y: 0.5235988
-        z: 0
-      scale:
-        x: 1
-        y: 1
-        z: 1
-    light:
-      type: 1
-      color:
-        x: 0.96902657
-        y: 0.82324374
-        z: 0.53167826
-      intensity: 3
-      range: 100
-      attenuation: 1
-      inner_cone_angle: 0.5235988
-      outer_cone_angle: 0.7853982
-      enabled: true
-      cast_shadows: true
-  - id: 17155244798400342746
-    tag: Spot Light
-    transform:
-      position:
-        x: -7.5
-        y: 4.997797
-        z: -0.30406633
-      rotation:
-        x: 1.5232586
-        y: -1.5707964
-        z: 0
-      scale:
-        x: 1.0000007
-        y: 1
-        z: 1.0000002
-    light:
-      type: 2
-      color:
-        x: 0.920354
-        y: 0.72488064
-        z: 0.72488064
-      intensity: 100
-      range: 8.1
-      attenuation: 1
-      inner_cone_angle: 0.04537856
-      outer_cone_angle: 0.7941248
-      enabled: true
-      cast_shadows: true
   - id: 5140339128763101717
     tag: Sponza
     transform:
@@ -503,3 +447,59 @@ entities:
                 z: 1
             mesh_filter:
               mesh_name: meshes[0]-50
+  - id: 17155244798400342746
+    tag: Spot Light
+    transform:
+      position:
+        x: -7.5
+        y: 4.997797
+        z: -0.30406633
+      rotation:
+        x: 1.5232586
+        y: -1.5707964
+        z: 0
+      scale:
+        x: 1.0000007
+        y: 1
+        z: 1.0000002
+    light:
+      type: 2
+      color:
+        x: 0.920354
+        y: 0.72488064
+        z: 0.72488064
+      intensity: 100
+      range: 8.1
+      attenuation: 1
+      inner_cone_angle: 0.04537856
+      outer_cone_angle: 0.7941248
+      enabled: true
+      cast_shadows: true
+  - id: 4705081256448519127
+    tag: Directional Light (Sun)
+    transform:
+      position:
+        x: 0
+        y: 2
+        z: 0
+      rotation:
+        x: -0.7853982
+        y: 0.5235988
+        z: 0
+      scale:
+        x: 1
+        y: 1
+        z: 1
+    light:
+      type: 1
+      color:
+        x: 0.96902657
+        y: 0.82324374
+        z: 0.53167826
+      intensity: 3
+      range: 100
+      attenuation: 1
+      inner_cone_angle: 0.5235988
+      outer_cone_angle: 0.7853982
+      enabled: true
+      cast_shadows: true

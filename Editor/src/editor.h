@@ -52,7 +52,6 @@ public:
 	b8 OnEventMouseScrolled(EventContext& event);
 
 private:
-	// TODO : These functions should be moved to SceneManager
 	void ImportAsset();
 	void CreateEmptyGameObject();
 
@@ -113,28 +112,18 @@ private:
 	void UpdateDebug();
 	void RenderDebug();
 
+	void UpdateLightGizmos();
+
 	// Final Blit
 	void DrawToSwapchain();
 
 	// Gizmos
 	void ShowTransformGizmo();
 	
-	// Other
-	void UpdateLights();
-	glm::mat4 ComputeCascadeMatrix(
-		MultiProjectionCamera& camera,
-		const glm::uvec2& viewportSize,
-		const glm::vec3& lightDir,
-		f32 cascadeNear,
-		f32 cascadeFar,
-		f32 shadowMapSize);
-	void ComputeDirectionalLightCascades(
-		MultiProjectionCamera& camera,
-		const glm::uvec2& viewportSize,
-		const ShadowSettings& shadowSettings,
-		const glm::vec3& lightDir,
-		u32 lightIndex,
-		LightGPUData& gpuLight);
+	// Lighting
+	void LoadLightData();
+	glm::mat4 ComputeCascadeMatrix(const glm::vec3& lightDir, f32 cascadeNear, f32 cascadeFar, f32 shadowMapSize);
+	void LoadShadowData(const glm::vec3& lightDir, u32 lightIndex, LightGPUData& gpuLight);
 
 private:
 	// Editor

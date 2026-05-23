@@ -64,14 +64,14 @@ namespace hellengine
 			}
 
 			template<typename T>
-			bool HasComponent()
+			b8 HasComponent()
 			{
 				return m_scene->GetRegistry().all_of<T>(m_handle);
 			}
 
-			bool operator==(const Entity& other) const { return m_handle == other.m_handle && m_scene == other.m_scene; }
-			bool operator!=(const Entity& other) const { return !(*this == other); }
-			operator bool() const { return m_handle != entt::null; }
+			b8 operator==(const Entity& other) const { return m_handle == other.m_handle && m_scene == other.m_scene; }
+			b8 operator!=(const Entity& other) const { return !(*this == other); }
+			operator b8() const { return m_handle != entt::null; }
 			operator u32() const { return (u32)m_handle; }
 
 			operator EntityId() const { return m_handle; }

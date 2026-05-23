@@ -33,9 +33,10 @@ namespace hellengine
             void DestroyGameObject(Entity entity);
             void ReparentGameObject(Entity child, Entity parent);
 
-            b8 IsValid(Entity entity) const;
+            b8 IsEntityValid(Entity entity) const;
 
-            void UpdateTransforms();
+            void UpdateAllTransforms();
+			void UpdateTransformCallback(entt::registry& registry, entt::entity entity);
 
             Entity GetEntity(UUID id);
 

@@ -43,10 +43,10 @@ namespace hellengine
             Entity entity = { m_registry.create(), this };
 
 			entity.AddComponent<IDComponent>().id = id;
-
-            auto& tag = entity.AddComponent<TagComponent>().tag = name;
-
+            entity.AddComponent<TagComponent>().tag = name;
             entity.AddComponent<TransformComponent>();
+
+			m_registry.on_update<TransformComponent>().connect<&Scene::UpdateTransformCallback>(*this);
 
             m_hierarchy.CreateNode(id);
 
@@ -68,7 +68,7 @@ namespace hellengine
 
         Entity Scene::CreateGameObject(const std::string& name, Entity parent)
         {
-            HE_ASSERT(IsValid(parent) || parent == NULL_ENTITY, "Parent entity is not valid in the current scene");
+            HE_ASSERT(IsEntityValid(parent) || parent == NULL_ENTITY, "Parent entity is not valid in the current scene");
 
             Entity entity = CreateEntity(name);
             UUID child_id = entity.GetComponent<IDComponent>().id;
@@ -84,7 +84,7 @@ namespace hellengine
 
         Entity Scene::CreateGameObjectWithUUID(const std::string& name, Entity parent, UUID id)
         {
-            HE_ASSERT(IsValid(parent) || parent == NULL_ENTITY, "Parent entity is not valid in the current scene");
+            HE_ASSERT(IsEntityValid(parent) || parent == NULL_ENTITY, "Parent entity is not valid in the current scene");
 
             Entity entity = CreateEntityWithUUID(id, name);
             UUID child_id = entity.GetComponent<IDComponent>().id;
@@ -100,7 +100,7 @@ namespace hellengine
 
         void Scene::DestroyGameObject(Entity entity)
         {
-            HE_ASSERT(IsValid(entity), "Entity is not valid in the current scene");
+            HE_ASSERT(IsEntityValid(entity), "Entity is not valid in the current scene");
 
             UUID root_id = entity.GetComponent<IDComponent>().id;
 
@@ -142,8 +142,8 @@ namespace hellengine
             if (!child || child == newParent)
                 return;
 
-            HE_ASSERT(IsValid(child), "Child entity is not valid in the current scene");
-            HE_ASSERT(IsValid(newParent) || newParent == NULL_ENTITY, "New parent entity is not valid in the current scene");
+            HE_ASSERT(IsEntityValid(child), "Child entity is not valid in the current scene");
+            HE_ASSERT(IsEntityValid(newParent) || newParent == NULL_ENTITY, "New parent entity is not valid in the current scene");
 
             auto& childTc = child.GetComponent<TransformComponent>();
             glm::mat4 oldWorld = childTc.world_transform;
@@ -178,12 +178,12 @@ namespace hellengine
             childTc.is_dirty = true;
         }
 
-        b8 Scene::IsValid(Entity entity) const
+        b8 Scene::IsEntityValid(Entity entity) const
         {
             return m_registry.valid(entity.GetHandle());
         }
 
-        void Scene::UpdateTransforms()
+        void Scene::UpdateAllTransforms()
         {
             struct StackEntry
             {
@@ -234,6 +234,42 @@ namespace hellengine
                     stack.push_back({ child, worldForChildren, dirtyHere });
                     child = m_hierarchy.GetNextSibling(child);
                 }
+            }
+        }
+
+        void Scene::UpdateTransformCallback(entt::registry& registry, entt::entity entity)
+        {
+			struct StackEntry
+			{
+				UUID      id;
+				glm::mat4 parentWorld;
+			};
+
+			Entity current_entity = { entity, this };
+			std::stack<StackEntry> stack;
+			stack.push({ current_entity.GetComponent<IDComponent>().id, glm::mat4(1.0f) });
+
+            while (!stack.empty())
+            {
+				StackEntry current = stack.top();
+				stack.pop();
+				Entity e = GetEntity(current.id);
+				if (!e)
+				{
+					continue;
+				}
+				TransformComponent* tc = registry.try_get<TransformComponent>(e.GetHandle());
+				if (tc)
+				{
+					tc->world_transform = current.parentWorld * tc->GetLocalTransform();
+				}
+				glm::mat4 worldForChildren = tc ? tc->world_transform : current.parentWorld;
+				UUID child = m_hierarchy.GetFirstChild(current.id);
+				while ((u64)child != (u64)INVALID_ID)
+				{
+					stack.push({ child, worldForChildren });
+					child = m_hierarchy.GetNextSibling(child);
+				}
             }
         }
 

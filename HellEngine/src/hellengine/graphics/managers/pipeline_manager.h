@@ -13,7 +13,6 @@ namespace hellengine
 		class PipelineManager : public Singleton<PipelineManager>
 		{
 		public:
-
 			void Init(VulkanBackend* backend);
 			void Shutdown();
 

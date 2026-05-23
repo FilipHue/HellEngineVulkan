@@ -83,18 +83,24 @@ void EditorInspector::DrawEntityComponents()
 
 	ImGui::Separator();
 
+	b8 changed = false;
 	DrawComponent<TransformComponent>("Transform", m_selected_entity,
-		[](TransformComponent& c)
+		[&](TransformComponent& c)
 		{
-			DrawTransformVec3("Position", c.local_position);
+			changed |= DrawTransformVec3("Position", c.local_position);
 
 			glm::vec3 rot = glm::degrees(c.local_rotation);
-			DrawTransformVec3("Rotation", rot);
+			changed |= DrawTransformVec3("Rotation", rot);
 			c.local_rotation = glm::radians(rot);
 
-			DrawTransformVec3("Scale", c.local_scale, 1.f);
+			changed |= DrawTransformVec3("Scale", c.local_scale, 1.f);
 
-			c.is_dirty = true;
+            if (changed)
+            {
+			    c.is_dirty = true;
+                auto& registry = SceneManager::GetInstance()->GetActiveScene()->GetRegistry();
+                registry.patch<TransformComponent>(m_selected_entity.GetHandle());
+            }
 		});
 
     DrawComponent<MeshFilterComponent>("Mesh Filter", m_selected_entity,
@@ -322,8 +328,9 @@ void EditorInspector::DrawEntityComponents()
         });
 }
 
-void EditorInspector::DrawTransformVec3(const std::string& label, glm::vec3& value, f32 reset_value)
+b8 EditorInspector::DrawTransformVec3(const std::string& label, glm::vec3& value, f32 reset_value)
 {
+    b8 changed = false;
     ImGui::PushID(label.c_str());
 
     if (ImGui::BeginTable("##Vec3Table", 2, ImGuiTableFlags_SizingStretchProp))
@@ -360,7 +367,10 @@ void EditorInspector::DrawTransformVec3(const std::string& label, glm::vec3& val
                 ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 4.0f);
 
                 if (ImGui::Button(axis, ImVec2(button_size, button_size)))
+                {
                     val = reset_value;
+                    changed = true;
+                }
 
                 ImGui::PopStyleVar();
                 ImGui::PopStyleColor(3);
@@ -370,7 +380,10 @@ void EditorInspector::DrawTransformVec3(const std::string& label, glm::vec3& val
                 ImGui::PushItemWidth(input_width);
                 ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 4.0f);
                 std::string dragLabel = "##" + std::string(axis);
-                bool changed = ImGui::DragFloat(dragLabel.c_str(), &val, 0.1f, 0.0f, 0.0f, "%.2f");
+                if (ImGui::DragFloat(dragLabel.c_str(), &val, 0.1f, 0.0f, 0.0f, "%.2f"))
+                {
+                    changed = true;
+                }
                 ImGui::PopStyleVar();
                 ImGui::PopItemWidth();
 
@@ -387,4 +400,6 @@ void EditorInspector::DrawTransformVec3(const std::string& label, glm::vec3& val
     }
 
     ImGui::PopID();
+
+	return changed;
 }

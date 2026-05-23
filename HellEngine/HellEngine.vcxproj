@@ -953,7 +953,6 @@
     <ClCompile Include="src\hellengine\graphics\objects\vulkan_synchronization.cpp" />
     <ClCompile Include="src\hellengine\graphics\objects\vulkan_texture.cpp" />
     <ClCompile Include="src\hellengine\graphics\render\render_graph.cpp" />
-    <ClCompile Include="src\hellengine\math\algebra.cpp" />
     <ClCompile Include="src\hellengine\math\random\random.cpp" />
     <ClCompile Include="src\hellengine\math\types.cpp" />
     <ClCompile Include="src\hellengine\math\vertex\vertex.cpp" />

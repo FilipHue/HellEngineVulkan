@@ -24,8 +24,6 @@ namespace hellengine
 			return (index == N) ? result : lcm_array<N>(nums, index + 1, lcm(result, nums[index]));
 		}
 
-		std::array<glm::vec3, 8> GetFrustumCornersWorldSpace(const glm::mat4& projection, const glm::mat4& view);
-
 	} // namespace math
 	 
 } // namespace hellengine

@@ -24,8 +24,14 @@ typedef bool b8;
 
 #define I32MIN INT32_MIN
 #define I64MIN INT64_MIN
-#define U32MIN UINT32_MIN
-#define U64MIN UINT64_MIN
+#define U32MIN 0U
+#define U64MIN 0ULL
+
+#define F32MAX FLT_MAX
+#define F64MAX DBL_MAX
+
+#define F32MIN FLT_MIN
+#define F64MIN DBL_MIN
 
 HE_STATIC_ASSERT(sizeof(u8) == 1, "Expected u8 (unsigned char) to be 1 byte long");
 HE_STATIC_ASSERT(sizeof(u16) == 2, "Expected u16 (unsigned short) to be 2 bytes long");

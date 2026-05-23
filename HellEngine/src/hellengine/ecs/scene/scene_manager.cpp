@@ -452,13 +452,19 @@ namespace hellengine
 					entity.AddComponent<TransformComponent>();
 
 				if (entity_node["transform"]["position"])
+				{
 					transform.local_position = entity_node["transform"]["position"].as<glm::vec3>();
+				}
 				if (entity_node["transform"]["rotation"])
+				{
 					transform.local_rotation = entity_node["transform"]["rotation"].as<glm::vec3>();
+				}
 				if (entity_node["transform"]["scale"])
+				{
 					transform.local_scale = entity_node["transform"]["scale"].as<glm::vec3>();
+				}
 
-				transform.is_dirty = true;
+				scene->GetRegistry().patch<TransformComponent>(entity.GetHandle(), [](TransformComponent& tc) { tc.is_dirty = true; });
 			}
 
 			// Deserialize Light Component

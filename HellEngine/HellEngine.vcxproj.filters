@@ -2540,9 +2540,6 @@
     <ClCompile Include="src\hellengine\graphics\render\render_graph.cpp">
       <Filter>src\hellengine\graphics\render</Filter>
     </ClCompile>
-    <ClCompile Include="src\hellengine\math\algebra.cpp">
-      <Filter>src\hellengine\math</Filter>
-    </ClCompile>
     <ClCompile Include="src\hellengine\math\random\random.cpp">
       <Filter>src\hellengine\math\random</Filter>
     </ClCompile>

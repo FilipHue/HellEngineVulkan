@@ -60,7 +60,7 @@ private:
 		ImGui::PopID();
 	}
 
-	static void DrawTransformVec3(const std::string& label, glm::vec3& value, f32 reset_value = 0.0f);
+	static b8 DrawTransformVec3(const std::string& label, glm::vec3& value, f32 reset_value = 0.0f);
 
 private:
 	Entity m_selected_entity;
