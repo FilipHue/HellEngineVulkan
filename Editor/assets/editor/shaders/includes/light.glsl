@@ -10,7 +10,8 @@
 
 #define MAX_LIGHTS 16
 #define MAX_SHADOW_CASCADES 4
-#define MAX_SHADOW_MAPS (MAX_LIGHTS * MAX_SHADOW_CASCADES)
+#define MAX_SHADOW_MAPS (MAX_LIGHTS * MAX_SHADOW_CASCADES)  // 2D shadow maps (directional + spot)
+#define MAX_POINT_SHADOW_MAPS MAX_LIGHTS                    // One cubemap per point light
 
 // ================================
 // Structures
@@ -23,10 +24,12 @@ struct LightInfo {
     vec4 cone_attenuation;   // x = inner, y = outer, z = attenuation, w = enabled
     vec4 shadow_params;      // x = base shadow map index, y = bias, z = cascade count/strength, w = cast_shadows
 
-    mat4 shadow_matrix;      // fallback shadow matrix for spot lights
+    mat4 shadow_matrix;      // spot light shadow matrix
 
     mat4 cascade_matrices[MAX_SHADOW_CASCADES];
     vec4 cascade_splits;
+
+    mat4 point_matrices[6];  // point light: one matrix per cube face
 };
 
 struct PointLight {

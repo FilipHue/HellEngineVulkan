@@ -34,6 +34,7 @@ namespace hellengine
 			VulkanTexture2D* CreateTexture2D(std::string name, VkFormat format, const void* data, u32 width, u32 height);
 
 			VulkanTextureCubemap* CreateTextureCubemap(std::string name, const File& file);
+			VulkanTextureCubemap* CreateTextureCubemap(std::string name, VkFormat format, u32 size);
 			VulkanTextureCubemap* CreateTextureCubemapArray(std::string name, const File& file);
 
 			VulkanTexture2D* GetTexture2D(std::string name);
@@ -42,6 +43,7 @@ namespace hellengine
 			u32 GetTexture2DIndex(std::string name);
 
 			void DestroyTexture2D(std::string name);
+			void DestroyTextureCubemap(std::string name);
 
 		private:
 			friend class MeshManager;

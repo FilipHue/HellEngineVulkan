@@ -167,15 +167,19 @@ private:
 	DynamicRenderingInfo m_gbuffer_rendering_info;
 	DynamicRenderingInfo m_gi_rendering_info;
 
-	GlobalData m_global_data;
+	GlobalData    m_global_data;
 	LightsUBOData m_lights_data;
 
-	// Shadow Maps
-	std::vector<VulkanTexture2D*> m_shadow_maps;
+	// Shadow Maps (directional cascades + spot)
+	std::vector<VulkanTexture2D*>      m_shadow_maps;
+
+	// Point light shadow cubemaps — one per potential point light slot
+	std::vector<VulkanTextureCubemap*> m_point_shadow_maps;
+
 	DescriptorSet* m_textures_descriptor;
 
 	Buffer* m_gizmo_vb;
 	Buffer* m_gizmo_ib;
 	std::vector<VertexGuizmo> m_gizmo_vertices;
-	std::vector<u32> m_gizmo_indices;
+	std::vector<u32>          m_gizmo_indices;
 };

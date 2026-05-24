@@ -547,7 +547,8 @@ void Editor::CreatePBRPipeline()
 		{
 			{
 				{ 0, DescriptorType_CombinedImageSampler, MAX_LIGHTS * MAX_SHADOW_CASCADES, ShaderStage_Fragment, DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind },
-				{ 1, DescriptorType_CombinedImageSampler, MAX_TEXTURES, ShaderStage_Fragment, DescriptorBindingFlags_VariableCount | DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind }
+				{ 1, DescriptorType_CombinedImageSampler, MAX_LIGHTS, ShaderStage_Fragment, DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind },
+				{ 2, DescriptorType_CombinedImageSampler, MAX_TEXTURES, ShaderStage_Fragment, DescriptorBindingFlags_VariableCount | DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind }
 			},
 			DescriptorSetFlags_UpdateAfterBindPool
 		}
@@ -730,7 +731,8 @@ void Editor::CreateGBufferPipeline()
 		{
 			{
 				{ 0, DescriptorType_CombinedImageSampler, MAX_LIGHTS * MAX_SHADOW_CASCADES, ShaderStage_Fragment, DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind },
-				{ 1, DescriptorType_CombinedImageSampler, MAX_TEXTURES, ShaderStage_Fragment, DescriptorBindingFlags_VariableCount | DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind }
+				{ 1, DescriptorType_CombinedImageSampler, MAX_LIGHTS, ShaderStage_Fragment, DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind },
+				{ 2, DescriptorType_CombinedImageSampler, MAX_TEXTURES, ShaderStage_Fragment, DescriptorBindingFlags_VariableCount | DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind }
 			},
 			DescriptorSetFlags_UpdateAfterBindPool
 		}
@@ -1147,7 +1149,8 @@ void Editor::CreateShadowPipeline()
 		{
 			{
 				{ 0, DescriptorType_CombinedImageSampler, MAX_LIGHTS * MAX_SHADOW_CASCADES, ShaderStage_Fragment, DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind },
-				{ 1, DescriptorType_CombinedImageSampler, MAX_TEXTURES, ShaderStage_Fragment, DescriptorBindingFlags_VariableCount | DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind }
+				{ 1, DescriptorType_CombinedImageSampler, MAX_LIGHTS, ShaderStage_Fragment, DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind },
+				{ 2, DescriptorType_CombinedImageSampler, MAX_TEXTURES, ShaderStage_Fragment, DescriptorBindingFlags_VariableCount | DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind }
 			},
 			DescriptorSetFlags_UpdateAfterBindPool
 		}
@@ -1156,7 +1159,7 @@ void Editor::CreateShadowPipeline()
 	pipeline_info.vertex_binding_description = VertexFormatTangent::GetBindingDescription();
 	pipeline_info.vertex_attribute_descriptions = VertexFormatTangent::GetAttributeDescriptions();
 
-	pipeline_info.push_constant_ranges = { { ShaderStage_Vertex, 0, sizeof(glm::mat4) } };
+	pipeline_info.push_constant_ranges = { { ShaderStage_Vertex | ShaderStage_Fragment, 0, sizeof(glm::mat4) + sizeof(glm::vec4) } };
 	pipeline_info.depth_stencil_info = { true, true, false, PipelineDethStencilCompareOp_Less };
 
 	pipeline_info.dynamic_rendering_info = { false, {}, VK_FORMAT_D32_SFLOAT };
@@ -1175,24 +1178,36 @@ void Editor::CreateShadowResources()
 		std::string name = "ShadowMap_" + std::to_string(i);
 		TextureManager::GetInstance()->DestroyTexture2D(name);
 	}
-
 	m_shadow_maps.clear();
+
+	for (size_t i = 0; i < m_point_shadow_maps.size(); ++i)
+	{
+		std::string name = "PointShadowMap_" + std::to_string(i);
+		TextureManager::GetInstance()->DestroyTextureCubemap(name);
+	}
+	m_point_shadow_maps.clear();
 
 	u32 shadowMapSize = m_editor_settings.shadow_settings.shadow_map_size;
 	u32 shadowMapCount = MAX_LIGHTS * MAX_SHADOW_CASCADES;
 
+	// 2D shadow maps for directional (cascades) and spot lights
 	for (u32 i = 0; i < shadowMapCount; ++i)
 	{
-		std::string shadowMapName = "ShadowMap_" + std::to_string(i);
-
+		std::string name = "ShadowMap_" + std::to_string(i);
 		VulkanTexture2D* shadowMap = TextureManager::GetInstance()->CreateTexture2D(
-			shadowMapName,
-			VK_FORMAT_D32_SFLOAT,
-			shadowMapSize,
-			shadowMapSize
+			name, VK_FORMAT_D32_SFLOAT, shadowMapSize, shadowMapSize
 		);
-
 		m_shadow_maps.push_back(shadowMap);
+	}
+
+	// Cube shadow maps for point lights — one per light slot
+	for (u32 i = 0; i < MAX_LIGHTS; ++i)
+	{
+		std::string name = "PointShadowMap_" + std::to_string(i);
+		VulkanTextureCubemap* cubemap = TextureManager::GetInstance()->CreateTextureCubemap(
+			name, VK_FORMAT_D32_SFLOAT, shadowMapSize
+		);
+		m_point_shadow_maps.push_back(cubemap);
 	}
 }
 
@@ -1204,36 +1219,67 @@ void Editor::DestroyShadowResources()
 		TextureManager::GetInstance()->DestroyTexture2D(name);
 	}
 	m_shadow_maps.clear();
+
+	for (size_t i = 0; i < m_point_shadow_maps.size(); ++i)
+	{
+		std::string name = "PointShadowMap_" + std::to_string(i);
+		TextureManager::GetInstance()->DestroyTextureCubemap(name);
+	}
+	m_point_shadow_maps.clear();
 }
 
 void Editor::CreateShadowDescriptors()
 {
 	m_textures_descriptor = MeshManager::GetInstance()->GetTexturesDescriptor();
 
-	if (!m_textures_descriptor || m_shadow_maps.empty())
-	{
+	if (!m_textures_descriptor || m_shadow_maps.empty() || m_point_shadow_maps.empty())
 		return;
-	}
 
-	std::vector<VkImageView> shadowMapViewValues;
-	std::vector<VkSampler>   shadowMapSamplerValues;
-	shadowMapViewValues.reserve(m_shadow_maps.size());
-	shadowMapSamplerValues.reserve(m_shadow_maps.size());
-
-	for (auto* shadowMap : m_shadow_maps)
+	// -- binding 0: 2D shadow maps 
 	{
-		shadowMapViewValues.push_back(shadowMap->GetImageView());
-		shadowMapSamplerValues.push_back(shadowMap->GetSampler());
+		std::vector<VkImageView> views;
+		std::vector<VkSampler>   samplers;
+		views.reserve(m_shadow_maps.size());
+		samplers.reserve(m_shadow_maps.size());
+
+		for (auto* sm : m_shadow_maps)
+		{
+			views.push_back(sm->GetImageView());
+			samplers.push_back(sm->GetSampler());
+		}
+
+		DescriptorSetWriteData write{};
+		write.type = DescriptorType_CombinedImageSampler;
+		write.binding = 0;
+		write.data.image.image_views = views.data();
+		write.data.image.samplers = samplers.data();
+
+		std::vector<DescriptorSetWriteData> writes = { write };
+		m_backend->WriteDescriptorVariable(&m_textures_descriptor, writes, static_cast<u32>(m_shadow_maps.size()), 0);
 	}
 
-	DescriptorSetWriteData shadowMapWrite{};
-	shadowMapWrite.type = DescriptorType_CombinedImageSampler;
-	shadowMapWrite.binding = 0;
-	shadowMapWrite.data.image.image_views = shadowMapViewValues.data();
-	shadowMapWrite.data.image.samplers = shadowMapSamplerValues.data();
+	// -- binding 1: point light cube shadow maps
+	{
+		std::vector<VkImageView> views;
+		std::vector<VkSampler>   samplers;
+		views.reserve(m_point_shadow_maps.size());
+		samplers.reserve(m_point_shadow_maps.size());
 
-	std::vector<DescriptorSetWriteData> shadowMapWrites = { shadowMapWrite };
-	m_backend->WriteDescriptorVariable(&m_textures_descriptor, shadowMapWrites, static_cast<u32>(m_shadow_maps.size()), 0);
+		for (auto* cm : m_point_shadow_maps)
+		{
+			views.push_back(cm->GetImageView());
+			samplers.push_back(cm->GetSampler());
+		}
+
+		DescriptorSetWriteData write{};
+		write.type = DescriptorType_CombinedImageSampler;
+		write.binding = 1;
+		write.data.image.image_views = views.data();
+		write.data.image.samplers = samplers.data();
+
+		std::vector<DescriptorSetWriteData> writes = { write };
+		m_backend->WriteDescriptorVariable(&m_textures_descriptor, writes, static_cast<u32>(m_point_shadow_maps.size()), 0);
+	}
 }
 
 void Editor::UpdateShadowDescriptors()
@@ -1243,6 +1289,12 @@ void Editor::UpdateShadowDescriptors()
 void Editor::RenderShadowMaps()
 {
 	if (!m_editor_settings.shadow_settings.enabled) return;
+
+	struct ShadowPushConstants
+	{
+		glm::mat4 lightViewProj;
+		glm::vec4 lightPosAndFar;
+	};
 
 	Scene* scene = SceneManager::GetInstance()->GetActiveScene();
 	if (!scene) return;
@@ -1271,51 +1323,117 @@ void Editor::RenderShadowMaps()
 		}
 
 		LightGPUData& gpuLight = m_lights_data.lights[lightIndex];
-		const u32     cascadeCount = light_component.type == LightType_Directional ? MAX_SHADOW_CASCADES : 1;
 
-		for (u32 cascade = 0; cascade < cascadeCount; ++cascade)
+		if (light_component.type == LightType_Point)
 		{
-			const u32 shadowMapIndex = light_component.type == LightType_Directional
-				? lightIndex * MAX_SHADOW_CASCADES + cascade
-				: lightIndex * MAX_SHADOW_CASCADES;
+			VulkanTextureCubemap* cubemap = m_point_shadow_maps[lightIndex];
 
-			if (shadowMapIndex >= m_shadow_maps.size())
-				continue;
+			// Transition the entire cubemap to attachment layout once before rendering any face.
+			// BeginDynamicRenderingWithAttachments barriers on the whole VkImage handle which
+			// would conflict with per-face transitions if done inside the loop.
+			m_backend->TransitionTexture(
+				cubemap,
+				VK_IMAGE_LAYOUT_UNDEFINED,
+				VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+			);
 
-			glm::mat4 lightViewProj = light_component.type == LightType_Directional
-				? gpuLight.cascade_matrices[cascade]
-				: gpuLight.shadow_matrix;
+			for (u32 face = 0; face < 6; ++face)
+			{
+				DynamicRenderingAttachmentInfo depthAttachment{};
+				depthAttachment.image = cubemap->GetHandle();
+				depthAttachment.image_view = cubemap->GetFaceImageView(face);
+				depthAttachment.format = VK_FORMAT_D32_SFLOAT;
+				depthAttachment.image_layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+				depthAttachment.load_op = VK_ATTACHMENT_LOAD_OP_CLEAR;
+				depthAttachment.store_op = VK_ATTACHMENT_STORE_OP_STORE;
+				depthAttachment.clear_value.depthStencil = { 1.0f, 0 };
+				// Already in attachment layout — no transition needed inside the loop
+				depthAttachment.initial_layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+				depthAttachment.final_layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
-			VulkanTexture2D* shadowMap = m_shadow_maps[shadowMapIndex];
+				DynamicRenderingInfo shadowDRI{};
+				shadowDRI.extent = { shadowMapSize, shadowMapSize };
+				shadowDRI.depth_attachment = depthAttachment;
+				shadowDRI.flags = 0;
 
-			DynamicRenderingAttachmentInfo depthAttachment{};
-			depthAttachment.image = shadowMap->GetHandle();
-			depthAttachment.image_view = shadowMap->GetImageView();
-			depthAttachment.format = VK_FORMAT_D32_SFLOAT;
-			depthAttachment.image_layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-			depthAttachment.load_op = VK_ATTACHMENT_LOAD_OP_CLEAR;
-			depthAttachment.store_op = VK_ATTACHMENT_STORE_OP_STORE;
-			depthAttachment.clear_value.depthStencil = { 1.0f, 0 };
-			depthAttachment.initial_layout = VK_IMAGE_LAYOUT_UNDEFINED;
-			depthAttachment.final_layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+				m_backend->BeginDynamicRenderingWithAttachments(shadowDRI);
 
-			DynamicRenderingInfo shadowDRI{};
-			shadowDRI.extent = { shadowMapSize, shadowMapSize };
-			shadowDRI.depth_attachment = depthAttachment;
-			shadowDRI.flags = 0;
+				m_backend->SetViewport({ { 0.0f, 0.0f, static_cast<f32>(shadowMapSize), static_cast<f32>(shadowMapSize), 0.0f, 1.0f } });
+				m_backend->SetScissor({ { { 0, 0 }, { shadowMapSize, shadowMapSize } } });
 
-			m_backend->BeginDynamicRenderingWithAttachments(shadowDRI);
+				m_backend->BindPipeline(shadowPipeline);
+				m_backend->BindDescriptorSet(shadowPipeline, m_pbr_descriptor);
+				ShadowPushConstants pc;
+				pc.lightViewProj = gpuLight.point_matrices[face];
+				pc.lightPosAndFar = glm::vec4(gpuLight.position_type.x, gpuLight.position_type.y, gpuLight.position_type.z, gpuLight.direction_range.w);
 
-			m_backend->SetViewport({ { 0.0f, 0.0f, static_cast<f32>(shadowMapSize), static_cast<f32>(shadowMapSize), 0.0f, 1.0f } });
-			m_backend->SetScissor({ { { 0, 0 }, { shadowMapSize, shadowMapSize } } });
+				m_backend->BindPushConstants(shadowPipeline, ShaderStage_Vertex | ShaderStage_Fragment, 0, sizeof(ShadowPushConstants), &pc);
 
-			m_backend->BindPipeline(shadowPipeline);
-			m_backend->BindDescriptorSet(shadowPipeline, m_pbr_descriptor);
-			m_backend->BindPushConstants(shadowPipeline, ShaderStage_Vertex, 0, sizeof(glm::mat4), &lightViewProj);
+				MeshManager::GetInstance()->DrawMeshes(shadowPipeline);
 
-			MeshManager::GetInstance()->DrawMeshes(shadowPipeline);
+				m_backend->EndDynamicRenderingWithAttachments(shadowDRI);
+			}
 
-			m_backend->EndDynamicRenderingWithAttachments(shadowDRI);
+			// Transition entire cubemap to shader read after all 6 faces are done
+			m_backend->TransitionTexture(
+				cubemap,
+				VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+				VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
+			);
+		}
+		else
+		{
+			const u32 cascadeCount = light_component.type == LightType_Directional
+				? MAX_SHADOW_CASCADES : 1;
+
+			for (u32 cascade = 0; cascade < cascadeCount; ++cascade)
+			{
+				const u32 shadowMapIndex = light_component.type == LightType_Directional
+					? lightIndex * MAX_SHADOW_CASCADES + cascade
+					: lightIndex * MAX_SHADOW_CASCADES;
+
+				if (shadowMapIndex >= m_shadow_maps.size())
+					continue;
+
+				glm::mat4 lightViewProj = light_component.type == LightType_Directional
+					? gpuLight.cascade_matrices[cascade]
+					: gpuLight.shadow_matrix;
+
+				VulkanTexture2D* shadowMap = m_shadow_maps[shadowMapIndex];
+
+				DynamicRenderingAttachmentInfo depthAttachment{};
+				depthAttachment.image = shadowMap->GetHandle();
+				depthAttachment.image_view = shadowMap->GetImageView();
+				depthAttachment.format = VK_FORMAT_D32_SFLOAT;
+				depthAttachment.image_layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+				depthAttachment.load_op = VK_ATTACHMENT_LOAD_OP_CLEAR;
+				depthAttachment.store_op = VK_ATTACHMENT_STORE_OP_STORE;
+				depthAttachment.clear_value.depthStencil = { 1.0f, 0 };
+				depthAttachment.initial_layout = VK_IMAGE_LAYOUT_UNDEFINED;
+				depthAttachment.final_layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+
+				DynamicRenderingInfo shadowDRI{};
+				shadowDRI.extent = { shadowMapSize, shadowMapSize };
+				shadowDRI.depth_attachment = depthAttachment;
+				shadowDRI.flags = 0;
+
+				m_backend->BeginDynamicRenderingWithAttachments(shadowDRI);
+
+				m_backend->SetViewport({ { 0.0f, 0.0f, static_cast<f32>(shadowMapSize), static_cast<f32>(shadowMapSize), 0.0f, 1.0f } });
+				m_backend->SetScissor({ { { 0, 0 }, { shadowMapSize, shadowMapSize } } });
+
+				m_backend->BindPipeline(shadowPipeline);
+				m_backend->BindDescriptorSet(shadowPipeline, m_pbr_descriptor);
+				ShadowPushConstants pc;
+				pc.lightViewProj = lightViewProj;
+				pc.lightPosAndFar = glm::vec4(0.0f);
+
+				m_backend->BindPushConstants(shadowPipeline, ShaderStage_Vertex | ShaderStage_Fragment, 0, sizeof(ShadowPushConstants), &pc);
+
+				MeshManager::GetInstance()->DrawMeshes(shadowPipeline);
+
+				m_backend->EndDynamicRenderingWithAttachments(shadowDRI);
+			}
 		}
 
 		lightIndex++;
@@ -1362,7 +1480,8 @@ void Editor::CreateDebugPipeline()
 			{
 				{
 					{ 0, DescriptorType_CombinedImageSampler, MAX_LIGHTS * MAX_SHADOW_CASCADES, ShaderStage_Fragment, DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind },
-					{ 1, DescriptorType_CombinedImageSampler, MAX_TEXTURES, ShaderStage_Fragment, DescriptorBindingFlags_VariableCount | DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind }
+					{ 1, DescriptorType_CombinedImageSampler, MAX_LIGHTS, ShaderStage_Fragment, DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind },
+					{ 2, DescriptorType_CombinedImageSampler, MAX_TEXTURES, ShaderStage_Fragment, DescriptorBindingFlags_VariableCount | DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind }
 				},
 				DescriptorSetFlags_UpdateAfterBindPool
 			}
@@ -1778,6 +1897,7 @@ void Editor::LoadLightData()
 		gpuLight.cone_attenuation.z = light_component.attenuation;
 		gpuLight.cone_attenuation.w = 1.0f;
 
+		// Default shadow_params — overridden per light type below
 		gpuLight.shadow_params.x = static_cast<f32>(lightIndex * MAX_SHADOW_CASCADES);
 		gpuLight.shadow_params.y = m_editor_settings.shadow_settings.min_bias;
 		gpuLight.shadow_params.z = 1.0f;
@@ -1807,14 +1927,51 @@ void Editor::LoadLightData()
 
 				gpuLight.shadow_matrix = lightProj * lightView;
 			}
-			else
+			else if (light_component.type == LightType_Point)
 			{
+				gpuLight.shadow_params.x = static_cast<f32>(lightIndex);
+
+				const glm::vec3 dirs[6] = {
+					{ 1.0f,  0.0f,  0.0f },	// +X
+					{-1.0f,  0.0f,  0.0f }, // -X
+					{ 0.0f,  1.0f,  0.0f }, // +Y
+					{ 0.0f, -1.0f,  0.0f }, // -Y
+					{ 0.0f,  0.0f,  1.0f }, // +Z
+					{ 0.0f,  0.0f, -1.0f }, // -Z
+				};
+
+				const glm::vec3 ups[6] = {
+					{ 0.0f, -1.0f,  0.0f },  // +X
+					{ 0.0f, -1.0f,  0.0f },  // -X
+					{ 0.0f,  0.0f,  1.0f },  // +Y
+					{ 0.0f,  0.0f, -1.0f },  // -Y
+					{ 0.0f, -1.0f,  0.0f },  // +Z
+					{ 0.0f, -1.0f,  0.0f },  // -Z
+				};
+				f32 aspect = 1.0f;
+				f32 nearPlane = 0.1f;
+				f32 farPlane = effectiveRange;
+
+				glm::mat4 proj = glm::perspectiveZO(glm::radians(90.0f), aspect, nearPlane, farPlane);
+
+				for (u32 face = 0; face < 6; ++face)
+				{
+					glm::mat4 faceView = glm::lookAt(world_position, world_position + dirs[face], ups[face]);
+					gpuLight.point_matrices[face] = proj * faceView;
+				}
+
 				gpuLight.shadow_matrix = glm::mat4(1.0f);
 			}
 		}
 		else
 		{
 			gpuLight.shadow_matrix = glm::mat4(1.0f);
+
+			if (light_component.type == LightType_Point)
+			{
+				for (u32 face = 0; face < 6; ++face)
+					gpuLight.point_matrices[face] = glm::mat4(1.0f);
+			}
 		}
 
 		lightIndex++;

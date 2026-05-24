@@ -393,7 +393,7 @@ namespace hellengine
 					{
 						DescriptorSetWriteData image_data{};
 						image_data.type = DescriptorType_CombinedImageSampler;
-						image_data.binding = 1;
+						image_data.binding = 2;
 						image_data.data.image.image_views = m_descriptor_image_views.data();
 						image_data.data.image.samplers = m_descriptor_image_samplers.data();
 

@@ -1,6 +1,6 @@
 scene:
   name: Lights
-  uuid: 12749114146059164351
+  uuid: 4633105831730249582
   assets:
     models:
       - D:\Projects\CC++\HellEngineVulkan\Editor\assets\models\Sponza\glTF\Sponza.gltf
@@ -469,7 +469,7 @@ entities:
         y: 0.72488064
         z: 0.72488064
       intensity: 100
-      range: 8.1
+      range: 30.1
       attenuation: 1
       inner_cone_angle: 0.04537856
       outer_cone_angle: 0.7941248
@@ -498,6 +498,62 @@ entities:
         z: 0.53167826
       intensity: 3
       range: 100
+      attenuation: 1
+      inner_cone_angle: 0.5235988
+      outer_cone_angle: 0.7853982
+      enabled: true
+      cast_shadows: true
+  - id: 6606836445153254011
+    tag: Point Light (Green)
+    transform:
+      position:
+        x: -7
+        y: 1
+        z: -3.5
+      rotation:
+        x: 0
+        y: -0
+        z: 0
+      scale:
+        x: 1
+        y: 1
+        z: 1
+    light:
+      type: 0
+      color:
+        x: 0.43362844
+        y: 1
+        z: 0
+      intensity: 50
+      range: 50
+      attenuation: 1
+      inner_cone_angle: 0.5235988
+      outer_cone_angle: 0.7853982
+      enabled: true
+      cast_shadows: true
+  - id: 5839077473454820928
+    tag: Point Light (Red)
+    transform:
+      position:
+        x: -7
+        y: 1
+        z: 3.5
+      rotation:
+        x: 0
+        y: 0
+        z: 0
+      scale:
+        x: 1
+        y: 1
+        z: 1
+    light:
+      type: 0
+      color:
+        x: 1
+        y: 0
+        z: 0
+      intensity: 50
+      range: 18.1
       attenuation: 1
       inner_cone_angle: 0.5235988
       outer_cone_angle: 0.7853982

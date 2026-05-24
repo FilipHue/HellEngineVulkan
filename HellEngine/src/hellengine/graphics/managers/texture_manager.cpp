@@ -97,6 +97,18 @@ namespace hellengine
 			return texture;
 		}
 
+		VulkanTextureCubemap* TextureManager::CreateTextureCubemap(std::string name, VkFormat format, u32 size)
+		{
+			if (m_textures_2d_index_map.find(name) != m_textures_2d_index_map.end())
+			{
+				HE_GRAPHICS_DEBUG("Texture with name {0} already exists", name);
+				return nullptr;
+			}
+			VulkanTextureCubemap* texture = m_backend->CreateTextureCubemap(format, size);
+			m_textures_cubemap_map[name] = texture;
+			return texture;
+		}
+
 		VulkanTextureCubemap* TextureManager::CreateTextureCubemapArray(std::string name, const File& file)
 		{
 			if (m_textures_2d_index_map.find(name) != m_textures_2d_index_map.end())
@@ -142,6 +154,15 @@ namespace hellengine
 				m_backend->DestroyTexture(*m_textures_2d_vector.at(index));
 				m_textures_2d_vector.erase(index);
 				m_textures_2d_index_map.erase(name);
+			}
+		}
+
+		void TextureManager::DestroyTextureCubemap(std::string name)
+		{
+			if (m_textures_cubemap_map.find(name) != m_textures_cubemap_map.end())
+			{
+				m_backend->DestroyTexture(m_textures_cubemap_map[name]);
+				m_textures_cubemap_map.erase(name);
 			}
 		}
 

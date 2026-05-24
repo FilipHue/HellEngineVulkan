@@ -33,6 +33,8 @@ ALIGN_AS(LAYOUT_STD140_ALIGNMENT) struct LightGPUData
 
 	glm::mat4 cascade_matrices[MAX_SHADOW_CASCADES];
 	glm::vec4 cascade_splits;
+
+	glm::mat4 point_matrices[6];
 };
 
 ALIGN_AS(LAYOUT_STD140_ALIGNMENT) struct LightsUBOData

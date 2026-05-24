@@ -25,7 +25,7 @@ layout(location = 6) in flat int vObjectIndex;
 layout(location = 0) out vec4 outPosition;
 layout(location = 1) out vec4 outNormal;
 layout(location = 2) out vec4 outAlbedoAO;
-layout(location = 3) out vec4 outLighting;   // <-- new: raw Lo for GI
+layout(location = 3) out vec4 outLighting;
 
 // ── Set 0 ──────────────────────────────────────────────────────────────
 layout(set = 0, binding = 0) uniform GlobalData
@@ -66,11 +66,15 @@ layout(set = 2, binding = 0, std430) readonly buffer PerObjectSSBO
 } ssbo_objects;
 
 // ── Set 3 ──────────────────────────────────────────────────────────────
-layout(set = 3, binding = 0) uniform sampler2D shadowMaps[MAX_SHADOW_MAPS];
-layout(set = 3, binding = 1) uniform sampler2D textures[];
+// binding 0 — 2D shadow maps (directional cascades + spot)
+// binding 1 — cube shadow maps (point lights)
+// binding 2 — bindless material textures (variable count, must be last)
+layout(set = 3, binding = 0) uniform sampler2D     shadowMaps[MAX_SHADOW_MAPS];
+layout(set = 3, binding = 1) uniform samplerCube   pointShadowMaps[MAX_POINT_SHADOW_MAPS];
+layout(set = 3, binding = 2) uniform sampler2D     textures[];
 
 // ══════════════════════════════════════════════════════════════════════
-// Helpers (mirror of pbr.frag — keep in sync or move to a shared include)
+// Helpers
 // ══════════════════════════════════════════════════════════════════════
 
 vec4 SampleTexture(int index, vec2 uv)
@@ -83,7 +87,7 @@ vec3 GetMaterialNormal(MaterialInfo mat)
     vec3 N = normalize(vNormalWS);
     if (mat.normal > 0 || mat.normal_camera > 0)
     {
-        int normalIdx = (mat.normal_camera > 0) ? mat.normal_camera : mat.normal;
+        int  normalIdx = (mat.normal_camera > 0) ? mat.normal_camera : mat.normal;
         vec3 normalMap = normalize(SampleTexture(normalIdx, vUV).xyz * 2.0 - 1.0);
         vec3 T  = normalize(vTangentWS);
         vec3 B  = normalize(vBitangentWS);
@@ -99,14 +103,14 @@ float GetMaterialAO(MaterialInfo mat)
     return (aoIdx > 0) ? SampleTexture(aoIdx, vUV).r : 1.0;
 }
 
-// ── Shadow (same PCF logic as pbr.frag) ────────────────────────────────
+// ── Shadow ─────────────────────────────────────────────────────────────
 
 float SampleShadowMapPCF(uint shadowMapIndex, vec2 uv, float currentDepth, float bias)
 {
-    vec2 texelSize = 1.0 / vec2(textureSize(shadowMaps[nonuniformEXT(shadowMapIndex)], 0));
-    int  radius    = int(ubo_shadowData.settings.pcf_samples);
-    float result   = 0.0;
-    int   count    = 0;
+    vec2  texelSize = 1.0 / vec2(textureSize(shadowMaps[nonuniformEXT(shadowMapIndex)], 0));
+    int   radius    = int(ubo_shadowData.settings.pcf_samples);
+    float result    = 0.0;
+    int   count     = 0;
     for (int x = -radius; x <= radius; ++x)
     {
         for (int y = -radius; y <= radius; ++y)
@@ -120,6 +124,21 @@ float SampleShadowMapPCF(uint shadowMapIndex, vec2 uv, float currentDepth, float
     return result / float(count);
 }
 
+float SamplePointShadow(uint cubemapIndex, vec3 fragToLight, float range, float minBias, float maxBias, vec3 N)
+{
+    vec3  toLight      = normalize(-fragToLight);
+    float ndotl        = dot(N, toLight);
+    if (ndotl <= 0.0) return 0.0;
+
+    float currentDepth = length(fragToLight) / range;
+    float closestDepth = texture(pointShadowMaps[nonuniformEXT(cubemapIndex)], fragToLight).r;
+
+    // Linear depth needs larger bias than NDC depth
+    float bias = max(maxBias * (1.0 - ndotl), minBias) * 0.1;
+
+    return (currentDepth - bias) > closestDepth ? 0.0 : 1.0;
+}
+
 float CalculateShadow(LightInfo light, vec3 worldPos, vec3 normal)
 {
     if (ubo_shadowData.settings.enabled == 0u || light.shadow_params.w < 0.5)
@@ -128,21 +147,37 @@ float CalculateShadow(LightInfo light, vec3 worldPos, vec3 normal)
     float lightType = light.position_type.w;
     vec3  N         = normalize(normal);
 
-    // ── Spot / Point ───────────────────────────────────────────────────
-    if (lightType != 1.0)
+    // ── Point light ────────────────────────────────────────────────────
+    if (lightType == 0.0)
     {
-        vec4  lsp        = light.shadow_matrix * vec4(worldPos, 1.0);
-        vec3  proj       = lsp.xyz / lsp.w;
-        proj.xy          = proj.xy * 0.5 + 0.5;
+        vec3  fragToLight  = worldPos - light.position_type.xyz;
+        uint  cubemapIndex = uint(light.shadow_params.x);
+
+        return SamplePointShadow(
+            cubemapIndex,
+            fragToLight,
+            light.direction_range.w,
+            ubo_shadowData.settings.min_bias,
+            ubo_shadowData.settings.max_bias,
+            N
+        );
+    }
+
+    // ── Spot light ─────────────────────────────────────────────────────
+    if (lightType == 2.0)
+    {
+        vec4  lsp  = light.shadow_matrix * vec4(worldPos, 1.0);
+        vec3  proj = lsp.xyz / lsp.w;
+        proj.xy    = proj.xy * 0.5 + 0.5;
 
         if (any(lessThan(proj, vec3(0.0))) || any(greaterThan(proj, vec3(1.0))))
             return 1.0;
 
-        vec3  lightDir   = (lightType == 2.0)
-            ? normalize(light.direction_range.xyz)
-            : normalize(light.position_type.xyz - worldPos);
-        float bias       = max(ubo_shadowData.settings.max_bias * (1.0 - dot(N, lightDir)),
-                               ubo_shadowData.settings.min_bias);
+        vec3  lightDir = normalize(light.position_type.xyz - worldPos);
+        float bias     = max(
+            ubo_shadowData.settings.max_bias * (1.0 - dot(N, lightDir)),
+            ubo_shadowData.settings.min_bias
+        );
 
         return SampleShadowMapPCF(uint(light.shadow_params.x), proj.xy, proj.z, bias);
     }
@@ -181,17 +216,17 @@ float CalculateShadow(LightInfo light, vec3 worldPos, vec3 normal)
     const float BLEND = 0.95;
     if (cascade < 3u)
     {
-        float prevSplit  = (cascade == 0u) ? 0.0 : light.cascade_splits[cascade - 1u];
-        float currSplit  = light.cascade_splits[cascade];
-        float range      = currSplit - prevSplit;
-        float fade       = clamp((viewDepth - (prevSplit + range * BLEND)) / (range * (1.0 - BLEND)), 0.0, 1.0);
+        float prevSplit = (cascade == 0u) ? 0.0 : light.cascade_splits[cascade - 1u];
+        float currSplit = light.cascade_splits[cascade];
+        float range     = currSplit - prevSplit;
+        float fade      = clamp((viewDepth - (prevSplit + range * BLEND)) / (range * (1.0 - BLEND)), 0.0, 1.0);
 
         if (fade > 0.0)
         {
-            uint  nextIdx  = cascade + 1u;
-            vec4  nlsp     = light.cascade_matrices[nextIdx] * vec4(shadowPos, 1.0);
-            vec3  nproj    = nlsp.xyz / nlsp.w;
-            nproj.xy       = nproj.xy * 0.5 + 0.5;
+            uint  nextIdx = cascade + 1u;
+            vec4  nlsp    = light.cascade_matrices[nextIdx] * vec4(shadowPos, 1.0);
+            vec3  nproj   = nlsp.xyz / nlsp.w;
+            nproj.xy      = nproj.xy * 0.5 + 0.5;
 
             if (all(greaterThanEqual(nproj, vec3(0.0))) && all(lessThanEqual(nproj, vec3(1.0))))
             {
@@ -211,17 +246,14 @@ void main()
     PerObjectData objectData = ssbo_objects.data[uint(vObjectIndex)];
     MaterialInfo  mat        = ssbo_materials.data[objectData.material_index];
 
-    // ── Albedo / alpha test ────────────────────────────────────────────
     int  albedoIdx    = (mat.base_color > 0) ? mat.base_color : mat.diffuse;
     vec4 albedoSample = SampleTexture(albedoIdx, vUV);
     if (albedoSample.a < 0.1) discard;
 
-    // ── Surface properties ─────────────────────────────────────────────
     vec3  albedo = albedoSample.rgb;
     float ao     = GetMaterialAO(mat);
     vec3  N      = GetMaterialNormal(mat);
 
-    // ── PBR material params ────────────────────────────────────────────
     int   metallicIdx  = (mat.metalness > 0) ? mat.metalness : -1;
     float metallic     = (metallicIdx >= 0) ? SampleTexture(metallicIdx, vUV).r : 0.0;
 
@@ -233,7 +265,6 @@ void main()
         roughness = (roughnessIdx >= 0) ? SampleTexture(roughnessIdx, vUV).r : 0.5;
     roughness = clamp(roughness, 0.04, 1.0);
 
-    // ── Lighting loop (produces Lo — raw direct light, no tonemap) ─────
     vec3 V  = normalize(ubo_globalData.camera.position.xyz - vPosWS);
     vec3 F0 = mix(vec3(0.04), albedo, metallic);
     vec3 Lo = vec3(0.0);
@@ -278,9 +309,8 @@ void main()
         }
     }
 
-    // ── G-buffer outputs ───────────────────────────────────────────────
-    outPosition  = vec4(vPosWS, 1.0);
-    outNormal    = vec4(N * 0.5 + 0.5, 1.0);
-    outAlbedoAO  = vec4(albedo, ao);
-    outLighting  = vec4(Lo, 1.0);   // shadow-aware direct light, linear, no tonemap
+    outPosition = vec4(vPosWS, 1.0);
+    outNormal   = vec4(N * 0.5 + 0.5, 1.0);
+    outAlbedoAO = vec4(albedo, ao);
+    outLighting = vec4(Lo, 1.0);
 }

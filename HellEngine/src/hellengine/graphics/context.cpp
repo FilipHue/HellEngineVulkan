@@ -787,6 +787,14 @@ namespace hellengine
 			return texture;
 		}
 
+		VulkanTextureCubemap* VulkanContext::CreateTextureCubemap(VkFormat format, u32 size)
+		{
+			VulkanTextureCubemap* texture = new VulkanTextureCubemap();
+			texture->Create(m_instance, m_device, m_command_pool, format, size);
+
+			return texture;
+		}
+
 		VulkanTextureCubemap* VulkanContext::CreateTextureCubemapArray(const File& file)
 		{
 			VulkanTextureCubemap* texture = new VulkanTextureCubemap();

@@ -109,6 +109,7 @@ namespace hellengine
 			HE_API VulkanTexture3D* CreateTexture3D(VkFormat format, const void* data, u32 width, u32 height, u32 depth);
 
 			HE_API VulkanTextureCubemap* CreateTextureCubemap(const File& file);
+			HE_API VulkanTextureCubemap* CreateTextureCubemap(VkFormat format, u32 size);
 			HE_API VulkanTextureCubemap* CreateTextureCubemapArray(const File& file);
 
 			HE_API void UpdateTexture(VulkanTexture* texture, const void* data);

@@ -667,6 +667,10 @@ namespace hellengine
 				vkDestroySampler(device.GetLogicalDevice(), m_sampler, instance.GetAllocator());
 				m_sampler = VK_NULL_HANDLE;
 			}
+			if (m_image.GetHandle() != VK_NULL_HANDLE)
+			{
+				m_image.Destroy(instance, device);
+			}
 			for (VkImageView view : m_face_image_views)
 			{
 				if (view != VK_NULL_HANDLE)
