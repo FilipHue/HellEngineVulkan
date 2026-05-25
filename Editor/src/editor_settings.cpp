@@ -90,7 +90,7 @@ void EditorSettings::LoadDefaults()
 		// Initialize Shadow settings
 		shadow_settings = {};
 		shadow_settings.enabled = 1;
-		shadow_settings.shadow_map_size = 2048;
+		shadow_settings.shadow_map_size = 4096;
 		shadow_settings.cascade_split_lambda = 0.75f;
 		shadow_settings.min_bias = 0.001f;
 		shadow_settings.max_bias = 0.01f;

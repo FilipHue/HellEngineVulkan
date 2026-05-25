@@ -1,11 +1,39 @@
 scene:
-  name: Lights
-  uuid: 3853517197277076408
+  name: DirectionalLight
+  uuid: 13202076521947550502
   assets:
     models:
       - D:\Projects\CC++\HellEngineVulkan\Editor\assets\models\Sponza\glTF\Sponza.gltf
 entities:
-  - id: 5140339128763101717
+  - id: 7241358788394014079
+    tag: Directional Light
+    transform:
+      position:
+        x: 0
+        y: 0
+        z: 0
+      rotation:
+        x: -0.7853982
+        y: 0.5235988
+        z: 0
+      scale:
+        x: 1
+        y: 1
+        z: 1
+    light:
+      type: 1
+      color:
+        x: 1
+        y: 0.95
+        z: 0.85
+      intensity: 3
+      range: 100
+      attenuation: 1
+      inner_cone_angle: 0.5235988
+      outer_cone_angle: 0.7853982
+      enabled: true
+      cast_shadows: true
+  - id: 11906100999373665739
     tag: Sponza
     transform:
       position:
@@ -21,7 +49,7 @@ entities:
         y: 1
         z: 1
     children:
-      - id: 15598623284368333550
+      - id: 12071624743797732544
         tag: meshes[0]-53.meshes[0]-0
         transform:
           position:
@@ -39,7 +67,7 @@ entities:
         mesh_filter:
           mesh_name: meshes[0]-53.meshes[0]-0
         children:
-          - id: 2668489341903603963
+          - id: 7736489588983552279
             tag: meshes[0]-81.meshes[0]-83.meshes[0]-85.meshes[0]-87.meshes[0]-89.meshes[0]-91.meshes[0]-93.meshes[0]-1
             transform:
               position:
@@ -56,7 +84,7 @@ entities:
                 z: 1
             mesh_filter:
               mesh_name: meshes[0]-81.meshes[0]-83.meshes[0]-85.meshes[0]-87.meshes[0]-89.meshes[0]-91.meshes[0]-93.meshes[0]-1
-          - id: 813072965915883071
+          - id: 14216117921261738472
             tag: meshes[0]-82.meshes[0]-94.meshes[0]-84.meshes[0]-92.meshes[0]-86.meshes[0]-90.meshes[0]-88.meshes[0]-2
             transform:
               position:
@@ -73,7 +101,7 @@ entities:
                 z: 1
             mesh_filter:
               mesh_name: meshes[0]-82.meshes[0]-94.meshes[0]-84.meshes[0]-92.meshes[0]-86.meshes[0]-90.meshes[0]-88.meshes[0]-2
-          - id: 11049842411020186914
+          - id: 9412472025028674055
             tag: meshes[0]-99.meshes[0]-97.meshes[0]-3
             transform:
               position:
@@ -90,7 +118,7 @@ entities:
                 z: 1
             mesh_filter:
               mesh_name: meshes[0]-99.meshes[0]-97.meshes[0]-3
-          - id: 9020815479873034202
+          - id: 12808529390158759471
             tag: meshes[0]-13.meshes[0]-15.meshes[0]-35.meshes[0]-100.meshes[0]-37.meshes[0]-39.meshes[0]-41.meshes[0]-43.meshes[0]-45.meshes[0]-51.meshes[0]-102.meshes[0]-4
             transform:
               position:
@@ -107,7 +135,7 @@ entities:
                 z: 1
             mesh_filter:
               mesh_name: meshes[0]-13.meshes[0]-15.meshes[0]-35.meshes[0]-100.meshes[0]-37.meshes[0]-39.meshes[0]-41.meshes[0]-43.meshes[0]-45.meshes[0]-51.meshes[0]-102.meshes[0]-4
-          - id: 247227207646790201
+          - id: 4799726729784583249
             tag: meshes[0]-8.meshes[0]-11.meshes[0]-16.meshes[0]-18.meshes[0]-20.meshes[0]-22.meshes[0]-24.meshes[0]-26.meshes[0]-28.meshes[0]-30.meshes[0]-32.meshes[0]-34.meshes[0]-36.meshes[0]-48.meshes[0]-5
             transform:
               position:
@@ -124,7 +152,7 @@ entities:
                 z: 1
             mesh_filter:
               mesh_name: meshes[0]-8.meshes[0]-11.meshes[0]-16.meshes[0]-18.meshes[0]-20.meshes[0]-22.meshes[0]-24.meshes[0]-26.meshes[0]-28.meshes[0]-30.meshes[0]-32.meshes[0]-34.meshes[0]-36.meshes[0]-48.meshes[0]-5
-          - id: 4955349141090520051
+          - id: 15165282984252741873
             tag: meshes[0]-10.meshes[0]-14.meshes[0]-17.meshes[0]-19.meshes[0]-21.meshes[0]-23.meshes[0]-25.meshes[0]-27.meshes[0]-29.meshes[0]-31.meshes[0]-33.meshes[0]-6
             transform:
               position:
@@ -141,7 +169,7 @@ entities:
                 z: 1
             mesh_filter:
               mesh_name: meshes[0]-10.meshes[0]-14.meshes[0]-17.meshes[0]-19.meshes[0]-21.meshes[0]-23.meshes[0]-25.meshes[0]-27.meshes[0]-29.meshes[0]-31.meshes[0]-33.meshes[0]-6
-          - id: 9256876896981634367
+          - id: 4920227931872220134
             tag: meshes[0]-47.meshes[0]-7
             transform:
               position:
@@ -158,7 +186,7 @@ entities:
                 z: 1
             mesh_filter:
               mesh_name: meshes[0]-47.meshes[0]-7
-          - id: 11908412349902706098
+          - id: 12783104641349194861
             tag: meshes[0]-76.meshes[0]-80.meshes[0]-78.meshes[0]-74
             transform:
               position:
@@ -175,7 +203,7 @@ entities:
                 z: 1
             mesh_filter:
               mesh_name: meshes[0]-76.meshes[0]-80.meshes[0]-78.meshes[0]-74
-          - id: 17855384331199866122
+          - id: 12528559538456592555
             tag: meshes[0]-46.meshes[0]-9
             transform:
               position:
@@ -192,7 +220,7 @@ entities:
                 z: 1
             mesh_filter:
               mesh_name: meshes[0]-46.meshes[0]-9
-          - id: 7445255832767021765
+          - id: 17355959864036200901
             tag: meshes[0]-56.meshes[0]-60
             transform:
               position:
@@ -209,7 +237,7 @@ entities:
                 z: 1
             mesh_filter:
               mesh_name: meshes[0]-56.meshes[0]-60
-          - id: 12286883501812258951
+          - id: 8865983322291687263
             tag: meshes[0]-75.meshes[0]-77.meshes[0]-79.meshes[0]-73
             transform:
               position:
@@ -226,7 +254,7 @@ entities:
                 z: 1
             mesh_filter:
               mesh_name: meshes[0]-75.meshes[0]-77.meshes[0]-79.meshes[0]-73
-          - id: 791113038792067870
+          - id: 10459595726987611791
             tag: meshes[0]-44.meshes[0]-12
             transform:
               position:
@@ -243,7 +271,7 @@ entities:
                 z: 1
             mesh_filter:
               mesh_name: meshes[0]-44.meshes[0]-12
-          - id: 14423455787156643154
+          - id: 6503196351018470675
             tag: meshes[0]-96.meshes[0]-98
             transform:
               position:
@@ -260,7 +288,7 @@ entities:
                 z: 1
             mesh_filter:
               mesh_name: meshes[0]-96.meshes[0]-98
-          - id: 14306006760556171831
+          - id: 3467034099008902607
             tag: meshes[0]-57.meshes[0]-54.meshes[0]-59
             transform:
               position:
@@ -277,7 +305,7 @@ entities:
                 z: 1
             mesh_filter:
               mesh_name: meshes[0]-57.meshes[0]-54.meshes[0]-59
-          - id: 4963424240818870833
+          - id: 3866601979876004718
             tag: meshes[0]-49
             transform:
               position:
@@ -294,7 +322,7 @@ entities:
                 z: 1
             mesh_filter:
               mesh_name: meshes[0]-49
-          - id: 10627708824141270975
+          - id: 13806831236318341001
             tag: meshes[0]-69.meshes[0]-63.meshes[0]-72
             transform:
               position:
@@ -311,7 +339,7 @@ entities:
                 z: 1
             mesh_filter:
               mesh_name: meshes[0]-69.meshes[0]-63.meshes[0]-72
-          - id: 4617049822239939455
+          - id: 1125375603380255189
             tag: meshes[0]-55.meshes[0]-61.meshes[0]-58
             transform:
               position:
@@ -328,7 +356,7 @@ entities:
                 z: 1
             mesh_filter:
               mesh_name: meshes[0]-55.meshes[0]-61.meshes[0]-58
-          - id: 1418460220250312934
+          - id: 15804949562846213096
             tag: meshes[0]-68.meshes[0]-64.meshes[0]-66.meshes[0]-71
             transform:
               position:
@@ -345,7 +373,7 @@ entities:
                 z: 1
             mesh_filter:
               mesh_name: meshes[0]-68.meshes[0]-64.meshes[0]-66.meshes[0]-71
-          - id: 16412290560648053083
+          - id: 3586845119870645453
             tag: meshes[0]-40.meshes[0]-42.meshes[0]-38
             transform:
               position:
@@ -362,7 +390,7 @@ entities:
                 z: 1
             mesh_filter:
               mesh_name: meshes[0]-40.meshes[0]-42.meshes[0]-38
-          - id: 18435567355985608461
+          - id: 11123939166632255770
             tag: meshes[0]-67.meshes[0]-65.meshes[0]-70
             transform:
               position:
@@ -379,7 +407,7 @@ entities:
                 z: 1
             mesh_filter:
               mesh_name: meshes[0]-67.meshes[0]-65.meshes[0]-70
-          - id: 4568655502002733812
+          - id: 1404298245660342081
             tag: meshes[0]-62.meshes[0]-52
             transform:
               position:
@@ -396,7 +424,7 @@ entities:
                 z: 1
             mesh_filter:
               mesh_name: meshes[0]-62.meshes[0]-52
-          - id: 1229574706368112722
+          - id: 378853436272793890
             tag: meshes[0]-101
             transform:
               position:
@@ -413,7 +441,7 @@ entities:
                 z: 1
             mesh_filter:
               mesh_name: meshes[0]-101
-          - id: 6872939726975045657
+          - id: 4508368406736976942
             tag: meshes[0]-95
             transform:
               position:
@@ -430,7 +458,7 @@ entities:
                 z: 1
             mesh_filter:
               mesh_name: meshes[0]-95
-          - id: 15667603315696148568
+          - id: 2496645606064128481
             tag: meshes[0]-50
             transform:
               position:
@@ -447,87 +475,3 @@ entities:
                 z: 1
             mesh_filter:
               mesh_name: meshes[0]-50
-  - id: 17155244798400342746
-    tag: Spot Light
-    transform:
-      position:
-        x: -7.5
-        y: 4.997797
-        z: -0.30406633
-      rotation:
-        x: 1.5232586
-        y: -1.5707964
-        z: 0
-      scale:
-        x: 1.0000007
-        y: 1
-        z: 1.0000002
-    light:
-      type: 2
-      color:
-        x: 0.920354
-        y: 0.72488064
-        z: 0.72488064
-      intensity: 100
-      range: 30.1
-      attenuation: 0
-      inner_cone_angle: 0.23038346
-      outer_cone_angle: 0.79063416
-      enabled: true
-      cast_shadows: true
-  - id: 6606836445153254011
-    tag: Point Light (Green)
-    transform:
-      position:
-        x: -7
-        y: 1
-        z: -3.5
-      rotation:
-        x: 0
-        y: -0
-        z: 0
-      scale:
-        x: 1
-        y: 1
-        z: 1
-    light:
-      type: 0
-      color:
-        x: 0.43362844
-        y: 1
-        z: 0
-      intensity: 50
-      range: 50
-      attenuation: 1
-      inner_cone_angle: 0.5235988
-      outer_cone_angle: 0.7853982
-      enabled: true
-      cast_shadows: true
-  - id: 5839077473454820928
-    tag: Point Light (Red)
-    transform:
-      position:
-        x: -7
-        y: 1
-        z: 3.5
-      rotation:
-        x: 0
-        y: 0
-        z: 0
-      scale:
-        x: 1
-        y: 1
-        z: 1
-    light:
-      type: 0
-      color:
-        x: 1
-        y: 0
-        z: 0
-      intensity: 50
-      range: 18.1
-      attenuation: 1
-      inner_cone_angle: 0.5235988
-      outer_cone_angle: 0.7853982
-      enabled: true
-      cast_shadows: true

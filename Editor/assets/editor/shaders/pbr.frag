@@ -85,20 +85,21 @@ vec4 SampleTexture(int index, vec2 uv)
 
 float SampleShadowMapPCF(uint shadowMapIndex, vec2 uv, float currentDepth, float bias)
 {
-    vec2 texelSize = 1.0 / vec2(textureSize(shadowMaps[nonuniformEXT(shadowMapIndex)], 0));
-    int radius = int(ubo_shadowData.settings.pcf_samples);
-
-    float result = 0.0;
-    int count = 0;
+    vec2  texelSize = 1.0 / vec2(textureSize(shadowMaps[nonuniformEXT(shadowMapIndex)], 0));
+    int   radius    = int(ubo_shadowData.settings.pcf_samples);
+    float result    = 0.0;
+    int   count     = 0;
 
     for (int x = -radius; x <= radius; ++x)
     {
         for (int y = -radius; y <= radius; ++y)
         {
-            vec2 offset = vec2(x, y) * texelSize * ubo_shadowData.settings.softness;
+            // Use a fixed texel-aligned offset — no softness multiplier
+            // Softness scaling was causing sub-texel sampling which flickers
+            vec2 offset = vec2(x, y) * texelSize * max(1.0, floor(ubo_shadowData.settings.softness));
             float closestDepth = texture(shadowMaps[nonuniformEXT(shadowMapIndex)], uv + offset).r;
-            result += (currentDepth - bias) > closestDepth ? 0.0 : 1.0;
-            count++;
+            result += ((currentDepth - bias) > closestDepth) ? 0.0 : 1.0;
+            ++count;
         }
     }
 

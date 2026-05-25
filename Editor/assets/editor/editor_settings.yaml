@@ -3,7 +3,7 @@ editor:
   show_gizmos: false
   render_mode: 0
   gi_settings:
-    enabled: 1
+    enabled: 0
     sample_count: 4
     ray_distance: 3
     intensity: 1.12
@@ -22,9 +22,9 @@ editor:
     cascade_split_lambda: 0.75
     min_bias: 0
     max_bias: 0
-    normal_offset: 0
+    normal_offset: 0.02
     pcf_samples: 4
-    softness: 0
+    softness: 5
     cascade_distances:
       x: 10
       y: 30

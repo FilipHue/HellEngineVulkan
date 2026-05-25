@@ -126,15 +126,14 @@ float SampleShadowMapPCF(uint shadowMapIndex, vec2 uv, float currentDepth, float
 
 float SamplePointShadow(uint cubemapIndex, vec3 fragToLight, float range, float minBias, float maxBias, vec3 N)
 {
-    vec3  toLight      = normalize(-fragToLight);
-    float ndotl        = dot(N, toLight);
+    vec3  toLight  = normalize(-fragToLight);
+    float ndotl    = dot(N, toLight);
     if (ndotl <= 0.0) return 0.0;
 
     float currentDepth = length(fragToLight) / range;
     float closestDepth = texture(pointShadowMaps[nonuniformEXT(cubemapIndex)], fragToLight).r;
 
-    // Linear depth needs larger bias than NDC depth
-    float bias = max(maxBias * (1.0 - ndotl), minBias) * 0.1;
+    float bias = max(maxBias * (1.0 - ndotl), minBias) / range;
 
     return (currentDepth - bias) > closestDepth ? 0.0 : 1.0;
 }
@@ -173,7 +172,7 @@ float CalculateShadow(LightInfo light, vec3 worldPos, vec3 normal)
         if (any(lessThan(proj, vec3(0.0))) || any(greaterThan(proj, vec3(1.0))))
             return 1.0;
 
-        vec3  lightDir = normalize(light.position_type.xyz - worldPos);
+        vec3 lightDir = normalize(light.direction_range.xyz);
         float bias     = max(
             ubo_shadowData.settings.max_bias * (1.0 - dot(N, lightDir)),
             ubo_shadowData.settings.min_bias
