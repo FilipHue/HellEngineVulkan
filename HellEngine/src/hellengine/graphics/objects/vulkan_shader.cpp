@@ -113,13 +113,18 @@ namespace hellengine
 			std::string binary_name = ShaderTypeToExt(type);
 			binary_name = file.GetAbsoluteDirectory() + "\\cache\\" + file.GetStem() + "_" + binary_name + ".spv";
 
-			//if (std::filesystem::exists(binary_name))
-			//{
-			//	HE_GRAPHICS_INFO("\tLoaded from cache");
-			//	return ReadSPIRVSource(binary_name.c_str());
-			//}
+			// Mesh and task shaders require SPIR-V 1.4 (--target-env=vulkan1.2).
+			// All other stages compile fine with the default target.
+			std::string target_env = (type == ShaderType_Mesh || type == ShaderType_Task)
+				? " --target-env=vulkan1.2 "
+				: " ";
 
-			std::string command = "C:/VulkanSDK/1.4.328.1/Bin/glslc.exe " + file.GetAbsolutePath() + " -o " + binary_name;
+			std::string command = "C:/VulkanSDK/1.4.328.1/Bin/glslc.exe"
+				+ target_env
+				+ file.GetAbsolutePath()
+				+ " -o "
+				+ binary_name;
+
 			system(command.c_str());
 
 			HE_GRAPHICS_INFO("\tCompiled to cache");

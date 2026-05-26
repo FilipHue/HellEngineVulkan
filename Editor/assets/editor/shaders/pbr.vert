@@ -5,7 +5,7 @@
 #extension GL_ARB_shader_draw_parameters : require
 
 layout(location = 0) in vec3 inPosition;
-layout(location = 1) in vec3 inColor;
+layout(location = 1) in vec4 inColor;
 layout(location = 2) in vec2 inUV;
 layout(location = 3) in vec3 inNormal;
 layout(location = 4) in vec3 inTangent;
@@ -53,7 +53,7 @@ void main()
     vBitangentWS = normalize(cross(vNormalWS, vTangentWS) * handedness);
 
     // Pass-through
-    vColor = inColor;
+    vColor = inColor.rgb;
     vUV = inUV;
 
     // Clip-space position

@@ -18,3 +18,7 @@ constexpr auto C_PIPELINE_GRID = "Editor_Grid";
 constexpr auto C_PIPELINE_WIREFRAME = "Editor_Wireframe";
 constexpr auto C_PIPELINE_GIZMO = "Editor_Light_Gizmo";
 constexpr auto C_PIPELINE_SHADOW_DEPTH = "Editor_Shadow_Depth";
+ constexpr const char* C_PIPELINE_PBR_MESH           = "PBR_MeshShader";
+ constexpr const char* C_PIPELINE_GBUFFER_MESH        = "GBuffer_MeshShader";
+ constexpr const char* C_PIPELINE_SHADOW_DEPTH_MESH   = "ShadowDepth_MeshShader";
+ constexpr const char* C_PIPELINE_WIREFRAME_MESH      = "Wireframe_MeshShader";

@@ -107,6 +107,16 @@ namespace hellengine
 				stage_vk = (VkShaderStageFlagBits)(stage_vk | VK_SHADER_STAGE_COMPUTE_BIT);
 			}
 
+			if (stage & ShaderStage_Task)
+			{
+				stage_vk = (VkShaderStageFlagBits)(stage_vk | VK_SHADER_STAGE_TASK_BIT_EXT);
+			}
+
+			if (stage & ShaderStage_Mesh)
+			{
+				stage_vk = (VkShaderStageFlagBits)(stage_vk | VK_SHADER_STAGE_MESH_BIT_EXT);
+			}
+
 			return stage_vk;
 		}
 
@@ -122,6 +132,10 @@ namespace hellengine
 				return VK_SHADER_STAGE_FRAGMENT_BIT;
 			case ShaderType_Compute:
 				return VK_SHADER_STAGE_COMPUTE_BIT;
+			case ShaderType_Task:
+				return VK_SHADER_STAGE_TASK_BIT_EXT;
+			case ShaderType_Mesh:
+				return VK_SHADER_STAGE_MESH_BIT_EXT;
 			default:
 				return VK_SHADER_STAGE_VERTEX_BIT;
 			}
@@ -223,6 +237,8 @@ namespace hellengine
 				return VK_PIPELINE_BIND_POINT_GRAPHICS;
 			case PipelineType_Compute:
 				return VK_PIPELINE_BIND_POINT_COMPUTE;
+			case PipelineType_Mesh:
+				return VK_PIPELINE_BIND_POINT_GRAPHICS;
 			default:
 				return VK_PIPELINE_BIND_POINT_GRAPHICS;
 			}

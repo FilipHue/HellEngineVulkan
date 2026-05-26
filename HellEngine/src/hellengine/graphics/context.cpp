@@ -393,6 +393,10 @@ namespace hellengine
 			{
 				pipeline->CreateCompute(m_instance, m_device, info, shader_info);
 			}
+			else if (info.type == PipelineType_Mesh)
+			{
+				pipeline->CreateMesh(m_instance, m_device, m_swapchain, info, shader_info);
+			}
 
 			return pipeline;
 		}
@@ -511,7 +515,7 @@ namespace hellengine
 			return index_buffer;
 		}
 
-		VulkanUniformBuffer* VulkanContext::CreateUniformBufferMappedPersistent(u32 elem_size, u32 elem_count)
+		VulkanUniformBuffer* VulkanContext::CreateUniformBufferHostCoherent(u32 elem_size, u32 elem_count)
 		{
 			VulkanUniformBuffer* uniform_buffer = new VulkanUniformBuffer();
 			uniform_buffer->CreateMapped(m_instance, m_device, elem_size, elem_count, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, false, 0, nullptr, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, true);
@@ -530,12 +534,29 @@ namespace hellengine
 			return uniform_buffer;
 		}
 
-		VulkanStorageBuffer* VulkanContext::CreateStorageBufferMappedPersistent(u32 elem_size, u32 elem_count)
+		VulkanStorageBuffer* VulkanContext::CreateStorageBufferHostCoherent(u32 elem_size, u32 elem_count)
 		{
 			VulkanStorageBuffer* storage_buffer = new VulkanStorageBuffer();
 			storage_buffer->CreateMapped(m_instance, m_device, elem_size, elem_count, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT, false, 0, nullptr, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, true);
 
 			return storage_buffer;
+		}
+
+		VulkanStorageBuffer* VulkanContext::CreateStorageBufferDeviceLocal(u32 size)
+		{
+			std::array<u32, 2> queue_families = {
+				m_device.GetGraphicsFamilyIndex(),
+				m_device.GetTransferFamilyIndex()
+			};
+
+			VulkanStorageBuffer* buffer = new VulkanStorageBuffer();
+			buffer->Create(
+				m_instance, m_device, size,
+				VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+				true,
+				(u32)queue_families.size(), queue_families.data(),
+				VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+			return buffer;
 		}
 
 		VulkanBuffer* VulkanContext::CreateDrawIndirectBuffer(u32 elem_size, u32 elem_count)
@@ -921,6 +942,16 @@ namespace hellengine
 		{
 			VkBuffer buffer_handle = buffer->GetHandle();
 			vkCmdDrawIndexedIndirect(m_frame_data[m_current_frame].command_buffer.GetHandle(), buffer_handle, offset, draw_count, stride);
+		}
+
+		void VulkanContext::DrawMeshTask(u32 group_count_x, u32 group_count_y, u32 group_count_z) const
+		{
+			m_device.GetCmdDrawMeshTasksEXT()(m_frame_data[m_current_frame].command_buffer.GetHandle(), group_count_x, group_count_y, group_count_z);
+		}
+
+		void VulkanContext::DrawMeshTasksIndirect(VulkanBuffer* buffer, u32 offset, u32 draw_count, u32 stride) const
+		{
+			m_device.GetCmdDrawMeshTasksIndirectEXT()(m_frame_data[m_current_frame].command_buffer.GetHandle(), buffer->GetHandle(), static_cast<VkDeviceSize>(offset), draw_count, stride);
 		}
 
 		void VulkanContext::InitDescriptorPoolGrowable(const std::vector<DescriptorPoolSizeInfo>& pool_sizes, u32 max_sets)

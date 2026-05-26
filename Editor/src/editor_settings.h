@@ -97,6 +97,8 @@ public:
 	b8 show_debug = false;
 	b8 show_grid = true;
 
+
+	GeometryMode geometry_mode = GeometryMode_Classic;
 	EditorRenderMode render_mode = EditorRenderMode_Normal;
 	GlobalIlluminationSettings gi_settings = {};
 	ShadowSettings shadow_settings = {};

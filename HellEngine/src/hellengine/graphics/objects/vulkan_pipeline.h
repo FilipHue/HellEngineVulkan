@@ -17,6 +17,7 @@ namespace hellengine
 
 			void CreateGraphics(const VulkanInstance& instance, VulkanDevice& device, VulkanSwapchain& swapchain, const PipelineCreateInfo& info, const ShaderStageInfo& shader_info);
 			void CreateCompute(const VulkanInstance& instance, VulkanDevice& device, const PipelineCreateInfo& info, const ShaderStageInfo& shader_info);
+			void CreateMesh(const VulkanInstance& instance, VulkanDevice& device, VulkanSwapchain& swapchain, const PipelineCreateInfo& info, const ShaderStageInfo& shader_info);
 
 			void Destroy(const VulkanInstance& instance, const VulkanDevice& device) const;
 

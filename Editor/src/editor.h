@@ -73,6 +73,7 @@ private:
 
 	// PBR
 	void CreatePBRPipeline();
+	void CreatePBRPipelineMesh();
 	void CreatePBRResources();
 	void DestroyPBRResources();
 	void CreatePBRDescriptors();
@@ -81,6 +82,7 @@ private:
 
 	// GBuffer
 	void CreateGBufferPipeline();
+	void CreateGBufferPipelineMesh();
 	void CreateGBufferResources();
 	void DestroyGBufferResources();
 	void CreateGBufferDescriptors();
@@ -97,6 +99,7 @@ private:
 
 	// Shadow Maps
 	void CreateShadowPipeline();
+	void CreateShadowPipelineMesh();
 	void CreateShadowResources();
 	void DestroyShadowResources();
 	void CreateShadowDescriptors();
@@ -105,6 +108,7 @@ private:
 
 	// Debug Visualization
 	void CreateDebugPipeline();
+	void CreateDebugPipelineMesh();
 	void CreateDebugResources();
 	void DestroyDebugResources();
 	void CreateDebugDescriptors();
@@ -146,6 +150,7 @@ private:
 
 	// PBR Pipeline
 	DescriptorSet* m_pbr_descriptor;
+	DescriptorSet* m_pbr_mesh_descriptor = nullptr;
 	DescriptorSet* m_pbr_gi_descriptor;
 	UniformBuffer* m_pbr_global_data_ubo;
 	UniformBuffer* m_pbr_lights_data_ubo;

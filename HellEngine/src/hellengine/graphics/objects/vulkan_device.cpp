@@ -31,7 +31,7 @@ namespace hellengine
 			m_requirements.transfer = true;
 			m_requirements.discrete = true;
 			m_requirements.present_support = true;
-			m_requirements.extensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME, VK_KHR_MULTIVIEW_EXTENSION_NAME };
+			m_requirements.extensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME, VK_KHR_MULTIVIEW_EXTENSION_NAME, VK_EXT_MESH_SHADER_EXTENSION_NAME };
 		}
 
 		VulkanDevice::~VulkanDevice()
@@ -178,10 +178,21 @@ namespace hellengine
 			vulkan11_features.pNext = &indexing_features;
 			vulkan11_features.shaderDrawParameters = VK_TRUE;
 
+			VkPhysicalDeviceMeshShaderFeaturesEXT mesh_shader_features = {};
+			mesh_shader_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MESH_SHADER_FEATURES_EXT;
+			mesh_shader_features.pNext = &vulkan11_features;
+			mesh_shader_features.meshShader = VK_TRUE;
+			mesh_shader_features.taskShader = VK_TRUE;
+
+			VkPhysicalDeviceScalarBlockLayoutFeatures scalar_layout_features{};
+			scalar_layout_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SCALAR_BLOCK_LAYOUT_FEATURES;
+			scalar_layout_features.pNext = &mesh_shader_features;  // insert before mesh_shader_features in chain
+			scalar_layout_features.scalarBlockLayout = VK_TRUE;
+
 			VkDeviceCreateInfo device_create_info = {};
 			device_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 			device_create_info.flags = 0;
-			device_create_info.pNext = &vulkan11_features;
+			device_create_info.pNext = &scalar_layout_features;
 			device_create_info.queueCreateInfoCount = static_cast<u32>(queue_create_infos.size());
 			device_create_info.pQueueCreateInfos = queue_create_infos.data();
 			device_create_info.enabledLayerCount = 0;
@@ -192,6 +203,9 @@ namespace hellengine
 
 			VK_CHECK(vkCreateDevice(m_physical_device, &device_create_info, instance.GetAllocator(), &m_logical_device));
 			HE_GRAPHICS_DEBUG("Vulkan logical device created successfully");
+
+			m_vkCmdDrawMeshTasksEXT = reinterpret_cast<PFN_vkCmdDrawMeshTasksEXT>(vkGetDeviceProcAddr(m_logical_device, "vkCmdDrawMeshTasksEXT"));
+			m_vkCmdDrawMeshTasksIndirectEXT = reinterpret_cast<PFN_vkCmdDrawMeshTasksIndirectEXT>(vkGetDeviceProcAddr(m_logical_device, "vkCmdDrawMeshTasksIndirectEXT"));
 		}
 
 		void VulkanDevice::GetDeviceQueue()

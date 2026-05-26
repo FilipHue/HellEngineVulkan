@@ -206,7 +206,7 @@ namespace hellengine
 
 		VulkanUniformBuffer* VulkanBackend::CreateUniformBufferMappedPersistent(u32 elem_size, u32 elem_count)
 		{
-			return m_context->CreateUniformBufferMappedPersistent(elem_size, elem_count);
+			return m_context->CreateUniformBufferHostCoherent(elem_size, elem_count);
 		}
 
 		VulkanUniformBuffer* VulkanBackend::CreateDynamicUniformBuffer(void*& data, u32 data_size, u32 data_count)
@@ -216,7 +216,12 @@ namespace hellengine
 
 		VulkanStorageBuffer* VulkanBackend::CreateStorageBufferMappedPersistent(u32 elem_size, u32 elem_count)
 		{
-			return m_context->CreateStorageBufferMappedPersistent(elem_size, elem_count);
+			return m_context->CreateStorageBufferHostCoherent(elem_size, elem_count);
+		}
+
+		VulkanStorageBuffer* VulkanBackend::CreateStorageBufferDeviceLocal(u32 size)
+		{
+			return m_context->CreateStorageBufferDeviceLocal(size);
 		}
 
 		VulkanBuffer* VulkanBackend::CreateDrawIndirectBuffer(u32 elem_size, u32 elem_count)
@@ -373,6 +378,16 @@ namespace hellengine
 		void VulkanBackend::DrawIndexedIndirect(VulkanBuffer* buffer, u32 offset, u32 draw_count, u32 stride) const
 		{
 			m_context->DrawIndexedIndirect(buffer, offset, draw_count, stride);
+		}
+
+		void VulkanBackend::DrawMeshTask(u32 group_count_x, u32 group_count_y, u32 group_count_z) const
+		{
+			m_context->DrawMeshTask(group_count_x, group_count_y, group_count_z);
+		}
+
+		void VulkanBackend::DrawMeshTasksIndirect(VulkanBuffer* buffer, u32 offset, u32 draw_count, u32 stride) const
+		{
+			m_context->DrawMeshTasksIndirect(buffer, offset, draw_count, stride);
 		}
 
 	} // namespace graphics

@@ -27,6 +27,9 @@ namespace hellengine
 			const VkPhysicalDevice& GetPhysicalDevice() const { return m_physical_device; }
 			const VkDevice& GetLogicalDevice() const { return m_logical_device; }
 
+			const PFN_vkCmdDrawMeshTasksEXT& GetCmdDrawMeshTasksEXT() const { return m_vkCmdDrawMeshTasksEXT; }
+			const PFN_vkCmdDrawMeshTasksIndirectEXT& GetCmdDrawMeshTasksIndirectEXT() const { return m_vkCmdDrawMeshTasksIndirectEXT; }
+
 			const VkPhysicalDeviceFeatures& GetFeatures() const { return m_features; }
 			const VkPhysicalDeviceProperties& GetProperties() const { return m_properties; }
 			const VkPhysicalDeviceMemoryProperties& GetMemoryProperties() const { return m_memory_properties; }
@@ -57,6 +60,9 @@ namespace hellengine
 		private:
 			VkPhysicalDevice m_physical_device;
 			VkDevice m_logical_device;
+
+			PFN_vkCmdDrawMeshTasksEXT m_vkCmdDrawMeshTasksEXT = nullptr;
+			PFN_vkCmdDrawMeshTasksIndirectEXT m_vkCmdDrawMeshTasksIndirectEXT = nullptr;
 
 			VkPhysicalDeviceFeatures m_features;
 			VkPhysicalDeviceProperties m_properties;

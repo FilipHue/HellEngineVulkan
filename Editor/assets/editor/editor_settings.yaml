@@ -2,6 +2,7 @@ editor:
   show_grid: true
   show_gizmos: false
   render_mode: 0
+  geometry_mode: 1
   gi_settings:
     enabled: 0
     sample_count: 4
@@ -21,7 +22,7 @@ editor:
     shadow_map_size: 2048
     cascade_split_lambda: 0.75
     min_bias: 0
-    max_bias: 0
+    max_bias: 0.0001
     normal_offset: 0.02
     pcf_samples: 4
     softness: 5

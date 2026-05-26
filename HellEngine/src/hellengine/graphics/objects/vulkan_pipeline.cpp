@@ -198,6 +198,108 @@ namespace hellengine
 			DestroyShaderStages(instance, device);
 		}
 
+		void VulkanPipeline::CreateMesh(const VulkanInstance& instance, VulkanDevice& device, VulkanSwapchain& swapchain, const PipelineCreateInfo& info, const ShaderStageInfo& shader_info)
+		{
+			m_type = PipelineType_Mesh;
+
+			SetPipelineLayout(instance, device, info);
+			SetPipelineState(instance, device, info);
+			CreateShaderStages(instance, device, shader_info);
+
+			std::vector<std::vector<VkSpecializationMapEntry>> all_entries;
+
+			if (!shader_info.specialization_infos.empty())
+			{
+				for (auto& specialization_info : shader_info.specialization_infos)
+				{
+					all_entries.emplace_back();
+					std::vector<VkSpecializationMapEntry>& entries = all_entries.back();
+
+					for (auto& entry : specialization_info.entries)
+					{
+						VkSpecializationMapEntry map_entry = {};
+						map_entry.constantID = entry.id;
+						map_entry.offset = entry.offset;
+						map_entry.size = entry.size;
+						entries.push_back(map_entry);
+					}
+
+					VkSpecializationInfo specialization_info_vk = {};
+					specialization_info_vk.mapEntryCount = (u32)entries.size();
+					specialization_info_vk.pMapEntries = entries.data();
+					specialization_info_vk.dataSize = specialization_info.size;
+					specialization_info_vk.pData = specialization_info.data;
+
+					for (auto& stage : m_shader_stages)
+					{
+						if (!(stage.flags & specialization_info.stage))
+						{
+							stage.pSpecializationInfo = &specialization_info_vk;
+							m_specialization_infos.push_back(specialization_info_vk);
+						}
+					}
+				}
+			}
+
+			VkPipelineRenderingCreateInfo rendering_info = {};
+			if (info.dynamic_rendering_info.has_value())
+			{
+				rendering_info.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
+				rendering_info.pNext = VK_NULL_HANDLE;
+				rendering_info.viewMask = 0;
+				rendering_info.colorAttachmentCount = (u32)info.dynamic_rendering_info.value().color_formats.size();
+				rendering_info.pColorAttachmentFormats = info.dynamic_rendering_info.value().color_formats.data();
+
+				rendering_info.depthAttachmentFormat =
+					info.dynamic_rendering_info.value().depth_format.has_value()
+					? info.dynamic_rendering_info.value().depth_format.value()
+					: VK_FORMAT_UNDEFINED;
+
+				rendering_info.stencilAttachmentFormat =
+					info.dynamic_rendering_info.value().stencil_format.has_value()
+					? info.dynamic_rendering_info.value().stencil_format.value()
+					: VK_FORMAT_UNDEFINED;
+			}
+			m_rendering_create_info = rendering_info;
+
+			VkGraphicsPipelineCreateInfo pipeline_info = {};
+			pipeline_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+			pipeline_info.pNext = info.dynamic_rendering_info.has_value() ? &rendering_info : VK_NULL_HANDLE;
+			pipeline_info.flags = 0;
+			pipeline_info.stageCount = (u32)m_shader_stages.size();
+			pipeline_info.pStages = !m_shader_stages.empty() ? m_shader_stages.data() : nullptr;
+
+			pipeline_info.pVertexInputState = nullptr;
+			pipeline_info.pInputAssemblyState = nullptr;
+
+			pipeline_info.pTessellationState = VK_NULL_HANDLE;
+			pipeline_info.pViewportState = &m_viewport_state;
+			pipeline_info.pRasterizationState = &m_rasterization_state;
+			pipeline_info.pMultisampleState = &m_multisample_state;
+			pipeline_info.pDepthStencilState = &m_depth_stencil_state;
+			pipeline_info.pColorBlendState = &m_color_blend_state;
+			pipeline_info.pDynamicState = &m_dynamic_state;
+			pipeline_info.layout = m_layout;
+			pipeline_info.renderPass = info.renderpass_rendering_info.has_value()
+				? info.renderpass_rendering_info.value().render_pass
+				: VK_NULL_HANDLE;
+			pipeline_info.subpass = info.renderpass_rendering_info.has_value()
+				? info.renderpass_rendering_info.value().subpass
+				: 0;
+			pipeline_info.basePipelineHandle = VK_NULL_HANDLE;
+			pipeline_info.basePipelineIndex = -1;
+
+			VK_CHECK(vkCreateGraphicsPipelines(
+				device.GetLogicalDevice(),
+				VK_NULL_HANDLE,
+				1,
+				&pipeline_info,
+				instance.GetAllocator(),
+				&m_handle));
+
+			DestroyShaderStages(instance, device);
+		}
+
 		void VulkanPipeline::Destroy(const VulkanInstance& instance, const VulkanDevice& device) const
 		{
 			for (auto& layout : m_descriptor_set_layouts)
@@ -367,10 +469,10 @@ namespace hellengine
 			m_vertex_input_state.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 			m_vertex_input_state.pNext = VK_NULL_HANDLE;
 			m_vertex_input_state.flags = 0;
-			m_vertex_input_state.vertexBindingDescriptionCount = info.vertex_attribute_descriptions.size() > 0 ? 1 : 0;
+			m_vertex_input_state.vertexBindingDescriptionCount = static_cast<u32>(info.vertex_attribute_descriptions.size()) > 0 ? 1 : 0;
 			m_vertex_input_state.pVertexBindingDescriptions = info.vertex_attribute_descriptions.size() > 0 ? &info.vertex_binding_description : nullptr;
 			m_vertex_input_state.vertexAttributeDescriptionCount = static_cast<u32>(info.vertex_attribute_descriptions.size());
-			m_vertex_input_state.pVertexAttributeDescriptions = info.vertex_attribute_descriptions.data();
+			m_vertex_input_state.pVertexAttributeDescriptions = info.vertex_attribute_descriptions.size() > 0 ? info.vertex_attribute_descriptions.data() : nullptr;
 		}
 
 		void VulkanPipeline::CreateShaderStages(const VulkanInstance& instance, const VulkanDevice& device, const ShaderStageInfo& shader_info)

@@ -347,13 +347,35 @@ void EditorMenuBar::ShowRenderSettings()
 		i32 current_mode = static_cast<i32>(m_settings->render_mode);
 
 		if (ImGui::Combo(
-			"Mode",
+			"##RenderMode",
 			&current_mode,
 			mode_names,
 			EditorRenderMode_Count))
 		{
 			m_settings->render_mode =
 				static_cast<EditorRenderMode>(current_mode);
+		}
+
+		ImGui::SeparatorText("Geometry Mode");
+
+		const char* geometry_mode_names[] =
+		{
+			"Classic",
+			"MeshShader"
+		};
+
+		i32 current_geometry_mode = static_cast<i32>(m_settings->geometry_mode);
+
+		if (ImGui::Combo(
+			"##GeometryMode",
+			&current_geometry_mode,
+			geometry_mode_names,
+			GeometryMode_Count))
+		{
+			m_settings->geometry_mode =
+				static_cast<GeometryMode>(current_geometry_mode);
+
+			MeshManager::GetInstance()->SetGeometryMode(m_settings->geometry_mode);
 		}
 	}
 

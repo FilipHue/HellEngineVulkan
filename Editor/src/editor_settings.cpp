@@ -8,6 +8,7 @@ void EditorSettings::Serialize()
 	root["editor"]["show_grid"] = static_cast<b8>(show_grid);
 	root["editor"]["show_gizmos"] = static_cast<b8>(show_gizmos);
 	root["editor"]["render_mode"] = static_cast<i32>(render_mode);
+	root["editor"]["geometry_mode"] = static_cast<i32>(geometry_mode);
 
 	// Window settings
 	SerializeWindowSettings(root);
@@ -46,6 +47,7 @@ void EditorSettings::Deserialize()
 		if (root["editor"]["show_grid"]) show_grid = root["editor"]["show_grid"].as<b8>();
 		if (root["editor"]["show_gizmos"]) show_gizmos = root["editor"]["show_gizmos"].as<b8>();
 		if (root["editor"]["render_mode"]) render_mode = static_cast<EditorRenderMode>(root["editor"]["render_mode"].as<i32>());
+		if (root["editor"]["geometry_mode"]) geometry_mode = static_cast<GeometryMode>(root["editor"]["geometry_mode"].as<i32>());
 
 		// Global Illumination settings
 		DeserializeGISettings(root);
@@ -74,6 +76,8 @@ void EditorSettings::LoadDefaults()
 	{
 		show_grid = true;
 		show_gizmos = true;
+		render_mode = EditorRenderMode_Normal;
+		geometry_mode = GeometryMode_Classic;
 
 		// Initialize Global Illumination settings
 		gi_settings = {};

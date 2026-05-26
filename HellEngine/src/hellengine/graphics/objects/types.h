@@ -204,6 +204,8 @@ namespace hellengine
 			ShaderType_Geometry,
 			ShaderType_Fragment,
 			ShaderType_Compute,
+			ShaderType_Task,
+			ShaderType_Mesh,
 
 			ShaderType_Count
 		};
@@ -216,8 +218,10 @@ namespace hellengine
 			ShaderStage_Geometry		= 8,
 			ShaderStage_Fragment		= 16,
 			ShaderStage_Compute			= 32,
+			ShaderStage_Task			= 64,
+			ShaderStage_Mesh			= 128,
 
-			ShaderStage_All = ShaderStage_Vertex | ShaderStage_TessControl | ShaderStage_TessEvaluation | ShaderStage_Geometry | ShaderStage_Fragment | ShaderStage_Compute,
+			ShaderStage_All = ShaderStage_Vertex | ShaderStage_TessControl | ShaderStage_TessEvaluation | ShaderStage_Geometry | ShaderStage_Fragment | ShaderStage_Compute | ShaderStage_Task | ShaderStage_Mesh,
 
 			ShaderStage_Count
 		};
@@ -333,6 +337,7 @@ namespace hellengine
 			PipelineType_None,
 			PipelineType_Graphics,
 			PipelineType_Compute,
+			PipelineType_Mesh,
 
 			PipelineType_Count
 		};

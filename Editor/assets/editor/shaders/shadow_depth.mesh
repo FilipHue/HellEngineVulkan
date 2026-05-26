@@ -1,0 +1,108 @@
+#version 460
+#extension GL_EXT_mesh_shader            : require
+#extension GL_ARB_shader_draw_parameters : require
+#extension GL_EXT_scalar_block_layout : require
+
+// ================================================================
+// shadow_depth.mesh  —  mesh shader replacement for shadow_depth.vert
+//
+// Output interface mirrors shadow_depth.vert exactly:
+//   location 0  vec3  vWorldPos
+//
+// shadow_depth.frag is UNCHANGED.
+// Push constants are identical to shadow_depth.vert.
+// ================================================================
+
+layout(local_size_x = 64) in;
+layout(triangles, max_vertices = 64, max_primitives = 84) out;
+
+// ----------------------------------------------------------------
+// Push constants — identical layout to shadow_depth.vert
+// ----------------------------------------------------------------
+layout(push_constant) uniform PushConstants
+{
+    mat4 lightViewProj;
+    vec4 lightPosAndFar;   // xyz = light world pos, w = far plane (0 = not point light)
+} pc;
+
+// ----------------------------------------------------------------
+// Set 2, binding 0 — per-object SSBO  (identical to shadow_depth.vert)
+// ----------------------------------------------------------------
+struct PerObjectData {
+    mat4 model;
+    uint material_index;
+    int  entity_id;
+};
+
+layout(set = 2, binding = 0, std430) readonly buffer PerObjectSSBO {
+    PerObjectData obj[];
+} perObject;
+
+// ----------------------------------------------------------------
+// Set 2, bindings 1-4 — mesh shader geometry SSBOs
+// ----------------------------------------------------------------
+struct PackedVertex {
+    vec3 position;    // offset 0,  size 12
+    vec4 color;       // offset 16, size 16  (naturally aligned in C++ too)
+    vec2 tex_coord;   // offset 32, size 8
+    vec3 normal;      // offset 40, size 12  (C++ packs here, scalar layout matches)
+    vec3 tangent;     // offset 52, size 12
+    vec3 bitangent;   // offset 64, size 12
+};  
+struct MeshletData {
+    uint  vertex_offset;
+    uint  index_offset;
+    uint  vertex_count;
+    uint  triangle_count;
+    vec3  bounding_sphere_center;
+    float bounding_sphere_radius;
+};
+
+struct DrawArgs {
+    uint meshlet_index;
+    uint instance_index;
+};
+
+layout(set = 2, binding = 1, scalar) readonly buffer VertexSSBO   { PackedVertex vertices[];    };
+layout(set = 2, binding = 2, scalar) readonly buffer IndexSSBO    { uint         prim_indices[]; };
+layout(set = 2, binding = 3, scalar) readonly buffer MeshletSSBO  { MeshletData  meshlets[];     };
+layout(set = 2, binding = 4, scalar) readonly buffer DrawArgsSSBO { DrawArgs     draw_args[];    };
+
+// ----------------------------------------------------------------
+// Per-vertex output — exact name and location from shadow_depth.vert
+// ----------------------------------------------------------------
+layout(location = 0) out vec3 vWorldPos[];
+
+void main()
+{
+    DrawArgs    da      = draw_args[gl_DrawID];
+    MeshletData meshlet = meshlets[da.meshlet_index + gl_WorkGroupID.x];  // ADD + gl_WorkGroupID.x
+    uint objectIndex    = da.instance_index;
+
+    uint vertex_count   = meshlet.vertex_count;
+    uint triangle_count = meshlet.triangle_count;
+
+    SetMeshOutputsEXT(vertex_count, triangle_count);
+
+    mat4 model = perObject.obj[objectIndex].model;
+
+    // ---- Emit vertices ----
+    for (uint v = gl_LocalInvocationID.x; v < vertex_count; v += gl_WorkGroupSize.x)
+    {
+        vec3 position = vertices[meshlet.vertex_offset + v].position;
+        vec4 worldPos = model * vec4(position, 1.0);
+
+        vWorldPos[v]                          = worldPos.xyz;
+        gl_MeshVerticesEXT[v].gl_Position     = pc.lightViewProj * worldPos;
+    }
+
+    // ---- Emit triangles ----
+    for (uint t = gl_LocalInvocationID.x; t < triangle_count; t += gl_WorkGroupSize.x)
+    {
+        uint base = meshlet.index_offset + t * 3u;
+        gl_PrimitiveTriangleIndicesEXT[t] = uvec3(
+            prim_indices[base + 0u],
+            prim_indices[base + 1u],
+            prim_indices[base + 2u]);
+    }
+}

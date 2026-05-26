@@ -60,6 +60,8 @@ void Editor::Init()
 
 	m_editor_settings.Deserialize();
 
+	MeshManager::GetInstance()->SetGeometryMode(m_editor_settings.geometry_mode);
+
 	CreateResources();
 	CreatePipelines();
 	CreateDescriptors();
@@ -91,11 +93,6 @@ void Editor::OnProcessUpdate(f32 delta_time)
 
 	m_global_data.world.time.x += delta_time;
 	m_global_data.world.time.y = delta_time;
-
-	//if (SceneManager::GetInstance()->GetActiveScene())
-	//{
-	//	SceneManager::GetInstance()->GetActiveScene()->UpdateAllTransforms();
-	//}
 
 	MeshManager::GetInstance()->UpdatePerDrawData();
 }
@@ -200,87 +197,52 @@ void Editor::Shutdown()
 b8 Editor::OnEventWindowClose(EventContext& event)
 {
 	m_running = false;
-
 	return true;
 }
 
 b8 Editor::OnEventWindowResize(EventContext& event)
 {
 	if (event.data.window_resize.width == 0 || event.data.window_resize.height == 0)
-	{
 		return false;
-	}
 	m_window->SetSize(event.data.window_resize.width, event.data.window_resize.height);
 	m_backend->OnFramebufferResize();
-
 	return false;
 }
 
-b8 Editor::OnEventWindowFocus(EventContext& event)
-{
-	return false;
-}
-
+b8 Editor::OnEventWindowFocus(EventContext& event) { return false; }
 b8 Editor::OnEventWindowIconified(EventContext& event)
 {
 	m_suspended = event.data.window_iconified.is_iconified;
-
 	return false;
 }
-
-b8 Editor::OnEventWindowMoved(EventContext& event)
-{
-	return false;
-}
+b8 Editor::OnEventWindowMoved(EventContext& event) { return false; }
 
 b8 Editor::OnEventKeyPressed(EventContext& event)
 {
 	if (event.data.key_event.key == KEY_ESCAPE)
-	{
 		m_running = false;
-	}
 
 	if (m_inspector_panel->GetSelectedEntity() != NULL_ENTITY && m_viewport_panel->IsHovered() && !m_editor_camera_controller.IsActive())
 	{
-		if (event.data.key_event.key == KEY_W)
-		{
-			m_guizmo_operation = ImGuizmo::TRANSLATE;
-			m_guizmo_mode = ImGuizmo::LOCAL;
-		}
-		else if (event.data.key_event.key == KEY_E)
-		{
-			m_guizmo_operation = ImGuizmo::ROTATE;
-			m_guizmo_mode = ImGuizmo::LOCAL;
-		}
-		else if (event.data.key_event.key == KEY_R)
-		{
-			m_guizmo_operation = ImGuizmo::SCALE;
-			m_guizmo_mode = ImGuizmo::LOCAL;
-		}
+		if (event.data.key_event.key == KEY_W) { m_guizmo_operation = ImGuizmo::TRANSLATE; m_guizmo_mode = ImGuizmo::LOCAL; }
+		else if (event.data.key_event.key == KEY_E) { m_guizmo_operation = ImGuizmo::ROTATE;    m_guizmo_mode = ImGuizmo::LOCAL; }
+		else if (event.data.key_event.key == KEY_R) { m_guizmo_operation = ImGuizmo::SCALE;     m_guizmo_mode = ImGuizmo::LOCAL; }
 	}
 
 	m_menu_bar->OnKeyPressed(event.data.key_event.key, event.data.key_event.scancode, event.data.key_event.mods);
-
 	return false;
 }
 
-b8 Editor::OnEventKeyReleased(EventContext& event)
-{
-	return false;
-}
+b8 Editor::OnEventKeyReleased(EventContext& event) { return false; }
 
 b8 Editor::OnEventMouseButtonPressed(EventContext& event)
 {
 	if (event.data.mouse_button_event.button == MOUSE_BUTTON_RIGHT && m_viewport_panel->IsHovered())
 	{
-		// Force viewport focus so other editor windows don't keep keyboard focus while freelook is active
 		ImGui::SetWindowFocus("Viewport");
-
-		// Hard-disable ImGui interactions while freelook camera is active
 		ImGuiIO& io = ImGui::GetIO();
 		io.ConfigFlags |= ImGuiConfigFlags_NoMouse;
 		io.ConfigFlags |= ImGuiConfigFlags_NavNoCaptureKeyboard;
-
 		m_editor_camera_controller.SetActive(true);
 		m_window->SetCursorMode(GLFW_CURSOR_DISABLED);
 		m_viewport_panel->CanPick(false);
@@ -289,14 +251,12 @@ b8 Editor::OnEventMouseButtonPressed(EventContext& event)
 
 	if (event.data.mouse_button_event.button == MOUSE_BUTTON_LEFT && m_viewport_panel->IsHovered() && SceneManager::GetInstance()->GetActiveScene())
 	{
-		// Don't pick while freelook camera is active or while manipulating gizmo
 		if (!m_editor_camera_controller.IsActive() && !ImGuizmo::IsOver() && !ImGuizmo::IsUsing())
 		{
 			m_viewport_panel->OnMouseButtonPressed();
 			return true;
 		}
 	}
-
 	return false;
 }
 
@@ -307,47 +267,28 @@ b8 Editor::OnEventMouseButtonReleased(EventContext& event)
 		m_editor_camera_controller.SetActive(false);
 		m_window->SetCursorMode(GLFW_CURSOR_NORMAL);
 		m_viewport_panel->CanPick(true);
-
-		// Restore ImGui interactions after freelook ends
 		ImGuiIO& io = ImGui::GetIO();
 		io.ConfigFlags &= ~ImGuiConfigFlags_NoMouse;
 		io.ConfigFlags &= ~ImGuiConfigFlags_NavNoCaptureKeyboard;
-
 		return true;
 	}
-
 	return false;
 }
 
-b8 Editor::OnEventMouseMoved(EventContext& event)
-{
-	return false;
-}
-
-b8 Editor::OnEventMouseScrolled(EventContext& event)
-{
-	return false;
-}
+b8 Editor::OnEventMouseMoved(EventContext& event) { return false; }
+b8 Editor::OnEventMouseScrolled(EventContext& event) { return false; }
 
 void Editor::ImportAsset()
 {
 	if (!SceneManager::GetInstance()->GetActiveScene())
-	{
 		SceneManager::GetInstance()->CreateScene("Untitled Scene");
-	}
 
 	TextureType material_texture_types =
-		TextureType_Diffuse |
-		TextureType_Specular |
-		TextureType_Ambient |
-		TextureType_Emissive |
-		TextureType_Height |
-		TextureType_Normals |
-		TextureType_Shininess |
-		TextureType_Opacity |
-		TextureType_Displacement |
-		TextureType_Lightmap |
-		TextureType_Reflection;
+		TextureType_Diffuse | TextureType_Specular | TextureType_Ambient |
+		TextureType_Emissive | TextureType_Height | TextureType_Normals |
+		TextureType_Shininess | TextureType_Opacity | TextureType_Displacement |
+		TextureType_Lightmap | TextureType_Reflection;
+
 	File file = FileManager::OpenFile("All Supported\0*.fbx;*.obj;*.gltf;*.glb\0FBX Files\0*.fbx\0OBJ Files\0*.obj\0GLTF Files\0*.gltf;*.glb\0");
 	if (FileManager::Exists(file.GetAbsolutePath()))
 	{
@@ -360,26 +301,21 @@ void Editor::ImportAsset()
 void Editor::CreateEmptyGameObject()
 {
 	if (!SceneManager::GetInstance()->GetActiveScene())
-	{
 		SceneManager::GetInstance()->CreateScene("Untitled Scene");
-	}
 	Entity entity = SceneManager::GetInstance()->GetActiveScene()->CreateEntity("Empty GameObject");
 	m_hierarchy_panel->SetSelectedGameObject(entity);
 }
 
 void Editor::CreateResources()
 {
-	// Init descriptor pool
 	m_backend->InitDescriptorPoolGrowable({
 		{ DescriptorType_UniformBuffer, 100 },
 		{ DescriptorType_StorageBuffer, 100 },
 		{ DescriptorType_CombinedImageSampler, 100 }
 		}, 110000);
 
-	// Camera
 	m_editor_camera = MultiProjectionCamera();
 	m_editor_camera.CreatePerspective(60.0f, (f32)m_window->GetWidth() / (f32)m_window->GetHeight(), 0.1f, 1000.0f);
-
 	m_editor_camera.SetPosition(glm::vec3(0.0f, 1.0f, 0.0f));
 
 	m_editor_camera_controller = MultiProjectionController();
@@ -388,51 +324,52 @@ void Editor::CreateResources()
 	m_editor_camera_controller.SetActive(false);
 
 	CreateEditorResources();
-
 	CreateShadowResources();
-
 	CreateDebugResources();
 }
 
+// FIX 1: CreatePipelines now calls all mesh shader pipeline variants too.
 void Editor::CreatePipelines()
 {
 	CreateEditorPipeline();
 
 	CreatePBRPipeline();
+	CreatePBRPipelineMesh();         // FIX 1
+
 	CreateGBufferPipeline();
+	CreateGBufferPipelineMesh();     // FIX 1
+
 	CreateGIPipeline();
+
 	CreateShadowPipeline();
+	CreateShadowPipelineMesh();      // FIX 1
 
 	CreateDebugPipeline();
+	CreateDebugPipelineMesh();       // FIX 1
 }
 
 void Editor::CreateDescriptors()
 {
-	MeshManager::GetInstance()->CreateDescriptors(PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_PBR));
+	MeshManager::GetInstance()->CreateDescriptors(PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_PBR), PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_PBR_MESH));
 
 	CreateEditorDescriptors();
-
 	CreateShadowDescriptors();
-
 	CreateDebugDescriptors();
 }
 
 void Editor::DestroyResources()
 {
 	DestroyEditorResources();
-
 	DestroyPBRResources();
 	DestroyGBufferResources();
 	DestroyGIResources();
 	DestroyShadowResources();
-
 	DestroyDebugResources();
 }
 
 void Editor::CreateEditorPipeline()
 {
 	PipelineCreateInfo pipeline_info = {};
-
 	pipeline_info.type = PipelineType_Graphics;
 	pipeline_info.topology = PipelinePrimitiveTopology_TriangleList;
 	pipeline_info.polygon_mode = PipelinePolygonMode_Fill;
@@ -440,7 +377,6 @@ void Editor::CreateEditorPipeline()
 	pipeline_info.front_face = PipelineFrontFace_CounterClockwise;
 	pipeline_info.line_width = 1.0f;
 	pipeline_info.depth_clamp_enable = false;
-
 	pipeline_info.dynamic_states = { PipelineDynamicState_Viewport, PipelineDynamicState_Scissor };
 	pipeline_info.layout = {
 		{
@@ -450,14 +386,10 @@ void Editor::CreateEditorPipeline()
 	};
 	pipeline_info.vertex_binding_description = {};
 	pipeline_info.vertex_attribute_descriptions = {};
-
 	pipeline_info.push_constant_ranges = {};
 	pipeline_info.depth_stencil_info = { true, true, false };
-
 	pipeline_info.dynamic_rendering_info = {
-		false,
-		{ VK_FORMAT_B8G8R8A8_UNORM },
-		VK_FORMAT_D32_SFLOAT_S8_UINT
+		false, { VK_FORMAT_B8G8R8A8_UNORM }, VK_FORMAT_D32_SFLOAT_S8_UINT
 	};
 
 	ShaderStageInfo shader_info = {};
@@ -468,25 +400,11 @@ void Editor::CreateEditorPipeline()
 	m_backend->InitImGuiForDynamicRendering(PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_EDITOR)->GetRenderingCreateInfo());
 }
 
-void Editor::CreateEditorResources()
-{
-}
-
-void Editor::DestroyEditorResources()
-{
-}
-
-void Editor::CreateEditorDescriptors()
-{
-}
-
-void Editor::UpdateEditorDescriptors()
-{
-}
-
-void Editor::RenderEditor()
-{
-}
+void Editor::CreateEditorResources() {}
+void Editor::DestroyEditorResources() {}
+void Editor::CreateEditorDescriptors() {}
+void Editor::UpdateEditorDescriptors() {}
+void Editor::RenderEditor() {}
 
 void Editor::CreateEditorUI()
 {
@@ -509,6 +427,68 @@ void Editor::CreateEditorUI()
 	m_menu_bar->SetCreateEmptyGameObjectCallback([this]() { CreateEmptyGameObject(); });
 }
 
+// ---------------------------------------------------------------------------
+// Shared set 2 layout helpers (avoids copy-paste for the 5-binding block)
+// ---------------------------------------------------------------------------
+// Classic set 2: binding 0 only (InstanceData, accessed by vertex shader).
+// The meshlet bindings 1-4 are NOT present — they are unused by vertex shaders
+// and declaring them in classic pipelines would cause validation warnings.
+// FIX 7: classic set 2 has binding 0 with ShaderStage_Vertex | ShaderStage_Fragment only.
+static DescriptorSetInfo ClassicSet2()
+{
+	return {
+		{
+			{ 0, DescriptorType_StorageBuffer, 1, ShaderStage_Vertex | ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind }
+		},
+		DescriptorSetFlags_UpdateAfterBindPool
+	};
+}
+
+static DescriptorSetInfo MeshSet0()
+{
+	return {
+		{
+			{ 0, DescriptorType_UniformBuffer,        1, ShaderStage_Mesh | ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
+			{ 1, DescriptorType_UniformBuffer,        1, ShaderStage_Mesh | ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
+			{ 2, DescriptorType_UniformBuffer,        1, ShaderStage_Mesh | ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
+			{ 3, DescriptorType_UniformBuffer,        1, ShaderStage_Mesh | ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
+			{ 4, DescriptorType_CombinedImageSampler, 1, ShaderStage_Mesh | ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind }
+		},
+		DescriptorSetFlags_UpdateAfterBindPool
+	};
+}
+
+// Mesh shader set 2: binding 0 (InstanceData) + bindings 1-4 (meshlet geometry).
+static DescriptorSetInfo MeshSet2()
+{
+	return {
+		{
+			{ 0, DescriptorType_StorageBuffer, 1, ShaderStage_Mesh | ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
+			{ 1, DescriptorType_StorageBuffer, 1, ShaderStage_Mesh,                        DescriptorBindingFlags_UpdateAfterBind },
+			{ 2, DescriptorType_StorageBuffer, 1, ShaderStage_Mesh,                        DescriptorBindingFlags_UpdateAfterBind },
+			{ 3, DescriptorType_StorageBuffer, 1, ShaderStage_Mesh,                        DescriptorBindingFlags_UpdateAfterBind },
+			{ 4, DescriptorType_StorageBuffer, 1, ShaderStage_Mesh,                        DescriptorBindingFlags_UpdateAfterBind },
+		},
+		DescriptorSetFlags_UpdateAfterBindPool
+	};
+}
+
+// Set 3: shadow maps + variable-count textures. Must always be last.
+static DescriptorSetInfo Set3Textures()
+{
+	return {
+		{
+			{ 0, DescriptorType_CombinedImageSampler, MAX_LIGHTS * MAX_SHADOW_CASCADES, ShaderStage_Fragment, DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind },
+			{ 1, DescriptorType_CombinedImageSampler, MAX_LIGHTS,                       ShaderStage_Fragment, DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind },
+			{ 2, DescriptorType_CombinedImageSampler, MAX_TEXTURES,                     ShaderStage_Fragment, DescriptorBindingFlags_VariableCount | DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind }
+		},
+		DescriptorSetFlags_UpdateAfterBindPool
+	};
+}
+
+// ---------------------------------------------------------------------------
+// PBR Pipeline
+// ---------------------------------------------------------------------------
 void Editor::CreatePBRPipeline()
 {
 	PipelineCreateInfo pipeline_info = {};
@@ -519,53 +499,33 @@ void Editor::CreatePBRPipeline()
 	pipeline_info.front_face = PipelineFrontFace_CounterClockwise;
 	pipeline_info.line_width = 1.0f;
 	pipeline_info.depth_clamp_enable = false;
-
 	pipeline_info.dynamic_states = { PipelineDynamicState_Viewport, PipelineDynamicState_Scissor };
+
 	pipeline_info.layout = {
 		{
 			{
-				{ 0, DescriptorType_UniformBuffer, 1, ShaderStage_Vertex | ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
-				{ 1, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
-				{ 2, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
-				{ 3, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
-				{ 4, DescriptorType_CombinedImageSampler, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind }
+				{ 0, DescriptorType_UniformBuffer,        1, ShaderStage_Vertex | ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
+				{ 1, DescriptorType_UniformBuffer,        1, ShaderStage_Fragment,                      DescriptorBindingFlags_UpdateAfterBind },
+				{ 2, DescriptorType_UniformBuffer,        1, ShaderStage_Fragment,                      DescriptorBindingFlags_UpdateAfterBind },
+				{ 3, DescriptorType_UniformBuffer,        1, ShaderStage_Fragment,                      DescriptorBindingFlags_UpdateAfterBind },
+				{ 4, DescriptorType_CombinedImageSampler, 1, ShaderStage_Fragment,                      DescriptorBindingFlags_UpdateAfterBind }
 			},
 			DescriptorSetFlags_UpdateAfterBindPool
 		},
 		{
-			{
-				{ 0, DescriptorType_StorageBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind }
-			},
+			{ { 0, DescriptorType_StorageBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind } },
 			DescriptorSetFlags_UpdateAfterBindPool
 		},
-		{
-			{
-				{ 0, DescriptorType_StorageBuffer, 1, ShaderStage_Vertex | ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
-			},
-			DescriptorSetFlags_UpdateAfterBindPool
-		},
-		{
-			{
-				{ 0, DescriptorType_CombinedImageSampler, MAX_LIGHTS * MAX_SHADOW_CASCADES, ShaderStage_Fragment, DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind },
-				{ 1, DescriptorType_CombinedImageSampler, MAX_LIGHTS, ShaderStage_Fragment, DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind },
-				{ 2, DescriptorType_CombinedImageSampler, MAX_TEXTURES, ShaderStage_Fragment, DescriptorBindingFlags_VariableCount | DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind }
-			},
-			DescriptorSetFlags_UpdateAfterBindPool
-		}
+		ClassicSet2(), // FIX 7: binding 0 only, ShaderStage_Vertex | Fragment
+		Set3Textures()
 	};
 
 	pipeline_info.vertex_binding_description = VertexFormatTangent::GetBindingDescription();
 	pipeline_info.vertex_attribute_descriptions = VertexFormatTangent::GetAttributeDescriptions();
-
-	pipeline_info.push_constant_ranges = {
-		{ ShaderStage_Fragment, 0, sizeof(u32) }
-	};
+	pipeline_info.push_constant_ranges = { { ShaderStage_Fragment, 0, sizeof(u32) } };
 	pipeline_info.depth_stencil_info = { true, true };
-
 	pipeline_info.dynamic_rendering_info = {
-		false,
-		{ VK_FORMAT_R16G16B16A16_SFLOAT, VK_FORMAT_R32_UINT },
-		VK_FORMAT_D32_SFLOAT
+		false, { VK_FORMAT_R16G16B16A16_SFLOAT, VK_FORMAT_R32_UINT }, VK_FORMAT_D32_SFLOAT
 	};
 
 	ShaderStageInfo shader_info = {};
@@ -575,13 +535,48 @@ void Editor::CreatePBRPipeline()
 	PipelineManager::GetInstance()->CreatePipeline(C_PIPELINE_PBR, pipeline_info, shader_info);
 }
 
+void Editor::CreatePBRPipelineMesh()
+{
+	PipelineCreateInfo pipeline_info = {};
+	pipeline_info.type = PipelineType_Mesh;
+	pipeline_info.polygon_mode = PipelinePolygonMode_Fill;
+	pipeline_info.cull_mode = PipelineCullMode_None;
+	pipeline_info.front_face = PipelineFrontFace_CounterClockwise;
+	pipeline_info.line_width = 1.0f;
+	pipeline_info.depth_clamp_enable = false;
+	pipeline_info.dynamic_states = { PipelineDynamicState_Viewport, PipelineDynamicState_Scissor };
+
+	pipeline_info.layout = {
+		MeshSet0(),
+		{
+			{ { 0, DescriptorType_StorageBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind } },
+			DescriptorSetFlags_UpdateAfterBindPool
+		},
+		MeshSet2(),    // bindings 0-4 for mesh shader
+		Set3Textures()
+	};
+
+	pipeline_info.vertex_binding_description = {};
+	pipeline_info.vertex_attribute_descriptions = {};
+	pipeline_info.push_constant_ranges = { { ShaderStage_Fragment, 0, sizeof(u32) } };
+	pipeline_info.depth_stencil_info = { true, true };
+	pipeline_info.dynamic_rendering_info = {
+		false, { VK_FORMAT_R16G16B16A16_SFLOAT, VK_FORMAT_R32_UINT }, VK_FORMAT_D32_SFLOAT
+	};
+
+	ShaderStageInfo shader_info = {};
+	shader_info.sources[ShaderType_Mesh] = CONCAT_PATHS(EDITOR_SHADER_PATH, "pbr.mesh");
+	shader_info.sources[ShaderType_Fragment] = CONCAT_PATHS(EDITOR_SHADER_PATH, "pbr.frag");
+
+	PipelineManager::GetInstance()->CreatePipeline(C_PIPELINE_PBR_MESH, pipeline_info, shader_info);
+}
+
 void Editor::CreatePBRResources()
 {
 	m_global_data = {};
 	m_global_data.camera.projection = m_editor_camera.GetProjection();
 	m_global_data.camera.view = m_editor_camera.GetView();
 	m_global_data.camera.position = glm::vec4(m_editor_camera.GetPosition(), 0.0f);
-
 	m_global_data.world.time = glm::vec4(0.0f);
 
 	m_pbr_global_data_ubo = m_backend->CreateUniformBufferMappedPersistent(sizeof(GlobalData), 1);
@@ -590,9 +585,7 @@ void Editor::CreatePBRResources()
 	m_lights_data.light_count = 0;
 
 	m_pbr_lights_data_ubo = m_backend->CreateUniformBufferMappedPersistent(sizeof(LightsUBOData), 1);
-
 	m_pbr_gi_data_ubo = m_backend->CreateUniformBufferMappedPersistent(sizeof(GlobalIlluminationSettings), 1);
-
 	m_pbr_shadow_data_ubo = m_backend->CreateUniformBufferMappedPersistent(sizeof(ShadowSettings), 1);
 }
 
@@ -602,93 +595,77 @@ void Editor::DestroyPBRResources()
 	m_backend->DestroyBuffer(m_pbr_lights_data_ubo);
 	m_backend->DestroyBuffer(m_pbr_gi_data_ubo);
 	m_backend->DestroyBuffer(m_pbr_shadow_data_ubo);
+
+	m_pbr_descriptor = nullptr;
+	m_pbr_mesh_descriptor = nullptr;
 }
 
 void Editor::CreatePBRDescriptors()
 {
 	m_pbr_descriptor = m_backend->CreateDescriptorSet(PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_PBR), 0);
+	m_pbr_mesh_descriptor = m_backend->CreateDescriptorSet(PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_PBR_MESH), 0);
 }
 
 void Editor::UpdatePBRDescriptors()
 {
-	VkBuffer     buf1 = m_pbr_global_data_ubo->GetHandle();
-	VkDeviceSize off1 = 0;
-	VkDeviceSize range1 = sizeof(GlobalData);
+	VkBuffer buf1 = m_pbr_global_data_ubo->GetHandle(); VkDeviceSize off1 = 0; VkDeviceSize range1 = sizeof(GlobalData);
+	VkBuffer buf2 = m_pbr_lights_data_ubo->GetHandle(); VkDeviceSize off2 = 0; VkDeviceSize range2 = sizeof(LightsUBOData);
+	VkBuffer buf3 = m_pbr_gi_data_ubo->GetHandle();     VkDeviceSize off3 = 0; VkDeviceSize range3 = sizeof(GlobalIlluminationSettings);
+	VkBuffer buf4 = m_pbr_shadow_data_ubo->GetHandle(); VkDeviceSize off4 = 0; VkDeviceSize range4 = sizeof(ShadowSettings);
 
-	DescriptorSetWriteData data1{};
-	data1.type = DescriptorType_UniformBuffer;
-	data1.binding = 0;
-	data1.data.buffer.buffers = &buf1;
-	data1.data.buffer.offsets = &off1;
-	data1.data.buffer.ranges = &range1;
+	DescriptorSetWriteData data1{}; data1.type = DescriptorType_UniformBuffer; data1.binding = 0;
+	data1.data.buffer.buffers = &buf1; data1.data.buffer.offsets = &off1; data1.data.buffer.ranges = &range1;
+	DescriptorSetWriteData data2{}; data2.type = DescriptorType_UniformBuffer; data2.binding = 1;
+	data2.data.buffer.buffers = &buf2; data2.data.buffer.offsets = &off2; data2.data.buffer.ranges = &range2;
+	DescriptorSetWriteData data3{}; data3.type = DescriptorType_UniformBuffer; data3.binding = 2;
+	data3.data.buffer.buffers = &buf3; data3.data.buffer.offsets = &off3; data3.data.buffer.ranges = &range3;
+	DescriptorSetWriteData data4{}; data4.type = DescriptorType_UniformBuffer; data4.binding = 3;
+	data4.data.buffer.buffers = &buf4; data4.data.buffer.offsets = &off4; data4.data.buffer.ranges = &range4;
 
-	VkBuffer     buf2 = m_pbr_lights_data_ubo->GetHandle();
-	VkDeviceSize off2 = 0;
-	VkDeviceSize range2 = sizeof(LightsUBOData);
+	VkImageView view5 = m_gi_texture->GetImageView(); VkSampler samp5 = m_gi_texture->GetSampler();
+	DescriptorSetWriteData data5{}; data5.type = DescriptorType_CombinedImageSampler; data5.binding = 4;
+	data5.data.image.image_views = &view5; data5.data.image.samplers = &samp5;
 
-	DescriptorSetWriteData data2{};
-	data2.type = DescriptorType_UniformBuffer;
-	data2.binding = 1;
-	data2.data.buffer.buffers = &buf2;
-	data2.data.buffer.offsets = &off2;
-	data2.data.buffer.ranges = &range2;
-
-	VkBuffer     buf3 = m_pbr_gi_data_ubo->GetHandle();
-	VkDeviceSize off3 = 0;
-	VkDeviceSize range3 = sizeof(GlobalIlluminationSettings);
-
-	DescriptorSetWriteData data3{};
-	data3.type = DescriptorType_UniformBuffer;
-	data3.binding = 2;
-	data3.data.buffer.buffers = &buf3;
-	data3.data.buffer.offsets = &off3;
-	data3.data.buffer.ranges = &range3;
-
-	VkBuffer     buf4 = m_pbr_shadow_data_ubo->GetHandle();
-	VkDeviceSize off4 = 0;
-	VkDeviceSize range4 = sizeof(ShadowSettings);
-
-	DescriptorSetWriteData data4{};
-	data4.type = DescriptorType_UniformBuffer;
-	data4.binding = 3;
-	data4.data.buffer.buffers = &buf4;
-	data4.data.buffer.offsets = &off4;
-	data4.data.buffer.ranges = &range4;
-
-	VkImageView  view5 = m_gi_texture->GetImageView();
-	VkSampler    samp5 = m_gi_texture->GetSampler();
-
-	DescriptorSetWriteData data5{};
-	data5.type = DescriptorType_CombinedImageSampler;
-	data5.binding = 4;
-	data5.data.image.image_views = &view5;
-	data5.data.image.samplers = &samp5;
-
-	std::vector<DescriptorSetWriteData> write_data = {
-		data1, data2, data3, data4, data5
-	};
-
+	std::vector<DescriptorSetWriteData> write_data = { data1, data2, data3, data4, data5 };
 	m_backend->WriteDescriptor(&m_pbr_descriptor, write_data);
+	m_backend->WriteDescriptor(&m_pbr_mesh_descriptor, write_data);
 }
 
 void Editor::RenderPBR()
 {
-	Pipeline* activePipeline = PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_PBR);
 	u32 debugViewMode = static_cast<u32>(m_editor_settings.render_mode);
+	Pipeline* activePipeline;
 
 	if (m_editor_settings.render_mode == EditorRenderMode_Wireframe)
 	{
-		activePipeline = PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_WIREFRAME);
+		// Wireframe uses the classic pipeline (or its mesh variant if in mesh mode)
+		activePipeline = (m_editor_settings.geometry_mode == GeometryMode_MeshShader)
+			? PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_WIREFRAME_MESH)
+			: PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_WIREFRAME);
+	}
+	else if (m_editor_settings.geometry_mode == GeometryMode_MeshShader)
+	{
+		activePipeline = PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_PBR_MESH);
+	}
+	else
+	{
+		activePipeline = PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_PBR);
 	}
 
 	m_backend->BindPipeline(activePipeline);
 	m_backend->BindPushConstants(activePipeline, ShaderStage_Fragment, 0, sizeof(u32), &debugViewMode);
+	DescriptorSet* set0 = (m_editor_settings.geometry_mode == GeometryMode_MeshShader)
+		? m_pbr_mesh_descriptor
+		: m_pbr_descriptor;
 
-	m_backend->BindDescriptorSet(activePipeline, m_pbr_descriptor);
+	m_backend->BindDescriptorSet(activePipeline, set0);
 
 	MeshManager::GetInstance()->DrawMeshes(activePipeline);
 }
 
+// ---------------------------------------------------------------------------
+// GBuffer Pipeline
+// ---------------------------------------------------------------------------
 void Editor::CreateGBufferPipeline()
 {
 	PipelineCreateInfo pipeline_info = {};
@@ -699,57 +676,33 @@ void Editor::CreateGBufferPipeline()
 	pipeline_info.front_face = PipelineFrontFace_CounterClockwise;
 	pipeline_info.line_width = 1.0f;
 	pipeline_info.depth_clamp_enable = false;
-
-	pipeline_info.dynamic_states = {
-		PipelineDynamicState_Viewport,
-		PipelineDynamicState_Scissor
-	};
+	pipeline_info.dynamic_states = { PipelineDynamicState_Viewport, PipelineDynamicState_Scissor };
 
 	pipeline_info.layout = {
 		{
 			{
-				{ 0, DescriptorType_UniformBuffer, 1, ShaderStage_Vertex | ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
-				{ 1, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
-				{ 2, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
-				{ 3, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
-				{ 4, DescriptorType_CombinedImageSampler, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind }
+				{ 0, DescriptorType_UniformBuffer,        1, ShaderStage_Vertex | ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
+				{ 1, DescriptorType_UniformBuffer,        1, ShaderStage_Fragment,                      DescriptorBindingFlags_UpdateAfterBind },
+				{ 2, DescriptorType_UniformBuffer,        1, ShaderStage_Fragment,                      DescriptorBindingFlags_UpdateAfterBind },
+				{ 3, DescriptorType_UniformBuffer,        1, ShaderStage_Fragment,                      DescriptorBindingFlags_UpdateAfterBind },
+				{ 4, DescriptorType_CombinedImageSampler, 1, ShaderStage_Fragment,                      DescriptorBindingFlags_UpdateAfterBind }
 			},
 			DescriptorSetFlags_UpdateAfterBindPool
 		},
 		{
-			{
-				{ 0, DescriptorType_StorageBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind }
-			},
+			{ { 0, DescriptorType_StorageBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind } },
 			DescriptorSetFlags_UpdateAfterBindPool
 		},
-		{
-			{
-				{ 0, DescriptorType_StorageBuffer, 1, ShaderStage_Vertex | ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind }
-			},
-			DescriptorSetFlags_UpdateAfterBindPool
-		},
-		{
-			{
-				{ 0, DescriptorType_CombinedImageSampler, MAX_LIGHTS * MAX_SHADOW_CASCADES, ShaderStage_Fragment, DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind },
-				{ 1, DescriptorType_CombinedImageSampler, MAX_LIGHTS, ShaderStage_Fragment, DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind },
-				{ 2, DescriptorType_CombinedImageSampler, MAX_TEXTURES, ShaderStage_Fragment, DescriptorBindingFlags_VariableCount | DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind }
-			},
-			DescriptorSetFlags_UpdateAfterBindPool
-		}
+		ClassicSet2(), // FIX 7
+		Set3Textures()
 	};
 
 	pipeline_info.vertex_binding_description = VertexFormatTangent::GetBindingDescription();
 	pipeline_info.vertex_attribute_descriptions = VertexFormatTangent::GetAttributeDescriptions();
 	pipeline_info.depth_stencil_info = { true, true };
-
 	pipeline_info.dynamic_rendering_info = {
 		false,
-		{
-			VK_FORMAT_R16G16B16A16_SFLOAT,
-			VK_FORMAT_R16G16B16A16_SFLOAT,
-			VK_FORMAT_R16G16B16A16_SFLOAT,
-			VK_FORMAT_R16G16B16A16_SFLOAT
-		},
+		{ VK_FORMAT_R16G16B16A16_SFLOAT, VK_FORMAT_R16G16B16A16_SFLOAT, VK_FORMAT_R16G16B16A16_SFLOAT, VK_FORMAT_R16G16B16A16_SFLOAT },
 		VK_FORMAT_D32_SFLOAT
 	};
 
@@ -760,45 +713,55 @@ void Editor::CreateGBufferPipeline()
 	PipelineManager::GetInstance()->CreatePipeline(C_PIPELINE_GBUFFER, pipeline_info, shader_info);
 }
 
+void Editor::CreateGBufferPipelineMesh()
+{
+	PipelineCreateInfo pipeline_info = {};
+	pipeline_info.type = PipelineType_Mesh;
+	pipeline_info.polygon_mode = PipelinePolygonMode_Fill;
+	pipeline_info.cull_mode = PipelineCullMode_None;
+	pipeline_info.front_face = PipelineFrontFace_CounterClockwise;
+	pipeline_info.line_width = 1.0f;
+	pipeline_info.depth_clamp_enable = false;
+	pipeline_info.dynamic_states = { PipelineDynamicState_Viewport, PipelineDynamicState_Scissor };
+
+	pipeline_info.layout = {
+		MeshSet0(),
+		{
+			{ { 0, DescriptorType_StorageBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind } },
+			DescriptorSetFlags_UpdateAfterBindPool
+		},
+		MeshSet2(),
+		Set3Textures()
+	};
+
+	pipeline_info.vertex_binding_description = {};
+	pipeline_info.vertex_attribute_descriptions = {};
+	pipeline_info.depth_stencil_info = { true, true };
+	pipeline_info.dynamic_rendering_info = {
+		false,
+		{ VK_FORMAT_R16G16B16A16_SFLOAT, VK_FORMAT_R16G16B16A16_SFLOAT, VK_FORMAT_R16G16B16A16_SFLOAT, VK_FORMAT_R16G16B16A16_SFLOAT },
+		VK_FORMAT_D32_SFLOAT
+	};
+
+	ShaderStageInfo shader_info = {};
+	// FIX 2: ShaderType_Mesh, not ShaderType_Vertex
+	shader_info.sources[ShaderType_Mesh] = CONCAT_PATHS(EDITOR_SHADER_PATH, "pbr.mesh");
+	shader_info.sources[ShaderType_Fragment] = CONCAT_PATHS(EDITOR_SHADER_PATH, "gbuffer.frag");
+
+	PipelineManager::GetInstance()->CreatePipeline(C_PIPELINE_GBUFFER_MESH, pipeline_info, shader_info);
+}
+
 void Editor::CreateGBufferResources()
 {
 	u32 width = m_viewport_panel->GetSize().x;
 	u32 height = m_viewport_panel->GetSize().y;
+	if (width == 0 || height == 0) return;
 
-	if (width == 0 || height == 0)
-	{
-		return;
-	}
-
-	m_gbuffer_position = TextureManager::GetInstance()->CreateTexture2D(
-		"GBuffer_Position",
-		VK_FORMAT_R16G16B16A16_SFLOAT,
-		width, height
-	);
-
-	m_gbuffer_normal = TextureManager::GetInstance()->CreateTexture2D(
-		"GBuffer_Normal",
-		VK_FORMAT_R16G16B16A16_SFLOAT,
-		width, height
-	);
-
-	m_gbuffer_albedo_ao = TextureManager::GetInstance()->CreateTexture2D(
-		"GBuffer_AlbedoAO",
-		VK_FORMAT_R16G16B16A16_SFLOAT,
-		width, height
-	);
-
-	m_gbuffer_depth = TextureManager::GetInstance()->CreateTexture2D(
-		"GBuffer_Depth",
-		VK_FORMAT_D32_SFLOAT,
-		width, height
-	);
-
-	m_gbuffer_lighting = TextureManager::GetInstance()->CreateTexture2D(
-		"GBuffer_Lighting",
-		VK_FORMAT_R16G16B16A16_SFLOAT,
-		width, height
-	);
+	m_gbuffer_position = TextureManager::GetInstance()->CreateTexture2D("GBuffer_Position", VK_FORMAT_R16G16B16A16_SFLOAT, width, height);
+	m_gbuffer_normal = TextureManager::GetInstance()->CreateTexture2D("GBuffer_Normal", VK_FORMAT_R16G16B16A16_SFLOAT, width, height);
+	m_gbuffer_albedo_ao = TextureManager::GetInstance()->CreateTexture2D("GBuffer_AlbedoAO", VK_FORMAT_R16G16B16A16_SFLOAT, width, height);
+	m_gbuffer_depth = TextureManager::GetInstance()->CreateTexture2D("GBuffer_Depth", VK_FORMAT_D32_SFLOAT, width, height);
+	m_gbuffer_lighting = TextureManager::GetInstance()->CreateTexture2D("GBuffer_Lighting", VK_FORMAT_R16G16B16A16_SFLOAT, width, height);
 }
 
 void Editor::DestroyGBufferResources()
@@ -809,35 +772,23 @@ void Editor::DestroyGBufferResources()
 	TextureManager::GetInstance()->DestroyTexture2D("GBuffer_Depth");
 	TextureManager::GetInstance()->DestroyTexture2D("GBuffer_Lighting");
 
-	m_gbuffer_position = nullptr;
-	m_gbuffer_normal = nullptr;
-	m_gbuffer_albedo_ao = nullptr;
-	m_gbuffer_depth = nullptr;
-	m_gbuffer_lighting = nullptr;
+	m_gbuffer_position = m_gbuffer_normal = m_gbuffer_albedo_ao = m_gbuffer_depth = m_gbuffer_lighting = nullptr;
 }
 
-void Editor::CreateGBufferDescriptors()
-{
-}
+void Editor::CreateGBufferDescriptors() {}
+void Editor::UpdateGBufferDescriptors() {}
 
-void Editor::UpdateGBufferDescriptors()
-{
-}
-
+// FIX 5: RenderGBuffer branches on geometry_mode.
 void Editor::RenderGBuffer()
 {
-	Pipeline* gbufferPipeline =
-		PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_GBUFFER);
+	// Select classic or mesh shader pipeline based on current mode
+	Pipeline* gbufferPipeline = (m_editor_settings.geometry_mode == GeometryMode_MeshShader)
+		? PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_GBUFFER_MESH)
+		: PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_GBUFFER);
 
-	if (!gbufferPipeline ||
-		!m_gbuffer_position ||
-		!m_gbuffer_normal ||
-		!m_gbuffer_albedo_ao ||
-		!m_gbuffer_depth ||
-		!m_gbuffer_lighting)
-	{
+	if (!gbufferPipeline || !m_gbuffer_position || !m_gbuffer_normal ||
+		!m_gbuffer_albedo_ao || !m_gbuffer_depth || !m_gbuffer_lighting)
 		return;
-	}
 
 	DynamicRenderingAttachmentInfo positionAttachment{};
 	positionAttachment.image = m_gbuffer_position->GetHandle();
@@ -878,31 +829,26 @@ void Editor::RenderGBuffer()
 
 	DynamicRenderingInfo dri{};
 	dri.extent = { m_viewport_last_size.x, m_viewport_last_size.y };
-	dri.color_attachments = {
-		positionAttachment,
-		normalAttachment,
-		albedoAOAttachment,
-		lightingAttachment
-	};
+	dri.color_attachments = { positionAttachment, normalAttachment, albedoAOAttachment, lightingAttachment };
 	dri.depth_attachment = depthAttachment;
 
 	m_backend->BeginDynamicRenderingWithAttachments(dri);
-
-	m_backend->SetViewport({
-		{ 0.0f, 0.0f, (f32)m_viewport_last_size.x, (f32)m_viewport_last_size.y, 0.0f, 1.0f }
-		});
-	m_backend->SetScissor({
-		{ { 0, 0 }, { m_viewport_last_size.x, m_viewport_last_size.y } }
-		});
+	m_backend->SetViewport({ { 0.0f, 0.0f, (f32)m_viewport_last_size.x, (f32)m_viewport_last_size.y, 0.0f, 1.0f } });
+	m_backend->SetScissor({ { { 0, 0 }, { m_viewport_last_size.x, m_viewport_last_size.y } } });
 
 	m_backend->BindPipeline(gbufferPipeline);
-	m_backend->BindDescriptorSet(gbufferPipeline, m_pbr_descriptor);
-
+	DescriptorSet* set0 = (m_editor_settings.geometry_mode == GeometryMode_MeshShader)
+		? m_pbr_mesh_descriptor
+		: m_pbr_descriptor;
+	m_backend->BindDescriptorSet(gbufferPipeline, set0);
 	MeshManager::GetInstance()->DrawMeshes(gbufferPipeline);
 
 	m_backend->EndDynamicRenderingWithAttachments(dri);
 }
 
+// ---------------------------------------------------------------------------
+// GI Pipeline (no mesh shader variant needed — fullscreen triangle, no mesh data)
+// ---------------------------------------------------------------------------
 void Editor::CreateGIPipeline()
 {
 	PipelineCreateInfo pipeline_info = {};
@@ -913,12 +859,7 @@ void Editor::CreateGIPipeline()
 	pipeline_info.front_face = PipelineFrontFace_CounterClockwise;
 	pipeline_info.line_width = 1.0f;
 	pipeline_info.depth_clamp_enable = false;
-
-	pipeline_info.dynamic_states = {
-		PipelineDynamicState_Viewport,
-		PipelineDynamicState_Scissor
-	};
-
+	pipeline_info.dynamic_states = { PipelineDynamicState_Viewport, PipelineDynamicState_Scissor };
 	pipeline_info.layout = {
 		{
 			{
@@ -933,16 +874,10 @@ void Editor::CreateGIPipeline()
 			DescriptorSetFlags_UpdateAfterBindPool
 		}
 	};
-
 	pipeline_info.vertex_binding_description = {};
 	pipeline_info.vertex_attribute_descriptions = {};
 	pipeline_info.depth_stencil_info = { false, false };
-
-	pipeline_info.dynamic_rendering_info = {
-		false,
-		{ VK_FORMAT_R16G16B16A16_SFLOAT },
-		VK_FORMAT_UNDEFINED
-	};
+	pipeline_info.dynamic_rendering_info = { false, { VK_FORMAT_R16G16B16A16_SFLOAT }, VK_FORMAT_UNDEFINED };
 
 	ShaderStageInfo shader_info = {};
 	shader_info.sources[ShaderType_Vertex] = CONCAT_PATHS(EDITOR_SHADER_PATH, "full_screen.vert");
@@ -953,129 +888,56 @@ void Editor::CreateGIPipeline()
 
 void Editor::CreateGIResources()
 {
-	u32 width = m_viewport_panel->GetSize().x;
-	u32 height = m_viewport_panel->GetSize().y;
-
-	if (width == 0 || height == 0)
-	{
-		return;
-	}
-
-	m_gi_texture = TextureManager::GetInstance()->CreateTexture2D(
-		"GlobalIllumination",
-		VK_FORMAT_R16G16B16A16_SFLOAT,
-		width, height
-	);
+	u32 width = m_viewport_panel->GetSize().x, height = m_viewport_panel->GetSize().y;
+	if (width == 0 || height == 0) return;
+	m_gi_texture = TextureManager::GetInstance()->CreateTexture2D("GlobalIllumination", VK_FORMAT_R16G16B16A16_SFLOAT, width, height);
 }
 
 void Editor::DestroyGIResources()
 {
 	TextureManager::GetInstance()->DestroyTexture2D("GlobalIllumination");
-
 	m_gi_texture = nullptr;
 }
 
 void Editor::CreateGIDescriptors()
 {
-	Pipeline* giPipeline = PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_GLOBAL_ILLUMINATION);
-	m_gi_descriptor = m_backend->CreateDescriptorSet(giPipeline, 0);
+	m_gi_descriptor = m_backend->CreateDescriptorSet(PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_GLOBAL_ILLUMINATION), 0);
 }
 
 void Editor::UpdateGIDescriptors()
 {
-	if (!m_gi_descriptor ||
-		!m_gi_texture ||
-		!m_gbuffer_position ||
-		!m_gbuffer_normal ||
-		!m_gbuffer_albedo_ao ||
-		!m_gbuffer_depth ||
-		!m_gbuffer_lighting)
-	{
+	if (!m_gi_descriptor || !m_gi_texture || !m_gbuffer_position || !m_gbuffer_normal ||
+		!m_gbuffer_albedo_ao || !m_gbuffer_depth || !m_gbuffer_lighting)
 		return;
-	}
 
-	VkBuffer     globalBuf = m_pbr_global_data_ubo->GetHandle();
-	VkDeviceSize globalOff = 0;
-	VkDeviceSize globalRange = sizeof(GlobalData);
+	VkBuffer gBuf = m_pbr_global_data_ubo->GetHandle(); VkDeviceSize gOff = 0; VkDeviceSize gRange = sizeof(GlobalData);
+	VkBuffer giBuf = m_pbr_gi_data_ubo->GetHandle();    VkDeviceSize giOff = 0; VkDeviceSize giRange = sizeof(GlobalIlluminationSettings);
 
-	DescriptorSetWriteData globalWrite{};
-	globalWrite.type = DescriptorType_UniformBuffer;
-	globalWrite.binding = 0;
-	globalWrite.data.buffer.buffers = &globalBuf;
-	globalWrite.data.buffer.offsets = &globalOff;
-	globalWrite.data.buffer.ranges = &globalRange;
+	DescriptorSetWriteData gW{};  gW.type = DescriptorType_UniformBuffer; gW.binding = 0; gW.data.buffer.buffers = &gBuf;  gW.data.buffer.offsets = &gOff;  gW.data.buffer.ranges = &gRange;
+	DescriptorSetWriteData giW{}; giW.type = DescriptorType_UniformBuffer; giW.binding = 1; giW.data.buffer.buffers = &giBuf; giW.data.buffer.offsets = &giOff; giW.data.buffer.ranges = &giRange;
 
-	VkBuffer     giBuf = m_pbr_gi_data_ubo->GetHandle();
-	VkDeviceSize giOff = 0;
-	VkDeviceSize giRange = sizeof(GlobalIlluminationSettings);
+	VkImageView posV = m_gbuffer_position->GetImageView();  VkSampler posS = m_gbuffer_position->GetSampler();
+	VkImageView nrmV = m_gbuffer_normal->GetImageView();    VkSampler nrmS = m_gbuffer_normal->GetSampler();
+	VkImageView albV = m_gbuffer_albedo_ao->GetImageView(); VkSampler albS = m_gbuffer_albedo_ao->GetSampler();
+	VkImageView depV = m_gbuffer_depth->GetImageView();     VkSampler depS = m_gbuffer_depth->GetSampler();
+	VkImageView litV = m_gbuffer_lighting->GetImageView();  VkSampler litS = m_gbuffer_lighting->GetSampler();
 
-	DescriptorSetWriteData giSettingsWrite{};
-	giSettingsWrite.type = DescriptorType_UniformBuffer;
-	giSettingsWrite.binding = 1;
-	giSettingsWrite.data.buffer.buffers = &giBuf;
-	giSettingsWrite.data.buffer.offsets = &giOff;
-	giSettingsWrite.data.buffer.ranges = &giRange;
-
-	VkImageView posView = m_gbuffer_position->GetImageView();
-	VkSampler   posSamp = m_gbuffer_position->GetSampler();
-
-	DescriptorSetWriteData positionWrite{};
-	positionWrite.type = DescriptorType_CombinedImageSampler;
-	positionWrite.binding = 2;
-	positionWrite.data.image.image_views = &posView;
-	positionWrite.data.image.samplers = &posSamp;
-
-	VkImageView normView = m_gbuffer_normal->GetImageView();
-	VkSampler   normSamp = m_gbuffer_normal->GetSampler();
-
-	DescriptorSetWriteData normalWrite{};
-	normalWrite.type = DescriptorType_CombinedImageSampler;
-	normalWrite.binding = 3;
-	normalWrite.data.image.image_views = &normView;
-	normalWrite.data.image.samplers = &normSamp;
-
-	VkImageView albView = m_gbuffer_albedo_ao->GetImageView();
-	VkSampler   albSamp = m_gbuffer_albedo_ao->GetSampler();
-
-	DescriptorSetWriteData albedoAOWrite{};
-	albedoAOWrite.type = DescriptorType_CombinedImageSampler;
-	albedoAOWrite.binding = 4;
-	albedoAOWrite.data.image.image_views = &albView;
-	albedoAOWrite.data.image.samplers = &albSamp;
-
-	VkImageView depthView = m_gbuffer_depth->GetImageView();
-	VkSampler   depthSamp = m_gbuffer_depth->GetSampler();
-
-	DescriptorSetWriteData depthWrite{};
-	depthWrite.type = DescriptorType_CombinedImageSampler;
-	depthWrite.binding = 5;
-	depthWrite.data.image.image_views = &depthView;
-	depthWrite.data.image.samplers = &depthSamp;
-
-	VkImageView lightView = m_gbuffer_lighting->GetImageView();
-	VkSampler   lightSamp = m_gbuffer_lighting->GetSampler();
-
-	DescriptorSetWriteData lightingWrite{};
-	lightingWrite.type = DescriptorType_CombinedImageSampler;
-	lightingWrite.binding = 6;
-	lightingWrite.data.image.image_views = &lightView;
-	lightingWrite.data.image.samplers = &lightSamp;
+	auto img = [](u32 b, VkImageView* v, VkSampler* s) {
+		DescriptorSetWriteData w{}; w.type = DescriptorType_CombinedImageSampler; w.binding = b;
+		w.data.image.image_views = v; w.data.image.samplers = s; return w;
+		};
 
 	std::vector<DescriptorSetWriteData> writes = {
-		globalWrite, giSettingsWrite, positionWrite,
-		normalWrite, albedoAOWrite,   depthWrite,
-		lightingWrite
+		gW, giW,
+		img(2, &posV, &posS), img(3, &nrmV, &nrmS),
+		img(4, &albV, &albS), img(5, &depV, &depS), img(6, &litV, &litS)
 	};
-
 	m_backend->WriteDescriptor(&m_gi_descriptor, writes);
 }
 
 void Editor::RenderGI()
 {
-	if (!m_gi_texture)
-	{
-		return;
-	}
+	if (!m_gi_texture) return;
 
 	Pipeline* giPipeline = PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_GLOBAL_ILLUMINATION);
 
@@ -1095,22 +957,17 @@ void Editor::RenderGI()
 	dri.color_attachments = { giAttachment };
 
 	m_backend->BeginDynamicRenderingWithAttachments(dri);
-
-	m_backend->SetViewport({
-		{ 0.0f, 0.0f, (f32)m_viewport_last_size.x, (f32)m_viewport_last_size.y, 0.0f, 1.0f }
-		});
-	m_backend->SetScissor({
-		{ { 0, 0 }, { m_viewport_last_size.x, m_viewport_last_size.y } }
-		});
-
+	m_backend->SetViewport({ { 0.0f, 0.0f, (f32)m_viewport_last_size.x, (f32)m_viewport_last_size.y, 0.0f, 1.0f } });
+	m_backend->SetScissor({ { { 0, 0 }, { m_viewport_last_size.x, m_viewport_last_size.y } } });
 	m_backend->BindPipeline(giPipeline);
 	m_backend->BindDescriptorSet(giPipeline, m_gi_descriptor);
-
 	m_backend->Draw(3, 1, 0, 0);
-
 	m_backend->EndDynamicRenderingWithAttachments(dri);
 }
 
+// ---------------------------------------------------------------------------
+// Shadow Pipeline
+// ---------------------------------------------------------------------------
 void Editor::CreateShadowPipeline()
 {
 	PipelineCreateInfo pipeline_info = {};
@@ -1121,47 +978,32 @@ void Editor::CreateShadowPipeline()
 	pipeline_info.front_face = PipelineFrontFace_CounterClockwise;
 	pipeline_info.line_width = 1.0f;
 	pipeline_info.depth_clamp_enable = true;
-
 	pipeline_info.dynamic_states = { PipelineDynamicState_Viewport, PipelineDynamicState_Scissor };
+
 	pipeline_info.layout = {
 		{
 			{
-				{ 0, DescriptorType_UniformBuffer, 1, ShaderStage_Vertex | ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
-				{ 1, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
-				{ 2, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
-				{ 3, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
-				{ 4, DescriptorType_CombinedImageSampler, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind }
+				{ 0, DescriptorType_UniformBuffer,        1, ShaderStage_Vertex | ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
+				{ 1, DescriptorType_UniformBuffer,        1, ShaderStage_Fragment,                      DescriptorBindingFlags_UpdateAfterBind },
+				{ 2, DescriptorType_UniformBuffer,        1, ShaderStage_Fragment,                      DescriptorBindingFlags_UpdateAfterBind },
+				{ 3, DescriptorType_UniformBuffer,        1, ShaderStage_Fragment,                      DescriptorBindingFlags_UpdateAfterBind },
+				{ 4, DescriptorType_CombinedImageSampler, 1, ShaderStage_Fragment,                      DescriptorBindingFlags_UpdateAfterBind }
 			},
 			DescriptorSetFlags_UpdateAfterBindPool
 		},
 		{
-			{
-				{ 0, DescriptorType_StorageBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind }
-			},
+			{ { 0, DescriptorType_StorageBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind } },
 			DescriptorSetFlags_UpdateAfterBindPool
 		},
-		{
-			{
-				{ 0, DescriptorType_StorageBuffer, 1, ShaderStage_Vertex | ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
-			},
-			DescriptorSetFlags_UpdateAfterBindPool
-		},
-		{
-			{
-				{ 0, DescriptorType_CombinedImageSampler, MAX_LIGHTS * MAX_SHADOW_CASCADES, ShaderStage_Fragment, DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind },
-				{ 1, DescriptorType_CombinedImageSampler, MAX_LIGHTS, ShaderStage_Fragment, DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind },
-				{ 2, DescriptorType_CombinedImageSampler, MAX_TEXTURES, ShaderStage_Fragment, DescriptorBindingFlags_VariableCount | DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind }
-			},
-			DescriptorSetFlags_UpdateAfterBindPool
-		}
+		ClassicSet2(), // FIX 7
+		Set3Textures()
 	};
 
 	pipeline_info.vertex_binding_description = VertexFormatTangent::GetBindingDescription();
 	pipeline_info.vertex_attribute_descriptions = VertexFormatTangent::GetAttributeDescriptions();
-
+	// Push constants cover both vertex and fragment stages (classic pipeline)
 	pipeline_info.push_constant_ranges = { { ShaderStage_Vertex | ShaderStage_Fragment, 0, sizeof(glm::mat4) + sizeof(glm::vec4) } };
 	pipeline_info.depth_stencil_info = { true, true, false, PipelineDethStencilCompareOp_Less };
-
 	pipeline_info.dynamic_rendering_info = { false, {}, VK_FORMAT_D32_SFLOAT };
 
 	ShaderStageInfo shader_info = {};
@@ -1171,136 +1013,110 @@ void Editor::CreateShadowPipeline()
 	PipelineManager::GetInstance()->CreatePipeline(C_PIPELINE_SHADOW_DEPTH, pipeline_info, shader_info);
 }
 
+void Editor::CreateShadowPipelineMesh()
+{
+	PipelineCreateInfo pipeline_info = {};
+	pipeline_info.type = PipelineType_Mesh;
+	pipeline_info.polygon_mode = PipelinePolygonMode_Fill;
+	pipeline_info.cull_mode = PipelineCullMode_None;
+	pipeline_info.front_face = PipelineFrontFace_CounterClockwise;
+	pipeline_info.line_width = 1.0f;
+	pipeline_info.depth_clamp_enable = true;
+	pipeline_info.dynamic_states = { PipelineDynamicState_Viewport, PipelineDynamicState_Scissor };
+
+	pipeline_info.layout = {
+		MeshSet0(),
+		{
+			{ { 0, DescriptorType_StorageBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind } },
+			DescriptorSetFlags_UpdateAfterBindPool
+		},
+		MeshSet2(),
+		Set3Textures()
+	};
+
+	pipeline_info.vertex_binding_description = {};
+	pipeline_info.vertex_attribute_descriptions = {};
+	// FIX 8: push constants use ShaderStage_Mesh instead of ShaderStage_Vertex
+	pipeline_info.push_constant_ranges = { { ShaderStage_Mesh | ShaderStage_Fragment, 0, sizeof(glm::mat4) + sizeof(glm::vec4) } };
+	pipeline_info.depth_stencil_info = { true, true, false, PipelineDethStencilCompareOp_Less };
+	pipeline_info.dynamic_rendering_info = { false, {}, VK_FORMAT_D32_SFLOAT };
+
+	ShaderStageInfo shader_info = {};
+	// FIX 3: ShaderType_Mesh, not ShaderType_Vertex
+	shader_info.sources[ShaderType_Mesh] = CONCAT_PATHS(EDITOR_SHADER_PATH, "shadow_depth.mesh");
+	shader_info.sources[ShaderType_Fragment] = CONCAT_PATHS(EDITOR_SHADER_PATH, "shadow_depth.frag");
+
+	PipelineManager::GetInstance()->CreatePipeline(C_PIPELINE_SHADOW_DEPTH_MESH, pipeline_info, shader_info);
+}
+
 void Editor::CreateShadowResources()
 {
 	for (size_t i = 0; i < m_shadow_maps.size(); ++i)
-	{
-		std::string name = "ShadowMap_" + std::to_string(i);
-		TextureManager::GetInstance()->DestroyTexture2D(name);
-	}
+		TextureManager::GetInstance()->DestroyTexture2D("ShadowMap_" + std::to_string(i));
 	m_shadow_maps.clear();
 
 	for (size_t i = 0; i < m_point_shadow_maps.size(); ++i)
-	{
-		std::string name = "PointShadowMap_" + std::to_string(i);
-		TextureManager::GetInstance()->DestroyTextureCubemap(name);
-	}
+		TextureManager::GetInstance()->DestroyTextureCubemap("PointShadowMap_" + std::to_string(i));
 	m_point_shadow_maps.clear();
 
 	u32 shadowMapSize = m_editor_settings.shadow_settings.shadow_map_size;
 	u32 shadowMapCount = MAX_LIGHTS * MAX_SHADOW_CASCADES;
 
-	// 2D shadow maps for directional (cascades) and spot lights
 	for (u32 i = 0; i < shadowMapCount; ++i)
-	{
-		std::string name = "ShadowMap_" + std::to_string(i);
-		VulkanTexture2D* shadowMap = TextureManager::GetInstance()->CreateTexture2D(
-			name, VK_FORMAT_D32_SFLOAT, shadowMapSize, shadowMapSize
-		);
-		m_shadow_maps.push_back(shadowMap);
-	}
+		m_shadow_maps.push_back(TextureManager::GetInstance()->CreateTexture2D("ShadowMap_" + std::to_string(i), VK_FORMAT_D32_SFLOAT, shadowMapSize, shadowMapSize));
 
-	// Cube shadow maps for point lights — one per light slot
 	for (u32 i = 0; i < MAX_LIGHTS; ++i)
-	{
-		std::string name = "PointShadowMap_" + std::to_string(i);
-		VulkanTextureCubemap* cubemap = TextureManager::GetInstance()->CreateTextureCubemap(
-			name, VK_FORMAT_D32_SFLOAT, shadowMapSize
-		);
-		m_point_shadow_maps.push_back(cubemap);
-	}
+		m_point_shadow_maps.push_back(TextureManager::GetInstance()->CreateTextureCubemap("PointShadowMap_" + std::to_string(i), VK_FORMAT_D32_SFLOAT, shadowMapSize));
 }
 
 void Editor::DestroyShadowResources()
 {
-	for (size_t i = 0; i < m_shadow_maps.size(); ++i)
-	{
-		std::string name = "ShadowMap_" + std::to_string(i);
-		TextureManager::GetInstance()->DestroyTexture2D(name);
-	}
+	for (size_t i = 0; i < m_shadow_maps.size(); ++i)      TextureManager::GetInstance()->DestroyTexture2D("ShadowMap_" + std::to_string(i));
+	for (size_t i = 0; i < m_point_shadow_maps.size(); ++i) TextureManager::GetInstance()->DestroyTextureCubemap("PointShadowMap_" + std::to_string(i));
 	m_shadow_maps.clear();
-
-	for (size_t i = 0; i < m_point_shadow_maps.size(); ++i)
-	{
-		std::string name = "PointShadowMap_" + std::to_string(i);
-		TextureManager::GetInstance()->DestroyTextureCubemap(name);
-	}
 	m_point_shadow_maps.clear();
 }
 
 void Editor::CreateShadowDescriptors()
 {
 	m_textures_descriptor = MeshManager::GetInstance()->GetTexturesDescriptor();
+	if (!m_textures_descriptor || m_shadow_maps.empty() || m_point_shadow_maps.empty()) return;
 
-	if (!m_textures_descriptor || m_shadow_maps.empty() || m_point_shadow_maps.empty())
-		return;
-
-	// -- binding 0: 2D shadow maps 
 	{
-		std::vector<VkImageView> views;
-		std::vector<VkSampler>   samplers;
-		views.reserve(m_shadow_maps.size());
-		samplers.reserve(m_shadow_maps.size());
-
-		for (auto* sm : m_shadow_maps)
-		{
-			views.push_back(sm->GetImageView());
-			samplers.push_back(sm->GetSampler());
-		}
-
-		DescriptorSetWriteData write{};
-		write.type = DescriptorType_CombinedImageSampler;
-		write.binding = 0;
-		write.data.image.image_views = views.data();
-		write.data.image.samplers = samplers.data();
-
+		std::vector<VkImageView> views; std::vector<VkSampler> samplers;
+		for (auto* sm : m_shadow_maps) { views.push_back(sm->GetImageView()); samplers.push_back(sm->GetSampler()); }
+		DescriptorSetWriteData write{}; write.type = DescriptorType_CombinedImageSampler; write.binding = 0;
+		write.data.image.image_views = views.data(); write.data.image.samplers = samplers.data();
 		std::vector<DescriptorSetWriteData> writes = { write };
 		m_backend->WriteDescriptorVariable(&m_textures_descriptor, writes, static_cast<u32>(m_shadow_maps.size()), 0);
 	}
-
-	// -- binding 1: point light cube shadow maps
 	{
-		std::vector<VkImageView> views;
-		std::vector<VkSampler>   samplers;
-		views.reserve(m_point_shadow_maps.size());
-		samplers.reserve(m_point_shadow_maps.size());
-
-		for (auto* cm : m_point_shadow_maps)
-		{
-			views.push_back(cm->GetImageView());
-			samplers.push_back(cm->GetSampler());
-		}
-
-		DescriptorSetWriteData write{};
-		write.type = DescriptorType_CombinedImageSampler;
-		write.binding = 1;
-		write.data.image.image_views = views.data();
-		write.data.image.samplers = samplers.data();
-
+		std::vector<VkImageView> views; std::vector<VkSampler> samplers;
+		for (auto* cm : m_point_shadow_maps) { views.push_back(cm->GetImageView()); samplers.push_back(cm->GetSampler()); }
+		DescriptorSetWriteData write{}; write.type = DescriptorType_CombinedImageSampler; write.binding = 1;
+		write.data.image.image_views = views.data(); write.data.image.samplers = samplers.data();
 		std::vector<DescriptorSetWriteData> writes = { write };
 		m_backend->WriteDescriptorVariable(&m_textures_descriptor, writes, static_cast<u32>(m_point_shadow_maps.size()), 0);
 	}
 }
 
-void Editor::UpdateShadowDescriptors()
-{
-}
+void Editor::UpdateShadowDescriptors() {}
 
+// FIX 6: RenderShadowMaps branches on geometry_mode.
 void Editor::RenderShadowMaps()
 {
 	if (!m_editor_settings.shadow_settings.enabled) return;
 
-	struct ShadowPushConstants
-	{
-		glm::mat4 lightViewProj;
-		glm::vec4 lightPosAndFar;
-	};
-
 	Scene* scene = SceneManager::GetInstance()->GetActiveScene();
 	if (!scene) return;
 
-	Pipeline* shadowPipeline = PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_SHADOW_DEPTH);
+	// FIX 6: select classic or mesh shader shadow pipeline
+	Pipeline* shadowPipeline = (m_editor_settings.geometry_mode == GeometryMode_MeshShader)
+		? PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_SHADOW_DEPTH_MESH)
+		: PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_SHADOW_DEPTH);
 	if (!shadowPipeline) return;
+
+	struct ShadowPushConstants { glm::mat4 lightViewProj; glm::vec4 lightPosAndFar; };
 
 	u32  shadowMapSize = m_editor_settings.shadow_settings.shadow_map_size;
 	auto view = scene->GetRegistry().view<LightComponent, TransformComponent>();
@@ -1309,140 +1125,103 @@ void Editor::RenderShadowMaps()
 	for (auto entity : view)
 	{
 		auto& light_component = view.get<LightComponent>(entity);
-
-		if (!light_component.enabled)
-			continue;
-
-		if (lightIndex >= MAX_LIGHTS)
-			break;
-
-		if (!light_component.cast_shadows)
-		{
-			lightIndex++;
-			continue;
-		}
+		if (!light_component.enabled) continue;
+		if (lightIndex >= MAX_LIGHTS) break;
+		if (!light_component.cast_shadows) { lightIndex++; continue; }
 
 		LightGPUData& gpuLight = m_lights_data.lights[lightIndex];
 
 		if (light_component.type == LightType_Point)
 		{
 			VulkanTextureCubemap* cubemap = m_point_shadow_maps[lightIndex];
-
-			// Transition the entire cubemap to attachment layout once before rendering any face.
-			// BeginDynamicRenderingWithAttachments barriers on the whole VkImage handle which
-			// would conflict with per-face transitions if done inside the loop.
-			m_backend->TransitionTexture(
-				cubemap,
-				VK_IMAGE_LAYOUT_UNDEFINED,
-				VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
-			);
+			m_backend->TransitionTexture(cubemap, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL);
 
 			for (u32 face = 0; face < 6; ++face)
 			{
-				DynamicRenderingAttachmentInfo depthAttachment{};
-				depthAttachment.image = cubemap->GetHandle();
-				depthAttachment.image_view = cubemap->GetFaceImageView(face);
-				depthAttachment.format = VK_FORMAT_D32_SFLOAT;
-				depthAttachment.image_layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-				depthAttachment.load_op = VK_ATTACHMENT_LOAD_OP_CLEAR;
-				depthAttachment.store_op = VK_ATTACHMENT_STORE_OP_STORE;
-				depthAttachment.clear_value.depthStencil = { 1.0f, 0 };
-				// Already in attachment layout — no transition needed inside the loop
-				depthAttachment.initial_layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-				depthAttachment.final_layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+				DynamicRenderingAttachmentInfo depthAtt{};
+				depthAtt.image = cubemap->GetHandle(); depthAtt.image_view = cubemap->GetFaceImageView(face);
+				depthAtt.format = VK_FORMAT_D32_SFLOAT; depthAtt.image_layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+				depthAtt.load_op = VK_ATTACHMENT_LOAD_OP_CLEAR; depthAtt.store_op = VK_ATTACHMENT_STORE_OP_STORE;
+				depthAtt.clear_value.depthStencil = { 1.0f, 0 };
+				depthAtt.initial_layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+				depthAtt.final_layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
-				DynamicRenderingInfo shadowDRI{};
-				shadowDRI.extent = { shadowMapSize, shadowMapSize };
-				shadowDRI.depth_attachment = depthAttachment;
-				shadowDRI.flags = 0;
-
-				m_backend->BeginDynamicRenderingWithAttachments(shadowDRI);
-
-				m_backend->SetViewport({ { 0.0f, 0.0f, static_cast<f32>(shadowMapSize), static_cast<f32>(shadowMapSize), 0.0f, 1.0f } });
+				DynamicRenderingInfo dri{}; dri.extent = { shadowMapSize, shadowMapSize }; dri.depth_attachment = depthAtt;
+				m_backend->BeginDynamicRenderingWithAttachments(dri);
+				m_backend->SetViewport({ { 0.0f, 0.0f, (f32)shadowMapSize, (f32)shadowMapSize, 0.0f, 1.0f } });
 				m_backend->SetScissor({ { { 0, 0 }, { shadowMapSize, shadowMapSize } } });
-
 				m_backend->BindPipeline(shadowPipeline);
-				m_backend->BindDescriptorSet(shadowPipeline, m_pbr_descriptor);
+				DescriptorSet* set0 = (m_editor_settings.geometry_mode == GeometryMode_MeshShader)
+					? m_pbr_mesh_descriptor
+					: m_pbr_descriptor;
+				m_backend->BindDescriptorSet(shadowPipeline, set0);
 				ShadowPushConstants pc;
 				pc.lightViewProj = gpuLight.point_matrices[face];
 				pc.lightPosAndFar = glm::vec4(gpuLight.position_type.x, gpuLight.position_type.y, gpuLight.position_type.z, gpuLight.direction_range.w);
-
-				m_backend->BindPushConstants(shadowPipeline, ShaderStage_Vertex | ShaderStage_Fragment, 0, sizeof(ShadowPushConstants), &pc);
-
+				// FIX 8: use ShaderStage_Mesh when in mesh shader mode, ShaderStage_Vertex otherwise
+				ShaderStage pcStage = (m_editor_settings.geometry_mode == GeometryMode_MeshShader)
+					? ShaderStage_Mesh | ShaderStage_Fragment
+					: ShaderStage_Vertex | ShaderStage_Fragment;
+				m_backend->BindPushConstants(shadowPipeline, pcStage, 0, sizeof(ShadowPushConstants), &pc);
 				MeshManager::GetInstance()->DrawMeshes(shadowPipeline);
-
-				m_backend->EndDynamicRenderingWithAttachments(shadowDRI);
+				m_backend->EndDynamicRenderingWithAttachments(dri);
 			}
 
-			// Transition entire cubemap to shader read after all 6 faces are done
-			m_backend->TransitionTexture(
-				cubemap,
-				VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
-				VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL
-			);
+			m_backend->TransitionTexture(cubemap, VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL);
 		}
 		else
 		{
-			const u32 cascadeCount = light_component.type == LightType_Directional
-				? MAX_SHADOW_CASCADES : 1;
+			const u32 cascadeCount = (light_component.type == LightType_Directional) ? MAX_SHADOW_CASCADES : 1;
 
 			for (u32 cascade = 0; cascade < cascadeCount; ++cascade)
 			{
-				const u32 shadowMapIndex = light_component.type == LightType_Directional
+				const u32 shadowMapIndex = (light_component.type == LightType_Directional)
 					? lightIndex * MAX_SHADOW_CASCADES + cascade
 					: lightIndex * MAX_SHADOW_CASCADES;
+				if (shadowMapIndex >= m_shadow_maps.size()) continue;
 
-				if (shadowMapIndex >= m_shadow_maps.size())
-					continue;
-
-				glm::mat4 lightViewProj = light_component.type == LightType_Directional
-					? gpuLight.cascade_matrices[cascade]
-					: gpuLight.shadow_matrix;
+				glm::mat4 lightViewProj = (light_component.type == LightType_Directional)
+					? gpuLight.cascade_matrices[cascade] : gpuLight.shadow_matrix;
 
 				VulkanTexture2D* shadowMap = m_shadow_maps[shadowMapIndex];
 
-				DynamicRenderingAttachmentInfo depthAttachment{};
-				depthAttachment.image = shadowMap->GetHandle();
-				depthAttachment.image_view = shadowMap->GetImageView();
-				depthAttachment.format = VK_FORMAT_D32_SFLOAT;
-				depthAttachment.image_layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-				depthAttachment.load_op = VK_ATTACHMENT_LOAD_OP_CLEAR;
-				depthAttachment.store_op = VK_ATTACHMENT_STORE_OP_STORE;
-				depthAttachment.clear_value.depthStencil = { 1.0f, 0 };
-				depthAttachment.initial_layout = VK_IMAGE_LAYOUT_UNDEFINED;
-				depthAttachment.final_layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+				DynamicRenderingAttachmentInfo depthAtt{};
+				depthAtt.image = shadowMap->GetHandle(); depthAtt.image_view = shadowMap->GetImageView();
+				depthAtt.format = VK_FORMAT_D32_SFLOAT; depthAtt.image_layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+				depthAtt.load_op = VK_ATTACHMENT_LOAD_OP_CLEAR; depthAtt.store_op = VK_ATTACHMENT_STORE_OP_STORE;
+				depthAtt.clear_value.depthStencil = { 1.0f, 0 };
+				depthAtt.initial_layout = VK_IMAGE_LAYOUT_UNDEFINED;
+				depthAtt.final_layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
 
-				DynamicRenderingInfo shadowDRI{};
-				shadowDRI.extent = { shadowMapSize, shadowMapSize };
-				shadowDRI.depth_attachment = depthAttachment;
-				shadowDRI.flags = 0;
-
-				m_backend->BeginDynamicRenderingWithAttachments(shadowDRI);
-
-				m_backend->SetViewport({ { 0.0f, 0.0f, static_cast<f32>(shadowMapSize), static_cast<f32>(shadowMapSize), 0.0f, 1.0f } });
+				DynamicRenderingInfo dri{}; dri.extent = { shadowMapSize, shadowMapSize }; dri.depth_attachment = depthAtt;
+				m_backend->BeginDynamicRenderingWithAttachments(dri);
+				m_backend->SetViewport({ { 0.0f, 0.0f, (f32)shadowMapSize, (f32)shadowMapSize, 0.0f, 1.0f } });
 				m_backend->SetScissor({ { { 0, 0 }, { shadowMapSize, shadowMapSize } } });
-
 				m_backend->BindPipeline(shadowPipeline);
-				m_backend->BindDescriptorSet(shadowPipeline, m_pbr_descriptor);
-				ShadowPushConstants pc;
-				pc.lightViewProj = lightViewProj;
-				pc.lightPosAndFar = glm::vec4(0.0f);
+				DescriptorSet* set0 = (m_editor_settings.geometry_mode == GeometryMode_MeshShader)
+					? m_pbr_mesh_descriptor
+					: m_pbr_descriptor;
+				m_backend->BindDescriptorSet(shadowPipeline, set0);
 
-				m_backend->BindPushConstants(shadowPipeline, ShaderStage_Vertex | ShaderStage_Fragment, 0, sizeof(ShadowPushConstants), &pc);
-
+				ShadowPushConstants pc; pc.lightViewProj = lightViewProj; pc.lightPosAndFar = glm::vec4(0.0f);
+				ShaderStage pcStage = (m_editor_settings.geometry_mode == GeometryMode_MeshShader)
+					? ShaderStage_Mesh | ShaderStage_Fragment
+					: ShaderStage_Vertex | ShaderStage_Fragment;
+				m_backend->BindPushConstants(shadowPipeline, pcStage, 0, sizeof(ShadowPushConstants), &pc);
 				MeshManager::GetInstance()->DrawMeshes(shadowPipeline);
-
-				m_backend->EndDynamicRenderingWithAttachments(shadowDRI);
+				m_backend->EndDynamicRenderingWithAttachments(dri);
 			}
 		}
-
 		lightIndex++;
 	}
 }
 
+// ---------------------------------------------------------------------------
+// Debug Pipelines
+// ---------------------------------------------------------------------------
 void Editor::CreateDebugPipeline()
 {
-	// Debug Wireframe Pipeline
+	// Classic wireframe
 	{
 		PipelineCreateInfo pipeline_info = {};
 		pipeline_info.type = PipelineType_Graphics;
@@ -1452,54 +1231,32 @@ void Editor::CreateDebugPipeline()
 		pipeline_info.front_face = PipelineFrontFace_CounterClockwise;
 		pipeline_info.line_width = 1.0f;
 		pipeline_info.depth_clamp_enable = false;
-
 		pipeline_info.dynamic_states = { PipelineDynamicState_Viewport, PipelineDynamicState_Scissor };
+
 		pipeline_info.layout = {
 			{
 				{
-					{ 0, DescriptorType_UniformBuffer, 1, ShaderStage_Vertex | ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
-					{ 1, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
-					{ 2, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
-					{ 3, DescriptorType_UniformBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
-					{ 4, DescriptorType_CombinedImageSampler, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind }
+					{ 0, DescriptorType_UniformBuffer,        1, ShaderStage_Vertex | ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
+					{ 1, DescriptorType_UniformBuffer,        1, ShaderStage_Fragment,                      DescriptorBindingFlags_UpdateAfterBind },
+					{ 2, DescriptorType_UniformBuffer,        1, ShaderStage_Fragment,                      DescriptorBindingFlags_UpdateAfterBind },
+					{ 3, DescriptorType_UniformBuffer,        1, ShaderStage_Fragment,                      DescriptorBindingFlags_UpdateAfterBind },
+					{ 4, DescriptorType_CombinedImageSampler, 1, ShaderStage_Fragment,                      DescriptorBindingFlags_UpdateAfterBind }
 				},
 				DescriptorSetFlags_UpdateAfterBindPool
 			},
 			{
-				{
-					{ 0, DescriptorType_StorageBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind }
-				},
+				{ { 0, DescriptorType_StorageBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind } },
 				DescriptorSetFlags_UpdateAfterBindPool
 			},
-			{
-				{
-					{ 0, DescriptorType_StorageBuffer, 1, ShaderStage_Vertex | ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind },
-				},
-				DescriptorSetFlags_UpdateAfterBindPool
-			},
-			{
-				{
-					{ 0, DescriptorType_CombinedImageSampler, MAX_LIGHTS * MAX_SHADOW_CASCADES, ShaderStage_Fragment, DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind },
-					{ 1, DescriptorType_CombinedImageSampler, MAX_LIGHTS, ShaderStage_Fragment, DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind },
-					{ 2, DescriptorType_CombinedImageSampler, MAX_TEXTURES, ShaderStage_Fragment, DescriptorBindingFlags_VariableCount | DescriptorBindingFlags_PartiallyBound | DescriptorBindingFlags_UpdateAfterBind }
-				},
-				DescriptorSetFlags_UpdateAfterBindPool
-			}
+			ClassicSet2(), // FIX 7
+			Set3Textures()
 		};
 
 		pipeline_info.vertex_binding_description = VertexFormatTangent::GetBindingDescription();
 		pipeline_info.vertex_attribute_descriptions = VertexFormatTangent::GetAttributeDescriptions();
-
-		pipeline_info.push_constant_ranges = {
-			{ ShaderStage_Fragment, 0, sizeof(u32) }
-		};
+		pipeline_info.push_constant_ranges = { { ShaderStage_Fragment, 0, sizeof(u32) } };
 		pipeline_info.depth_stencil_info = { true, true };
-
-		pipeline_info.dynamic_rendering_info = {
-			false,
-			{ VK_FORMAT_R16G16B16A16_SFLOAT, VK_FORMAT_R32_UINT },
-			VK_FORMAT_D32_SFLOAT
-		};
+		pipeline_info.dynamic_rendering_info = { false, { VK_FORMAT_R16G16B16A16_SFLOAT, VK_FORMAT_R32_UINT }, VK_FORMAT_D32_SFLOAT };
 
 		ShaderStageInfo shader_info = {};
 		shader_info.sources[ShaderType_Vertex] = CONCAT_PATHS(EDITOR_SHADER_PATH, "pbr.vert");
@@ -1508,7 +1265,7 @@ void Editor::CreateDebugPipeline()
 		PipelineManager::GetInstance()->CreatePipeline(C_PIPELINE_WIREFRAME, pipeline_info, shader_info);
 	}
 
-	// Gizmo Pipeline
+	// Gizmo (line list, no mesh shader variant needed)
 	{
 		PipelineCreateInfo pipeline_info = {};
 		pipeline_info.type = PipelineType_Graphics;
@@ -1517,23 +1274,13 @@ void Editor::CreateDebugPipeline()
 		pipeline_info.cull_mode = PipelineCullMode_None;
 		pipeline_info.front_face = PipelineFrontFace_CounterClockwise;
 		pipeline_info.line_width = 2.0f;
-
 		pipeline_info.dynamic_states = { PipelineDynamicState_Viewport, PipelineDynamicState_Scissor };
 		pipeline_info.layout = {};
-
 		pipeline_info.vertex_binding_description = VertexGuizmo::GetBindingDescription();
 		pipeline_info.vertex_attribute_descriptions = VertexGuizmo::GetAttributeDescriptions();
-
-		pipeline_info.push_constant_ranges = {
-			{ ShaderStage_Vertex, 0, sizeof(glm::mat4) }
-		};
+		pipeline_info.push_constant_ranges = { { ShaderStage_Vertex, 0, sizeof(glm::mat4) } };
 		pipeline_info.depth_stencil_info = { true, false };
-
-		pipeline_info.dynamic_rendering_info = {
-			false,
-			{ VK_FORMAT_R16G16B16A16_SFLOAT, VK_FORMAT_R32_UINT },
-			VK_FORMAT_D32_SFLOAT
-		};
+		pipeline_info.dynamic_rendering_info = { false, { VK_FORMAT_R16G16B16A16_SFLOAT, VK_FORMAT_R32_UINT }, VK_FORMAT_D32_SFLOAT };
 
 		ShaderStageInfo shader_info = {};
 		shader_info.sources[ShaderType_Vertex] = CONCAT_PATHS(EDITOR_SHADER_PATH, "gizmo.vert");
@@ -1541,6 +1288,43 @@ void Editor::CreateDebugPipeline()
 
 		PipelineManager::GetInstance()->CreatePipeline(C_PIPELINE_GIZMO, pipeline_info, shader_info);
 	}
+}
+
+void Editor::CreateDebugPipelineMesh()
+{
+	// Mesh shader wireframe
+	PipelineCreateInfo pipeline_info = {};
+	pipeline_info.type = PipelineType_Mesh;
+	pipeline_info.topology = PipelinePrimitiveTopology_TriangleList;
+	pipeline_info.polygon_mode = PipelinePolygonMode_Line;
+	pipeline_info.cull_mode = PipelineCullMode_None;
+	pipeline_info.front_face = PipelineFrontFace_CounterClockwise;
+	pipeline_info.line_width = 1.0f;
+	pipeline_info.depth_clamp_enable = false;
+	pipeline_info.dynamic_states = { PipelineDynamicState_Viewport, PipelineDynamicState_Scissor };
+
+	pipeline_info.layout = {
+		MeshSet0(),
+		{
+			{ { 0, DescriptorType_StorageBuffer, 1, ShaderStage_Fragment, DescriptorBindingFlags_UpdateAfterBind } },
+			DescriptorSetFlags_UpdateAfterBindPool
+		},
+		MeshSet2(),
+		Set3Textures()
+	};
+
+	pipeline_info.vertex_binding_description = {};
+	pipeline_info.vertex_attribute_descriptions = {};
+	pipeline_info.push_constant_ranges = { { ShaderStage_Fragment, 0, sizeof(u32) } };
+	pipeline_info.depth_stencil_info = { true, true };
+	pipeline_info.dynamic_rendering_info = { false, { VK_FORMAT_R16G16B16A16_SFLOAT, VK_FORMAT_R32_UINT }, VK_FORMAT_D32_SFLOAT };
+
+	ShaderStageInfo shader_info = {};
+	shader_info.sources[ShaderType_Mesh] = CONCAT_PATHS(EDITOR_SHADER_PATH, "pbr.mesh");
+	shader_info.sources[ShaderType_Fragment] = CONCAT_PATHS(EDITOR_SHADER_PATH, "pbr.frag");
+
+	// FIX 4: register under C_PIPELINE_WIREFRAME_MESH, not C_PIPELINE_WIREFRAME
+	PipelineManager::GetInstance()->CreatePipeline(C_PIPELINE_WIREFRAME_MESH, pipeline_info, shader_info);
 }
 
 void Editor::CreateDebugResources()
@@ -1551,20 +1335,15 @@ void Editor::CreateDebugResources()
 
 void Editor::DestroyDebugResources()
 {
-	if ((m_gizmo_vb != nullptr) && (m_gizmo_ib != nullptr))
+	if (m_gizmo_vb && m_gizmo_ib)
 	{
 		m_backend->DestroyBuffer(m_gizmo_vb);
 		m_backend->DestroyBuffer(m_gizmo_ib);
 	}
 }
 
-void Editor::CreateDebugDescriptors()
-{
-}
-
-void Editor::UpdateDebugDescriptors()
-{
-}
+void Editor::CreateDebugDescriptors() {}
+void Editor::UpdateDebugDescriptors() {}
 
 void Editor::UpdateDebug()
 {
@@ -1572,35 +1351,25 @@ void Editor::UpdateDebug()
 	m_gizmo_indices.clear();
 
 	Scene* active_scene = SceneManager::GetInstance()->GetActiveScene();
-	if (active_scene == nullptr)
-	{
-		return;
-	}
+	if (!active_scene) return;
 
 	UpdateLightGizmos();
 
 	if (!m_gizmo_vertices.empty())
 	{
-		u32 vb_size = static_cast<u32>(m_gizmo_vertices.size() * sizeof(VertexGuizmo));
-		u32 ib_size = static_cast<u32>(m_gizmo_indices.size() * sizeof(u32));
-
-		m_backend->UpdateVertexBuffer(m_gizmo_vb, 0, m_gizmo_vertices.data(), vb_size);
-		m_backend->UpdateIndexBuffer(m_gizmo_ib, 0, m_gizmo_indices.data(), ib_size);
+		m_backend->UpdateVertexBuffer(m_gizmo_vb, 0, m_gizmo_vertices.data(), static_cast<u32>(m_gizmo_vertices.size() * sizeof(VertexGuizmo)));
+		m_backend->UpdateIndexBuffer(m_gizmo_ib, 0, m_gizmo_indices.data(), static_cast<u32>(m_gizmo_indices.size() * sizeof(u32)));
 	}
 }
 
 void Editor::RenderDebug()
 {
 	Pipeline* gizmoPipeline = PipelineManager::GetInstance()->GetPipeline(C_PIPELINE_GIZMO);
-
 	m_backend->BindPipeline(gizmoPipeline);
-
 	glm::mat4 vp = m_editor_camera.GetProjection() * m_editor_camera.GetView();
 	m_backend->BindPushConstants(gizmoPipeline, ShaderStage_Vertex, 0, sizeof(glm::mat4), &vp);
-
 	m_backend->BindVertexBuffer(m_gizmo_vb, 0);
 	m_backend->BindIndexBuffer(m_gizmo_ib, 0);
-
 	m_backend->DrawIndexed(static_cast<u32>(m_gizmo_indices.size()), 1, 0, 0, 0);
 }
 

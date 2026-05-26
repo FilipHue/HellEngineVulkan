@@ -78,6 +78,7 @@ namespace hellengine
 			HE_API VulkanUniformBuffer* CreateUniformBufferMappedPersistent(u32 elem_size, u32 elem_count);
 			HE_API VulkanUniformBuffer* CreateDynamicUniformBuffer(void*& data, u32 elem_size, u32 elem_count);
 			HE_API VulkanStorageBuffer* CreateStorageBufferMappedPersistent(u32 elem_size, u32 elem_count);
+			HE_API VulkanStorageBuffer* CreateStorageBufferDeviceLocal(u32 size);
 			HE_API VulkanBuffer* CreateDrawIndirectBuffer(u32 elem_size, u32 elem_count);
 
 			HE_API void UpdateVertexBuffer(VulkanBuffer* buffer, u32 offset, void* data, u32 size);
@@ -126,6 +127,9 @@ namespace hellengine
 			HE_API void Draw(u32 vertex_count, u32 instance_count, u32 first_vertex, u32 first_instance) const;
 			HE_API void DrawIndexed(u32 index_count, u32 instance_count, u32 first_index, u32 vertex_offset, u32 first_instance) const;
 			HE_API void DrawIndexedIndirect(VulkanBuffer* buffer, u32 offset, u32 draw_count, u32 stride) const;
+
+			HE_API void DrawMeshTask(u32 group_count_x, u32 group_count_y, u32 group_count_z) const;
+			HE_API void DrawMeshTasksIndirect(VulkanBuffer* buffer, u32 offset, u32 draw_count, u32 stride) const;
 
 		private:
 			VulkanContext* m_context;
