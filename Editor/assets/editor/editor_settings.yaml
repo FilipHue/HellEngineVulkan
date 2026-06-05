@@ -1,6 +1,6 @@
 editor:
   show_grid: true
-  show_gizmos: false
+  show_gizmos: true
   render_mode: 0
   gi_settings:
     enabled: 0
@@ -21,7 +21,7 @@ editor:
     shadow_map_size: 2048
     cascade_split_lambda: 0.75
     min_bias: 0
-    max_bias: 0
+    max_bias: 0.0004
     normal_offset: 0.02
     pcf_samples: 4
     softness: 5

@@ -288,7 +288,8 @@ enum ColliderType : u32
 {
 	Collider_Sphere = 0,
 	Collider_AABB = 1,
-	Collider_ConeSphereApprox = 2
+	Collider_Capsule = 2,
+	Collider_Cone = 3
 };
 
 struct Body
@@ -301,6 +302,14 @@ struct Body
 
 	glm::vec3 half_extents{ 0.5f };
 	f32 radius = 0.5f;
+
+	glm::vec3 capsule_tip{ 0.0f, 0.5f, 0.0f };  // Local offset to capsule tip from position
+	f32 capsule_radius = 0.25f;                  // Capsule radius
+
+	glm::vec3 cone_direction{ 0.0f, 1.0f, 0.0f }; // Cone axis direction (normalized)
+	f32 cone_height = 1.0f;                        // Cone height
+	f32 cone_base_radius = 0.5f;                   // Cone base radius
+	f32 _pad0 = 0.0f;
 };
 
 static inline AABB ComputeBodyAABB(const Body& b)
@@ -308,6 +317,25 @@ static inline AABB ComputeBodyAABB(const Body& b)
 	if (b.type == Collider_AABB)
 	{
 		return AABB(b.position - b.half_extents, b.position + b.half_extents);
+	}
+	else if (b.type == Collider_Capsule)
+	{
+		glm::vec3 base = b.position;
+		glm::vec3 tip = b.position + b.capsule_tip;
+		glm::vec3 minPt = glm::min(base, tip) - glm::vec3(b.capsule_radius);
+		glm::vec3 maxPt = glm::max(base, tip) + glm::vec3(b.capsule_radius);
+		return AABB(minPt, maxPt);
+	}
+	else if (b.type == Collider_Cone)
+	{
+		glm::vec3 apex = b.position + b.cone_direction * b.cone_height;
+		glm::vec3 base_center = b.position;
+
+		// AABB encompassing cone apex and base circle
+		glm::vec3 r(b.cone_base_radius);
+		glm::vec3 minPt = glm::min(apex, base_center - r);
+		glm::vec3 maxPt = glm::max(apex, base_center + r);
+		return AABB(minPt, maxPt);
 	}
 
 	glm::vec3 r(b.radius);
@@ -321,13 +349,24 @@ struct BVHNode
 	i32 right = -1;
 	u32 first = 0;
 	u32 count = 0;
+	std::vector<u32> leaf_indices;
+};
+
+struct BVHNodeGPU
+{
+	glm::vec4 bounds_min_left;   // xyz = min, w = left (as float)
+	glm::vec4 bounds_max_right;  // xyz = max, w = right (as float)
+	glm::vec4 first_count;       // x = first index into flat_leaf_indices, y = count, zw unused
 };
 
 struct BodyGPU
 {
-	glm::vec4 pos_invMass;     // xyz pos, w invMass
-	glm::vec4 vel_type;        // xyz vel, w type (float)
-	glm::vec4 halfExt_radius;  // xyz halfExt, w radius
+	glm::vec4 pos_invMass;        // xyz pos, w invMass
+	glm::vec4 vel_type;           // xyz vel, w type (float)
+	glm::vec4 halfExt_radius;     // xyz halfExt, w radius
+	glm::vec4 capsule_tip_radius; // xyz capsule_tip offset, w capsule_radius
+	glm::vec4 cone_dir_height;    // xyz cone direction, w cone height
+	glm::vec4 cone_base_rad_pad;  // x cone base radius, yzw padding
 };
 
 struct PhysicsParams
@@ -339,7 +378,7 @@ struct PhysicsParams
 	f32 separation_slop;
 	f32 push_strength;
 	f32 damping;
-	f32 _pad0;
+	u32 bvh_node_count;
 };
 
 struct PhysicsWorld
@@ -362,6 +401,13 @@ struct PhysicsWorld
 
 		bodies_buffer = backend->CreateStorageBufferMappedPersistent(sizeof(BodyGPU), max_bodies);
 		params_buffer = backend->CreateUniformBufferMappedPersistent(sizeof(PhysicsParams), 1);
+
+		// BVH buffer: worst case is 2*N-1 nodes for N bodies
+		const u32 max_bvh_nodes = (max_bodies > 0) ? (2 * max_bodies - 1) : 0;
+		bvh_buffer = backend->CreateStorageBufferMappedPersistent(sizeof(BVHNodeGPU), glm::max(max_bvh_nodes, 1u));
+
+		// BVH leaf indices buffer: worst case is all bodies in leaves (with max 4 per leaf, so ~N indices total)
+		bvh_indices_buffer = backend->CreateStorageBufferMappedPersistent(sizeof(u32), glm::max(max_bodies, 1u));
 
 		// set = 0 -> bodies
 		bodies_set = backend->CreateDescriptorSet(compute_pipeline, 0);
@@ -402,6 +448,29 @@ struct PhysicsWorld
 			backend->WriteDescriptor(&params_set, writes);
 		}
 
+		// set = 3 -> BVH nodes and indices
+		bvh_set = backend->CreateDescriptorSet(compute_pipeline, 3);
+		{
+			const u32 max_bvh_nodes = (max_bodies > 0) ? (2 * max_bodies - 1) : 0;
+
+			DescriptorSetWriteData w0{};
+			w0.type = DescriptorType_StorageBuffer;
+			w0.binding = 0;
+			w0.data.buffer.buffers = new VkBuffer[1]{ bvh_buffer->GetHandle() };
+			w0.data.buffer.offsets = new VkDeviceSize[1]{ 0 };
+			w0.data.buffer.ranges = new VkDeviceSize[1]{ sizeof(BVHNodeGPU) * glm::max(max_bvh_nodes, 1u) };
+
+			DescriptorSetWriteData w1{};
+			w1.type = DescriptorType_StorageBuffer;
+			w1.binding = 1;
+			w1.data.buffer.buffers = new VkBuffer[1]{ bvh_indices_buffer->GetHandle() };
+			w1.data.buffer.offsets = new VkDeviceSize[1]{ 0 };
+			w1.data.buffer.ranges = new VkDeviceSize[1]{ sizeof(u32) * glm::max(max_bodies, 1u) };
+
+			std::vector<DescriptorSetWriteData> writes = { w0, w1 };
+			backend->WriteDescriptor(&bvh_set, writes);
+		}
+
 		// reserve CPU staging for capacity to avoid realloc when changing active count
 		bodies_gpu.reserve(m_capacity_bodies);
 		bodies.reserve(m_capacity_bodies);
@@ -420,12 +489,17 @@ struct PhysicsWorld
 		// compute
 		if (bodies_buffer) backend->DestroyBuffer(bodies_buffer);
 		if (params_buffer) backend->DestroyBuffer(params_buffer);
+		if (bvh_buffer) backend->DestroyBuffer(bvh_buffer);
+		if (bvh_indices_buffer) backend->DestroyBuffer(bvh_indices_buffer);
 		bodies_buffer = nullptr;
 		params_buffer = nullptr;
+		bvh_buffer = nullptr;
+		bvh_indices_buffer = nullptr;
 
 		bodies_set = nullptr;
 		instances_set = nullptr;
 		params_set = nullptr;
+		bvh_set = nullptr;
 
 		m_capacity_bodies = 0;
 	}
@@ -472,6 +546,9 @@ struct PhysicsWorld
 			g.pos_invMass = glm::vec4(s.position, s.inv_mass);
 			g.vel_type = glm::vec4(s.velocity, (f32)s.type);
 			g.halfExt_radius = glm::vec4(s.half_extents, s.radius);
+			g.capsule_tip_radius = glm::vec4(s.capsule_tip, s.capsule_radius);
+			g.cone_dir_height = glm::vec4(s.cone_direction, s.cone_height);
+			g.cone_base_rad_pad = glm::vec4(s.cone_base_radius, 0.0f, 0.0f, 0.0f);
 
 			bodies_gpu[i] = g;
 		}
@@ -510,6 +587,7 @@ struct PhysicsWorld
 		p.separation_slop = m_params.separation_slop;
 		p.push_strength = m_params.push_strength;
 		p.damping = m_params.damping;
+		p.bvh_node_count = (u32)nodes.size();
 
 		backend->UpdateUniformBuffer(params_buffer, &p, sizeof(PhysicsParams));
 
@@ -519,6 +597,7 @@ struct PhysicsWorld
 		backend->BindDescriptorSet(compute_pipeline, bodies_set, 0);
 		backend->BindDescriptorSet(compute_pipeline, instances_set, 0);
 		backend->BindDescriptorSet(compute_pipeline, params_set, 0);
+		backend->BindDescriptorSet(compute_pipeline, bvh_set, 0);
 
 		const u32 N = (u32)bodies.size();
 		if (N > 0)
@@ -546,6 +625,63 @@ struct PhysicsWorld
 			bodies[i].type = (u32)gpu[i].vel_type.w;
 			bodies[i].half_extents = glm::vec3(gpu[i].halfExt_radius);
 			bodies[i].radius = gpu[i].halfExt_radius.w;
+			bodies[i].capsule_tip = glm::vec3(gpu[i].capsule_tip_radius);
+			bodies[i].capsule_radius = gpu[i].capsule_tip_radius.w;
+			bodies[i].cone_direction = glm::vec3(gpu[i].cone_dir_height);
+			bodies[i].cone_height = gpu[i].cone_dir_height.w;
+			bodies[i].cone_base_radius = gpu[i].cone_base_rad_pad.x;
+		}
+	}
+
+	void UploadBVHToGPU(VulkanBackend* backend)
+	{
+		if (!backend || !bvh_buffer || !bvh_indices_buffer) return;
+		if (nodes.empty()) return;
+
+		// Flatten leaf indices into a single array
+		flat_leaf_indices.clear();
+
+		// Convert CPU BVH nodes to GPU format
+		bvh_nodes_gpu.resize(nodes.size());
+		for (u32 i = 0; i < (u32)nodes.size(); ++i)
+		{
+			const BVHNode& n = nodes[i];
+			BVHNodeGPU& g = bvh_nodes_gpu[i];
+
+			g.bounds_min_left = glm::vec4(n.bounds.min, (f32)n.left);
+			g.bounds_max_right = glm::vec4(n.bounds.max, (f32)n.right);
+
+			// If leaf node, store offset into flat_leaf_indices
+			if (n.left == -1 && !n.leaf_indices.empty())
+			{
+				u32 offset = (u32)flat_leaf_indices.size();
+				g.first_count = glm::vec4((f32)offset, (f32)n.count, 0.0f, 0.0f);
+
+				// Add indices to flat array
+				for (u32 idx : n.leaf_indices)
+				{
+					flat_leaf_indices.push_back(idx);
+				}
+			}
+			else
+			{
+				g.first_count = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
+			}
+		}
+
+		// Upload nodes to GPU
+		backend->UpdateStorageBuffer(
+			bvh_buffer,
+			bvh_nodes_gpu.data(),
+			sizeof(BVHNodeGPU) * (u32)bvh_nodes_gpu.size());
+
+		// Upload flattened indices to GPU
+		if (!flat_leaf_indices.empty())
+		{
+			backend->UpdateStorageBuffer(
+				bvh_indices_buffer,
+				flat_leaf_indices.data(),
+				sizeof(u32) * (u32)flat_leaf_indices.size());
 		}
 	}
 
@@ -553,6 +689,7 @@ struct PhysicsWorld
 	{
 		BuildPrimBounds();
 		BuildBVH();
+		UploadBVHToGPU(backend);
 		BuildDebugMesh(draw_internal_nodes);
 		UploadDebugMesh(backend);
 	}
@@ -592,12 +729,17 @@ struct PhysicsWorld
 	Pipeline* compute_pipeline = nullptr;
 	StorageBuffer* bodies_buffer = nullptr;
 	UniformBuffer* params_buffer = nullptr;
+	StorageBuffer* bvh_buffer = nullptr;
+	StorageBuffer* bvh_indices_buffer = nullptr;
 
 	DescriptorSet* bodies_set = nullptr;
 	DescriptorSet* instances_set = nullptr;
 	DescriptorSet* params_set = nullptr;
+	DescriptorSet* bvh_set = nullptr;
 
 	std::vector<BodyGPU> bodies_gpu;
+	std::vector<BVHNodeGPU> bvh_nodes_gpu;
+	std::vector<u32> flat_leaf_indices;
 	b8 needs_gpu_upload = false;
 
 	u32 m_capacity_bodies = 0;
@@ -646,7 +788,13 @@ private:
 		const u32 LEAF_MAX = 4;
 		if (count <= LEAF_MAX)
 		{
-			node.first = first;
+			// Store actual body indices in leaf
+			node.leaf_indices.clear();
+			for (u32 i = 0; i < count; ++i)
+			{
+				node.leaf_indices.push_back(prim_indices[first + i]);
+			}
+			node.first = 0; // Will be set during flattening
 			node.count = count;
 			node.left = -1;
 			node.right = -1;

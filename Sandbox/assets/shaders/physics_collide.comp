@@ -10,13 +10,25 @@ struct InstanceData
 
 struct BodyGPU
 {
-    vec4 pos_invMass;        // xyz pos, w invMass
-    vec4 vel_type;           // xyz vel, w type (float)
-    vec4 halfExt_radius;     // xyz half extents, w radius
+    vec4 pos_invMass;           // xyz pos, w invMass
+    vec4 vel_type;              // xyz vel, w type (float)
+    vec4 halfExt_radius;        // xyz half extents, w radius
+    vec4 capsule_tip_radius;    // xyz capsule tip offset, w capsule radius
+    vec4 cone_dir_height;       // xyz cone direction, w cone height
+    vec4 cone_base_rad_pad;     // x cone base radius, yzw padding
+};
+
+struct BVHNodeGPU
+{
+    vec4 bounds_min_left;    // xyz = min, w = left (as float)
+    vec4 bounds_max_right;   // xyz = max, w = right (as float)
+    vec4 first_count;        // x = first, y = count, zw unused
 };
 
 layout(std430, set = 0, binding = 0) buffer Bodies { BodyGPU b[]; } BodiesSSBO;
 layout(std430, set = 1, binding = 0) buffer Instances { InstanceData inst[]; } InstSSBO;
+layout(std430, set = 3, binding = 0) readonly buffer BVHNodes { BVHNodeGPU nodes[]; } BVHSSBO;
+layout(std430, set = 3, binding = 1) readonly buffer BVHIndices { uint indices[]; } BVHIndicesSSBO;
 
 layout(set = 2, binding = 0) uniform Params
 {
@@ -25,7 +37,7 @@ layout(set = 2, binding = 0) uniform Params
     float separation_slop;
     float push_strength;
     float damping;
-    float _pad0;
+    uint bvh_node_count;
 } P;
 
 uint collider_type(uint i) { return uint(BodiesSSBO.b[i].vel_type.w + 0.5); }
@@ -35,6 +47,11 @@ vec3  velocity(uint i) { return BodiesSSBO.b[i].vel_type.xyz; }
 float invMass(uint i)  { return BodiesSSBO.b[i].pos_invMass.w; }
 vec3  halfExt(uint i)  { return BodiesSSBO.b[i].halfExt_radius.xyz; }
 float radius(uint i)   { return BodiesSSBO.b[i].halfExt_radius.w; }
+vec3  capsule_tip(uint i) { return BodiesSSBO.b[i].capsule_tip_radius.xyz; }
+float capsule_radius(uint i) { return BodiesSSBO.b[i].capsule_tip_radius.w; }
+vec3  cone_direction(uint i) { return BodiesSSBO.b[i].cone_dir_height.xyz; }
+float cone_height(uint i) { return BodiesSSBO.b[i].cone_dir_height.w; }
+float cone_base_radius(uint i) { return BodiesSSBO.b[i].cone_base_rad_pad.x; }
 
 void set_position(uint i, vec3 p) { BodiesSSBO.b[i].pos_invMass.xyz = p; }
 void set_velocity(uint i, vec3 v) { BodiesSSBO.b[i].vel_type.xyz = v; }
@@ -76,9 +93,248 @@ vec3 resolve_sphere_aabb(vec3 p, float r, vec3 c, vec3 e)
     return n * pen;
 }
 
-void contain(inout vec3 p, inout vec3 v, vec3 e, float r, uint type)
+// Closest point on line segment to a point
+vec3 closest_point_on_segment(vec3 p, vec3 a, vec3 b)
 {
-    vec3 margin = (type == 1u) ? e : vec3(r);
+    vec3 ab = b - a;
+    float t = clamp(dot(p - a, ab) / max(dot(ab, ab), 1e-8), 0.0, 1.0);
+    return a + t * ab;
+}
+
+// Capsule vs Sphere collision
+vec3 resolve_capsule_sphere(vec3 capsule_base, vec3 capsule_tip, float capsule_r, vec3 sphere_pos, float sphere_r)
+{
+    vec3 closest = closest_point_on_segment(sphere_pos, capsule_base, capsule_tip);
+    vec3 d = sphere_pos - closest;
+    float dist2 = dot(d, d);
+    float r = capsule_r + sphere_r;
+    if (dist2 >= r * r) return vec3(0);
+
+    float dist = sqrt(max(dist2, 1e-8));
+    vec3 n = d / dist;
+    float pen = (r - dist);
+    return n * pen;
+}
+
+// Capsule vs AABB collision
+vec3 resolve_capsule_aabb(vec3 capsule_base, vec3 capsule_tip, float capsule_r, vec3 aabb_center, vec3 aabb_extents)
+{
+    // Find closest point on capsule segment to AABB
+    vec3 ab = capsule_tip - capsule_base;
+    float seg_len = length(ab);
+    vec3 dir = (seg_len > 1e-6) ? ab / seg_len : vec3(0, 1, 0);
+
+    // Sample a few points along the capsule and find minimum penetration
+    vec3 best_push = vec3(0);
+    float best_pen = 0.0;
+
+    for (int s = 0; s <= 4; ++s)
+    {
+        float t = float(s) / 4.0;
+        vec3 pt = capsule_base + t * ab;
+        vec3 push = resolve_sphere_aabb(pt, capsule_r, aabb_center, aabb_extents);
+        float pen = length(push);
+        if (pen > best_pen)
+        {
+            best_pen = pen;
+            best_push = push;
+        }
+    }
+
+    return best_push;
+}
+
+// Capsule vs Capsule collision
+vec3 resolve_capsule_capsule(vec3 a_base, vec3 a_tip, float a_r, vec3 b_base, vec3 b_tip, float b_r)
+{
+    // Closest points between two line segments
+    vec3 d1 = a_tip - a_base;
+    vec3 d2 = b_tip - b_base;
+    vec3 r = a_base - b_base;
+
+    float a = dot(d1, d1);
+    float e = dot(d2, d2);
+    float f = dot(d2, r);
+
+    float s = 0.0, t = 0.0;
+
+    if (a <= 1e-8 && e <= 1e-8)
+    {
+        s = t = 0.0;
+    }
+    else if (a <= 1e-8)
+    {
+        s = 0.0;
+        t = clamp(f / e, 0.0, 1.0);
+    }
+    else
+    {
+        float c = dot(d1, r);
+        if (e <= 1e-8)
+        {
+            t = 0.0;
+            s = clamp(-c / a, 0.0, 1.0);
+        }
+        else
+        {
+            float b = dot(d1, d2);
+            float denom = a * e - b * b;
+
+            if (denom != 0.0)
+                s = clamp((b * f - c * e) / denom, 0.0, 1.0);
+            else
+                s = 0.0;
+
+            t = (b * s + f) / e;
+
+            if (t < 0.0)
+            {
+                t = 0.0;
+                s = clamp(-c / a, 0.0, 1.0);
+            }
+            else if (t > 1.0)
+            {
+                t = 1.0;
+                s = clamp((b - c) / a, 0.0, 1.0);
+            }
+        }
+    }
+
+    vec3 c1 = a_base + s * d1;
+    vec3 c2 = b_base + t * d2;
+    vec3 d = c1 - c2;
+    float dist2 = dot(d, d);
+    float total_r = a_r + b_r;
+
+    if (dist2 >= total_r * total_r) return vec3(0);
+
+    float dist = sqrt(max(dist2, 1e-8));
+    vec3 n = d / dist;
+    float pen = (total_r - dist);
+    return n * pen;
+}
+
+// Closest point on cone surface to a point
+// Cone: base_center is the base center, axis is normalized direction, height is cone height, base_radius is cone base radius
+vec3 closest_point_on_cone(vec3 p, vec3 base_center, vec3 axis, float height, float base_radius)
+{
+    vec3 apex = base_center + axis * height;
+    vec3 pa = p - apex;
+
+    float t_axis = dot(pa, axis);
+
+    // Above apex
+    if (t_axis >= 0.0)
+        return apex;
+
+    // Project onto cone axis
+    vec3 proj = apex + t_axis * axis;
+    float h_from_apex = -t_axis;
+
+    // Below base
+    if (h_from_apex >= height)
+    {
+        // Clamp to base disk
+        vec3 to_p = p - base_center;
+        vec3 radial = to_p - dot(to_p, axis) * axis;
+        float r_len = length(radial);
+        if (r_len <= base_radius)
+            return p; // Inside base disk, already at surface
+        return base_center + normalize(radial) * base_radius;
+    }
+
+    // On cone lateral surface
+    float r_at_h = base_radius * (h_from_apex / height);
+    vec3 radial = p - proj;
+    float r_len = length(radial);
+
+    if (r_len < 1e-6)
+        return proj; // On axis
+
+    vec3 surf = proj + normalize(radial) * r_at_h;
+    return surf;
+}
+
+// Cone vs Sphere collision
+vec3 resolve_cone_sphere(vec3 cone_base, vec3 cone_dir, float cone_height, float cone_base_radius, vec3 sphere_pos, float sphere_r)
+{
+    vec3 closest = closest_point_on_cone(sphere_pos, cone_base, cone_dir, cone_height, cone_base_radius);
+    vec3 d = sphere_pos - closest;
+    float dist2 = dot(d, d);
+
+    if (dist2 >= sphere_r * sphere_r) return vec3(0);
+
+    float dist = sqrt(max(dist2, 1e-8));
+    vec3 n = d / dist;
+    float pen = (sphere_r - dist);
+    return n * pen;
+}
+
+// Cone vs AABB collision (approximate using sampling)
+vec3 resolve_cone_aabb(vec3 cone_base, vec3 cone_dir, float cone_height, float cone_base_radius, vec3 aabb_center, vec3 aabb_extents)
+{
+    vec3 apex = cone_base + cone_dir * cone_height;
+
+    vec3 best_push = vec3(0);
+    float best_pen = 0.0;
+
+    // Sample apex
+    vec3 push = resolve_sphere_aabb(apex, 0.05, aabb_center, aabb_extents);
+    float pen = length(push);
+    if (pen > best_pen) { best_pen = pen; best_push = push; }
+
+    // Sample base center
+    push = resolve_sphere_aabb(cone_base, cone_base_radius, aabb_center, aabb_extents);
+    pen = length(push);
+    if (pen > best_pen) { best_pen = pen; best_push = push; }
+
+    // Sample around base circle
+    for (int i = 0; i < 8; ++i)
+    {
+        float angle = float(i) * 6.28318 / 8.0;
+        vec3 tangent = (abs(cone_dir.y) < 0.9) ? vec3(0, 1, 0) : vec3(1, 0, 0);
+        vec3 u = normalize(cross(tangent, cone_dir));
+        vec3 v = cross(cone_dir, u);
+        vec3 base_pt = cone_base + (cos(angle) * u + sin(angle) * v) * cone_base_radius;
+
+        push = resolve_sphere_aabb(base_pt, 0.05, aabb_center, aabb_extents);
+        pen = length(push);
+        if (pen > best_pen) { best_pen = pen; best_push = push; }
+    }
+
+    return best_push;
+}
+
+// Cone vs Cone collision (approximate using sampling)
+vec3 resolve_cone_cone(vec3 a_base, vec3 a_dir, float a_height, float a_radius, vec3 b_base, vec3 b_dir, float b_height, float b_radius)
+{
+    vec3 a_apex = a_base + a_dir * a_height;
+    vec3 b_apex = b_base + b_dir * b_height;
+
+    // Test a's apex against b
+    vec3 push1 = resolve_cone_sphere(b_base, b_dir, b_height, b_radius, a_apex, 0.05);
+
+    // Test b's apex against a
+    vec3 push2 = -resolve_cone_sphere(a_base, a_dir, a_height, a_radius, b_apex, 0.05);
+
+    // Return the larger penetration
+    float pen1 = length(push1);
+    float pen2 = length(push2);
+    return (pen1 > pen2) ? push1 : push2;
+}
+
+void contain(uint i, inout vec3 p, inout vec3 v, uint type)
+{
+    vec3 margin;
+    if (type == 1u) // AABB
+        margin = halfExt(i);
+    else if (type == 2u) // Capsule
+        margin = vec3(capsule_radius(i)) + abs(capsule_tip(i));
+    else if (type == 3u) // Cone
+        margin = vec3(max(cone_base_radius(i), cone_height(i)));
+    else // Sphere
+        margin = vec3(radius(i));
+
     vec3 minp = P.world_min + margin;
     vec3 maxp = P.world_max - margin;
 
@@ -88,6 +344,206 @@ void contain(inout vec3 p, inout vec3 v, vec3 e, float r, uint type)
     if (p.y > maxp.y) { p.y = maxp.y; v.y *= -0.5; }
     if (p.z < minp.z) { p.z = minp.z; v.z *= -0.5; }
     if (p.z > maxp.z) { p.z = maxp.z; v.z *= -0.5; }
+}
+
+// AABB vs AABB intersection test
+bool aabb_intersects(vec3 minA, vec3 maxA, vec3 minB, vec3 maxB)
+{
+    return (minA.x <= maxB.x && maxA.x >= minB.x) &&
+           (minA.y <= maxB.y && maxA.y >= minB.y) &&
+           (minA.z <= maxB.z && maxA.z >= minB.z);
+}
+
+// Compute AABB for a body at given position
+void compute_body_aabb(uint i, uint type, vec3 pos, out vec3 outMin, out vec3 outMax)
+{
+    if (type == 1u) // AABB collider
+    {
+        outMin = pos - halfExt(i);
+        outMax = pos + halfExt(i);
+    }
+    else if (type == 2u) // Capsule
+    {
+        vec3 base = pos;
+        vec3 tip = pos + capsule_tip(i);
+        vec3 r = vec3(capsule_radius(i));
+        outMin = min(base, tip) - r;
+        outMax = max(base, tip) + r;
+    }
+    else if (type == 3u) // Cone
+    {
+        vec3 apex = pos + cone_direction(i) * cone_height(i);
+        vec3 r = vec3(cone_base_radius(i));
+        outMin = min(apex, pos - r);
+        outMax = max(apex, pos + r);
+    }
+    else // Sphere (type == 0)
+    {
+        vec3 r = vec3(radius(i));
+        outMin = pos - r;
+        outMax = pos + r;
+    }
+}
+
+// Process collision between two bodies
+void process_collision(uint i, uint j, uint ti, uint tj, vec3 pi, inout vec3 corr)
+{
+    vec3 pj = position(j);
+    vec3 push = vec3(0);
+
+    // Sphere (type 0)
+    if (ti == 0u && tj == 0u)
+    {
+        push = resolve_sphere_sphere(pi, radius(i), pj, radius(j));
+    }
+    // AABB (type 1)
+    else if (ti == 1u && tj == 1u)
+    {
+        push = resolve_aabb_aabb(pi, halfExt(i), pj, halfExt(j));
+    }
+    // Capsule (type 2)
+    else if (ti == 2u && tj == 2u)
+    {
+        vec3 i_base = pi;
+        vec3 i_tip = pi + capsule_tip(i);
+        vec3 j_base = pj;
+        vec3 j_tip = pj + capsule_tip(j);
+        push = resolve_capsule_capsule(i_base, i_tip, capsule_radius(i), j_base, j_tip, capsule_radius(j));
+    }
+    // Cone (type 3)
+    else if (ti == 3u && tj == 3u)
+    {
+        push = resolve_cone_cone(pi, cone_direction(i), cone_height(i), cone_base_radius(i),
+                                   pj, cone_direction(j), cone_height(j), cone_base_radius(j));
+    }
+    // Sphere vs AABB
+    else if (ti == 0u && tj == 1u)
+    {
+        push = resolve_sphere_aabb(pi, radius(i), pj, halfExt(j));
+    }
+    else if (ti == 1u && tj == 0u)
+    {
+        push = -resolve_sphere_aabb(pj, radius(j), pi, halfExt(i));
+    }
+    // Sphere vs Capsule
+    else if (ti == 0u && tj == 2u)
+    {
+        vec3 j_base = pj;
+        vec3 j_tip = pj + capsule_tip(j);
+        push = resolve_capsule_sphere(j_base, j_tip, capsule_radius(j), pi, radius(i));
+    }
+    else if (ti == 2u && tj == 0u)
+    {
+        vec3 i_base = pi;
+        vec3 i_tip = pi + capsule_tip(i);
+        push = -resolve_capsule_sphere(i_base, i_tip, capsule_radius(i), pj, radius(j));
+    }
+    // Sphere vs Cone
+    else if (ti == 0u && tj == 3u)
+    {
+        push = resolve_cone_sphere(pj, cone_direction(j), cone_height(j), cone_base_radius(j), pi, radius(i));
+    }
+    else if (ti == 3u && tj == 0u)
+    {
+        push = -resolve_cone_sphere(pi, cone_direction(i), cone_height(i), cone_base_radius(i), pj, radius(j));
+    }
+    // AABB vs Capsule
+    else if (ti == 1u && tj == 2u)
+    {
+        vec3 j_base = pj;
+        vec3 j_tip = pj + capsule_tip(j);
+        push = -resolve_capsule_aabb(j_base, j_tip, capsule_radius(j), pi, halfExt(i));
+    }
+    else if (ti == 2u && tj == 1u)
+    {
+        vec3 i_base = pi;
+        vec3 i_tip = pi + capsule_tip(i);
+        push = resolve_capsule_aabb(i_base, i_tip, capsule_radius(i), pj, halfExt(j));
+    }
+    // AABB vs Cone
+    else if (ti == 1u && tj == 3u)
+    {
+        push = -resolve_cone_aabb(pj, cone_direction(j), cone_height(j), cone_base_radius(j), pi, halfExt(i));
+    }
+    else if (ti == 3u && tj == 1u)
+    {
+        push = resolve_cone_aabb(pi, cone_direction(i), cone_height(i), cone_base_radius(i), pj, halfExt(j));
+    }
+    // Capsule vs Cone
+    else if (ti == 2u && tj == 3u)
+    {
+        // Approximate: test capsule endpoints against cone
+        vec3 i_base = pi;
+        vec3 i_tip = pi + capsule_tip(i);
+        vec3 push1 = resolve_cone_sphere(pj, cone_direction(j), cone_height(j), cone_base_radius(j), i_base, capsule_radius(i));
+        vec3 push2 = resolve_cone_sphere(pj, cone_direction(j), cone_height(j), cone_base_radius(j), i_tip, capsule_radius(i));
+        push = (length(push1) > length(push2)) ? push1 : push2;
+    }
+    else if (ti == 3u && tj == 2u)
+    {
+        vec3 j_base = pj;
+        vec3 j_tip = pj + capsule_tip(j);
+        vec3 push1 = -resolve_cone_sphere(pi, cone_direction(i), cone_height(i), cone_base_radius(i), j_base, capsule_radius(j));
+        vec3 push2 = -resolve_cone_sphere(pi, cone_direction(i), cone_height(i), cone_base_radius(i), j_tip, capsule_radius(j));
+        push = (length(push1) > length(push2)) ? push1 : push2;
+    }
+
+    if (length(push) > 0.0)
+    {
+        corr += push;
+    }
+}
+
+// BVH traversal to find collisions
+void traverse_bvh(uint i, uint ti, vec3 pi, vec3 bodyMin, vec3 bodyMax, inout vec3 corr)
+{
+    if (P.bvh_node_count == 0u) return;
+
+    // Stack-based traversal (max depth ~64 for very large trees)
+    int stack[64];
+    int stackPtr = 0;
+    stack[stackPtr++] = 0; // Start with root
+
+    while (stackPtr > 0)
+    {
+        int nodeIdx = stack[--stackPtr];
+        if (nodeIdx < 0 || nodeIdx >= int(P.bvh_node_count)) continue;
+
+        BVHNodeGPU node = BVHSSBO.nodes[nodeIdx];
+
+        vec3 nodeMin = node.bounds_min_left.xyz;
+        vec3 nodeMax = node.bounds_max_right.xyz;
+
+        // Test if body AABB intersects node AABB
+        if (!aabb_intersects(bodyMin, bodyMax, nodeMin, nodeMax))
+            continue;
+
+        int left = int(node.bounds_min_left.w);
+        int right = int(node.bounds_max_right.w);
+        uint first = uint(node.first_count.x);
+        uint count = uint(node.first_count.y);
+
+        // Leaf node - test primitives using index indirection
+        if (left == -1 && count > 0u)
+        {
+            for (uint k = 0u; k < count; ++k)
+            {
+                uint j = BVHIndicesSSBO.indices[first + k];
+                if (j == i) continue; // Skip self
+                if (j >= P.body_count) continue;
+
+                uint tj = collider_type(j);
+                process_collision(i, j, ti, tj, pi, corr);
+            }
+        }
+        else // Internal node - push children
+        {
+            if (left >= 0 && stackPtr < 64)
+                stack[stackPtr++] = left;
+            if (right >= 0 && stackPtr < 64)
+                stack[stackPtr++] = right;
+        }
+    }
 }
 
 void main()
@@ -108,41 +564,12 @@ void main()
 
     vec3 corr = vec3(0);
 
-    for (uint j = 0; j < P.body_count; ++j)
-    {
-        if (j == i) continue;
+    // Compute body AABB for BVH traversal
+    vec3 bodyMin, bodyMax;
+    compute_body_aabb(i, ti, pi, bodyMin, bodyMax);
 
-        uint tj = collider_type(j);
-        vec3 pj = position(j);
-
-        bool iSphere = (ti == 0u) || (ti == 2u);
-        bool jSphere = (tj == 0u) || (tj == 2u);
-
-        if (iSphere && jSphere)
-        {
-            vec3 push = resolve_sphere_sphere(pi, radius(i), pj, radius(j));
-            if (length(push) > 0.0) corr += push;
-        }
-        else if (ti == 1u && tj == 1u)
-        {
-            vec3 push = resolve_aabb_aabb(pi, halfExt(i), pj, halfExt(j));
-            if (length(push) > 0.0) corr += push;
-        }
-        else
-        {
-            if (iSphere && tj == 1u)
-            {
-                vec3 push = resolve_sphere_aabb(pi, radius(i), pj, halfExt(j));
-                if (length(push) > 0.0) corr += push;
-            }
-            else if (ti == 1u && jSphere)
-            {
-                vec3 push = resolve_sphere_aabb(pj, radius(j), pi, halfExt(i));
-                push = -push;
-                if (length(push) > 0.0) corr += push;
-            }
-        }
-    }
+    // Use BVH traversal instead of brute force
+    traverse_bvh(i, ti, pi, bodyMin, bodyMax, corr);
 
     float corrLen = length(corr);
     if (corrLen > 0.0)
@@ -156,7 +583,7 @@ void main()
     }
 
     vi *= P.damping;
-    contain(pi, vi, halfExt(i), radius(i), ti);
+    contain(i, pi, vi, ti);
 
     set_position(i, pi);
     set_velocity(i, vi);

@@ -535,8 +535,11 @@ void SandboxApplication::CreateResources()
 	// Cone
 	{
 		Body b{};
-		b.type = Collider_ConeSphereApprox;
-		b.radius = glm::sqrt(0.5f * 0.5f + 0.5f * 0.5f);
+		b.type = Collider_Cone;
+		// Cone with base at origin, apex pointing up
+		b.cone_direction = glm::vec3(0.0f, 1.0f, 0.0f);
+		b.cone_height = 1.0f;
+		b.cone_base_radius = 0.5f;
 		b.inv_mass = 1.0f;
 		m_shape_prototypes.push_back(b);
 	}
@@ -682,6 +685,13 @@ void SandboxApplication::CreatePipelines()
 			},
 			{
 				{ { 0, DescriptorType_UniformBuffer, 1, ShaderStage_Compute, DescriptorBindingFlags_None } },
+				DescriptorSetFlags_None
+			},
+			{
+				{
+					{ 0, DescriptorType_StorageBuffer, 1, ShaderStage_Compute, DescriptorBindingFlags_None },
+					{ 1, DescriptorType_StorageBuffer, 1, ShaderStage_Compute, DescriptorBindingFlags_None }
+				},
 				DescriptorSetFlags_None
 			}
 		};

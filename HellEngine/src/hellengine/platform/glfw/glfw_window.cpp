@@ -67,6 +67,8 @@ namespace hellengine
 
 			CenterWindow();
 			CenterCursor();
+
+			delete internal_state;
 		}
 
 		GlfwWindow::~GlfwWindow()
